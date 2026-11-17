@@ -26,10 +26,15 @@ export function BrandPanel() {
 
         <path d={ROUTE} stroke="#5fd08f" strokeWidth="5" strokeLinecap="round" strokeDasharray="2 12" fill="none" className="route-animated" />
 
-        <g>
+        <g className="motion-reduce:hidden">
           <circle r="22" fill="#178045" stroke="white" strokeWidth="4" />
           <text textAnchor="middle" dy="5" fontSize="14" fontWeight="700" fill="white">LF</text>
           <animateMotion dur="7s" repeatCount="indefinite" path={ROUTE} keyPoints="0;1;1" keyTimes="0;0.85;1" calcMode="linear" />
+        </g>
+        {/* animateMotion ignora prefers-reduced-motion: mostra o marcador parado no início da rota */}
+        <g className="hidden motion-reduce:block" transform="translate(470 170)">
+          <circle r="22" fill="#178045" stroke="white" strokeWidth="4" />
+          <text textAnchor="middle" dy="5" fontSize="14" fontWeight="700" fill="white">LF</text>
         </g>
 
         <circle cx="210" cy="560" r="34" fill="white" fillOpacity="0.15" className="pulse-ring" />
