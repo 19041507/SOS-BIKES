@@ -37,7 +37,17 @@ NEXT_PUBLIC_SUPABASE_URL=https://<id-do-projeto>.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Os dois valores ficam no painel do Supabase, no botão **Connect** da página inicial do projeto. Nunca use a **Secret key** (`sb_secret_...`) no front.
+Os dois valores ficam no painel do Supabase, no botão **Connect** da página inicial do projeto. Nunca use a **Secret key** (`sb_secret_...`) no front. Sem esse arquivo o site abre, mas o login responde que não está configurado.
+
+## Login
+
+O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "Sou ciclista" ou "Sou mecânico"; se a conta for do outro tipo, o login avisa qual opção escolher.
+
+- `/ciclista` só abre para contas de ciclista e `/mecanico` só para contas de mecânico. Quem não está logado volta para o login; quem já está logado e abre o login vai direto para a própria área.
+- A sessão fica em cookies e é renovada a cada requisição pelo `src/proxy.ts`.
+- **Sair** encerra a sessão e volta para o login.
+
+Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
 
 ## Banco de dados (Supabase)
 
