@@ -17,24 +17,42 @@ type Screen = "idle" | "incoming" | "waiting" | "on-the-way" | "in-service" | "c
 // Tempos da simulação (ms)
 const NEXT_CALL = 3000;
 const CYCLIST_CONFIRMATION = 3500;
-
-const DEFAULT_ESTIMATE = "25,00";
-const DEFAULT_ETA = "6";
+/** Prazo para o mecânico responder um chamado, em segundos */
+const RESPONSE_TIME = 60;
 
 export function MechanicPanel() {
   const [online, setOnline] = useState(false);
   const [screen, setScreen] = useState<Screen>("idle");
-  const [estimateInput, setEstimateInput] = useState(DEFAULT_ESTIMATE);
-  const [etaInput, setEtaInput] = useState(DEFAULT_ETA);
-  const [finalInput, setFinalInput] = useState(DEFAULT_ESTIMATE);
+  const [estimateInput, setEstimateInput] = useState("");
+  const [etaInput, setEtaInput] = useState("");
+  const [finalInput, setFinalInput] = useState("");
+  const [secondsLeft, setSecondsLeft] = useState(RESPONSE_TIME);
+  const [expired, setExpired] = useState(false);
   const [reason, setReason] = useState("");
   const [jobsToday, setJobsToday] = useState(0);
   const [earnedToday, setEarnedToday] = useState(0);
 
   useEffect(() => {
     if (screen === "idle" && online) {
-      const timer = setTimeout(() => setScreen("incoming"), NEXT_CALL);
+      const timer = setTimeout(() => {
+        setSecondsLeft(RESPONSE_TIME);
+        setExpired(false);
+        setScreen("incoming");
+      }, NEXT_CALL);
       return () => clearTimeout(timer);
+    }
+    if (screen === "incoming") {
+      const countdown = setInterval(() => setSecondsLeft((seconds) => Math.max(seconds - 1, 0)), 1000);
+      const deadline = setTimeout(() => {
+        setEstimateInput("");
+        setEtaInput("");
+        setExpired(true);
+        setScreen("idle");
+      }, RESPONSE_TIME * 1000);
+      return () => {
+        clearInterval(countdown);
+        clearTimeout(deadline);
+      };
     }
     if (screen === "waiting") {
       const timer = setTimeout(() => setScreen("on-the-way"), CYCLIST_CONFIRMATION);
@@ -49,13 +67,14 @@ export function MechanicPanel() {
 
   function toggleAvailability() {
     setOnline(!online);
+    setExpired(false);
     setScreen("idle");
   }
 
   function backToCalls() {
-    setEstimateInput(DEFAULT_ESTIMATE);
-    setEtaInput(DEFAULT_ETA);
-    setFinalInput(DEFAULT_ESTIMATE);
+    setEstimateInput("");
+    setEtaInput("");
+    setFinalInput("");
     setReason("");
     setScreen("idle");
   }
@@ -78,13 +97,19 @@ export function MechanicPanel() {
           <EmptyState
             live
             title="Aguardando chamados"
-            description="Você será avisado quando um ciclista escolher você."
+            description={
+              expired
+                ? "O último chamado expirou porque não foi respondido a tempo. Você será avisado quando um ciclista escolher você."
+                : "Você será avisado quando um ciclista escolher você."
+            }
           />
         )}
         {screen === "incoming" && (
           <IncomingCall
             estimate={estimateInput}
             eta={etaInput}
+            secondsLeft={secondsLeft}
+            totalSeconds={RESPONSE_TIME}
             onEstimateChange={setEstimateInput}
             onEtaChange={setEtaInput}
             onDecline={backToCalls}
