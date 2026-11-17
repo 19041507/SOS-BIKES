@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { sair } from "@/app/_actions/auth";
 import { Logo } from "./Logo";
 
 type NavLink = { href: string; label: string; active?: boolean };
@@ -42,12 +43,14 @@ export function AppHeader({ links, user, badge }: AppHeaderProps) {
             {user.initials}
           </span>
           <span className="text-[15px] font-medium">{user.name}</span>
-          <Link
-            href="/"
-            className="ml-2 rounded-lg px-3 py-2 text-sm font-semibold text-subtle hover:bg-surface hover:text-ink"
-          >
-            Sair
-          </Link>
+          <form action={sair}>
+            <button
+              type="submit"
+              className="ml-2 rounded-lg px-3 py-2 text-sm font-semibold text-subtle hover:bg-surface hover:text-ink"
+            >
+              Sair
+            </button>
+          </form>
         </div>
       </div>
     </header>
