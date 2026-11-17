@@ -19,7 +19,7 @@ Projeto acadêmico do curso de Administração da Faculdade Católica Imaculada 
 - O pagamento e a gorjeta são feitos diretamente ao mecânico; o sistema apenas registra.
 - Comunicação por mensagem (WhatsApp) ou ligação.
 
-## Como rodar
+## Como rodar local
 
 Requer Node.js 20.9 ou superior.
 
