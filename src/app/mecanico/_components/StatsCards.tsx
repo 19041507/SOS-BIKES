@@ -7,19 +7,23 @@ type StatsCardsProps = {
 };
 
 export function StatsCards({ jobsToday, rating, earnedToday }: StatsCardsProps) {
-  const stats = [
-    { label: "Atendimentos hoje", value: String(jobsToday) },
-    { label: "Avaliação", value: rating },
-    { label: "Ganhos hoje", value: formatBRL(earnedToday) },
-  ];
   return (
-    <div className="grid grid-cols-3 gap-2.5">
-      {stats.map((stat) => (
-        <div key={stat.label} className="rounded-xl border border-line bg-white p-3.5">
-          <p className="text-xs text-subtle">{stat.label}</p>
-          <p className="mt-1 text-xl font-bold">{stat.value}</p>
-        </div>
-      ))}
+    <div className="grid grid-cols-2 gap-2.5">
+      <div className="col-span-2 rounded-xl border border-line bg-white p-4">
+        <p className="text-[13px] text-subtle">Ganhos hoje</p>
+        <p className="mt-1 text-2xl font-bold tabular-nums">{formatBRL(earnedToday)}</p>
+        <p className="mt-0.5 text-xs text-subtle">já descontada a comissão de 10%</p>
+      </div>
+      <div className="rounded-xl border border-line bg-white p-4">
+        <p className="text-[13px] text-subtle">Atendimentos hoje</p>
+        <p className="mt-1 text-xl font-bold tabular-nums">{jobsToday}</p>
+      </div>
+      <div className="rounded-xl border border-line bg-white p-4">
+        <p className="text-[13px] text-subtle">Avaliação</p>
+        <p className="mt-1 text-xl font-bold tabular-nums">
+          <span className="text-star" aria-hidden="true">★</span> {rating}
+        </p>
+      </div>
     </div>
   );
 }
