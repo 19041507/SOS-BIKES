@@ -25,6 +25,8 @@ type Screen =
 
 // Tempos da simulação (ms)
 const MECHANIC_RESPONSE = 3000;
+/** Tempo máximo de espera pela resposta do mecânico, em segundos */
+const WAIT_LIMIT = 60;
 const TRAVEL_TIME = 6000;
 const SERVICE_TIME = 6000;
 
@@ -40,17 +42,27 @@ export function CyclistFlow() {
 
   useEffect(() => {
     if (screen === "waiting" && chosen) {
-      const timer = setTimeout(() => {
+      const firstName = chosen.name.split(" ")[0];
+      const response = setTimeout(() => {
         if (chosen.declines) {
           setDeclinedIds((ids) => [...ids, chosen.id]);
-          setNotice(`${chosen.name.split(" ")[0]} não pode atender agora. Escolha outro mecânico.`);
+          setNotice(`${firstName} não pode atender agora. Escolha outro mecânico.`);
           setChosen(null);
           setScreen("mechanics");
         } else {
           setScreen("proposal");
         }
       }, MECHANIC_RESPONSE);
-      return () => clearTimeout(timer);
+      // Na simulação o mecânico sempre responde antes; o limite cobre a falta de resposta.
+      const limit = setTimeout(() => {
+        setNotice(`${firstName} não respondeu a tempo. Escolha outro mecânico.`);
+        setChosen(null);
+        setScreen("mechanics");
+      }, WAIT_LIMIT * 1000);
+      return () => {
+        clearTimeout(response);
+        clearTimeout(limit);
+      };
     }
     // A simulação fica parada enquanto o ciclista decide se cancela.
     if (confirmingCancel) return;
@@ -139,7 +151,7 @@ export function CyclistFlow() {
             }}
           />
         )}
-        {screen === "waiting" && chosen && <WaitingStep mechanic={chosen} onCancel={backToList} />}
+        {screen === "waiting" && chosen && <WaitingStep mechanic={chosen} limitSeconds={WAIT_LIMIT} onCancel={backToList} />}
         {screen === "proposal" && chosen && (
           <ProposalStep
             mechanic={chosen}
