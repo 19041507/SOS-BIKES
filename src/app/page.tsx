@@ -1,16 +1,9 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { perfilAtual } from "@/lib/auth";
 import { BrandPanel } from "./_components/BrandPanel";
 import { LoginForm } from "./_components/LoginForm";
-
-// Lê a sessão, então fica num <Suspense> separado: o resto do login continua estático.
-async function RedirecionarSeLogado() {
-  const perfil = await perfilAtual();
-  if (perfil) redirect(`/${perfil.tipo}`);
-  return null;
-}
+import { RedirecionarSeLogado } from "./_components/RedirecionarSeLogado";
 
 export default function LoginPage() {
   return (
@@ -30,6 +23,12 @@ export default function LoginPage() {
             </p>
           </div>
           <LoginForm />
+          <p className="text-center text-[15px] text-muted">
+            Não tem conta?{" "}
+            <Link href="/cadastro" className="font-semibold text-brand hover:text-brand-dark">
+              Cadastre-se
+            </Link>
+          </p>
         </div>
       </section>
       <BrandPanel />
