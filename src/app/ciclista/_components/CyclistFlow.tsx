@@ -1,0 +1,169 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { MapView } from "@/components/MapView";
+import { categories, mechanics, type Mechanic } from "@/data/mechanics";
+import { HomeStep } from "./HomeStep";
+import { CategoryStep } from "./CategoryStep";
+import { LocationStep } from "./LocationStep";
+import { MechanicListStep } from "./MechanicListStep";
+import { WaitingStep } from "./WaitingStep";
+import { ProposalStep } from "./ProposalStep";
+import { TrackingStep } from "./TrackingStep";
+import { FinishedStep } from "./FinishedStep";
+
+type Screen =
+  | "home"
+  | "category"
+  | "location"
+  | "mechanics"
+  | "waiting"
+  | "proposal"
+  | "on-the-way"
+  | "in-service"
+  | "finished";
+
+// Tempos da simulação (ms)
+const MECHANIC_RESPONSE = 3000;
+const TRAVEL_TIME = 6000;
+const SERVICE_TIME = 6000;
+
+export function CyclistFlow() {
+  const [screen, setScreen] = useState<Screen>("home");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [details, setDetails] = useState("");
+  const [chosen, setChosen] = useState<Mechanic | null>(null);
+  const [declinedIds, setDeclinedIds] = useState<string[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [justFinished, setJustFinished] = useState(false);
+
+  useEffect(() => {
+    if (screen === "waiting" && chosen) {
+      const timer = setTimeout(() => {
+        if (chosen.declines) {
+          setDeclinedIds((ids) => [...ids, chosen.id]);
+          setNotice(`${chosen.name.split(" ")[0]} não pode atender agora. Escolha outro mecânico.`);
+          setChosen(null);
+          setScreen("mechanics");
+        } else {
+          setScreen("proposal");
+        }
+      }, MECHANIC_RESPONSE);
+      return () => clearTimeout(timer);
+    }
+    if (screen === "on-the-way") {
+      const timer = setTimeout(() => setScreen("in-service"), TRAVEL_TIME);
+      return () => clearTimeout(timer);
+    }
+    if (screen === "in-service") {
+      const timer = setTimeout(() => setScreen("finished"), SERVICE_TIME);
+      return () => clearTimeout(timer);
+    }
+  }, [screen, chosen]);
+
+  useEffect(() => {
+    if (!justFinished) return;
+    const timer = setTimeout(() => setJustFinished(false), 5000);
+    return () => clearTimeout(timer);
+  }, [justFinished]);
+
+  const category = categories.find((item) => item.id === categoryId);
+  const available = mechanics.filter((mechanic) => !declinedIds.includes(mechanic.id));
+  const focusedOnChosen = chosen && screen !== "mechanics";
+  const pins = focusedOnChosen ? [chosen] : available;
+  const firstName = chosen?.name.split(" ")[0];
+
+  function reset() {
+    setScreen("home");
+    setCategoryId(null);
+    setDetails("");
+    setChosen(null);
+    setDeclinedIds([]);
+    setNotice(null);
+  }
+
+  function backToList() {
+    setChosen(null);
+    setNotice(null);
+    setScreen("mechanics");
+  }
+
+  let chip = `${available.length} mecânicos disponíveis perto de você`;
+  if (chosen && screen === "waiting") chip = `Aguardando resposta de ${firstName}`;
+  if (chosen && screen === "proposal") chip = `${firstName} está a ${chosen.distance}`;
+  if (chosen && screen === "on-the-way") chip = `${firstName} chega em ${chosen.etaMinutes} min`;
+  if (screen === "in-service") chip = "Mecânico no local";
+  if (screen === "finished") chip = "Atendimento concluído";
+
+  return (
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-wrap items-stretch gap-4 p-4">
+      <section className="flex min-w-0 flex-[1_1_380px] flex-col gap-4 rounded-2xl border border-line bg-white p-6 md:max-w-[480px]">
+        {screen === "home" && (
+          <HomeStep
+            finished={justFinished}
+            onStart={() => {
+              setJustFinished(false);
+              setScreen("category");
+            }}
+          />
+        )}
+        {screen === "category" && (
+          <CategoryStep
+            selected={categoryId}
+            details={details}
+            onSelect={setCategoryId}
+            onDetailsChange={setDetails}
+            onBack={reset}
+            onNext={() => setScreen("location")}
+          />
+        )}
+        {screen === "location" && (
+          <LocationStep
+            categoryLabel={category?.label ?? ""}
+            onBack={() => setScreen("category")}
+            onNext={() => setScreen("mechanics")}
+          />
+        )}
+        {screen === "mechanics" && (
+          <MechanicListStep
+            mechanics={available}
+            notice={notice}
+            onBack={() => setScreen("location")}
+            onChoose={(mechanic) => {
+              setNotice(null);
+              setChosen(mechanic);
+              setScreen("waiting");
+            }}
+          />
+        )}
+        {screen === "waiting" && chosen && <WaitingStep mechanic={chosen} onCancel={backToList} />}
+        {screen === "proposal" && chosen && (
+          <ProposalStep
+            mechanic={chosen}
+            onConfirm={() => setScreen("on-the-way")}
+            onChooseAnother={backToList}
+          />
+        )}
+        {(screen === "on-the-way" || screen === "in-service") && chosen && (
+          <TrackingStep mechanic={chosen} stage={screen === "on-the-way" ? 1 : 2} onCancel={reset} />
+        )}
+        {screen === "finished" && chosen && (
+          <FinishedStep
+            mechanic={chosen}
+            onConfirm={() => {
+              reset();
+              setJustFinished(true);
+            }}
+          />
+        )}
+      </section>
+
+      <MapView
+        className="min-h-[420px] min-w-0 flex-[999_1_480px]"
+        pins={pins}
+        chip={chip}
+        routeTo={screen === "on-the-way" || screen === "in-service" ? chosen ?? undefined : undefined}
+      />
+    </main>
+  );
+}
