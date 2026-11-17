@@ -49,6 +49,14 @@ O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "
 
 Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
 
+## Cadastro
+
+Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
+
+O que acontece depois depende da configuração **Authentication → Sign In / Providers → Email → Confirm email** do Supabase:
+- **desligada** (recomendado para o projeto): a conta entra na hora e vai para a área do perfil;
+- **ligada**: o site pede para confirmar pelo link enviado por e-mail. O envio padrão do Supabase tem limite de poucos e-mails por hora.
+
 ## Banco de dados (Supabase)
 
 | Tabela | Conteúdo |
