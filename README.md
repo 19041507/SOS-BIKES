@@ -38,6 +38,14 @@ Acesse http://localhost:3000.
 
 Todo PR vai para a `dev`. A `main` só recebe PR vindo da `dev`, seguido de uma tag de versão (`vX.Y.Z`).
 
+Todo PR passa pelo CI (GitHub Actions): checagem de tipos, lint e build. Para rodar o mesmo localmente antes de abrir o PR:
+
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
+
 ## Deploy (Vercel)
 
 O projeto usa a configuração padrão da Vercel para Next.js, sem arquivo de configuração extra. A versão do Node vem do campo `engines` do `package.json`.
