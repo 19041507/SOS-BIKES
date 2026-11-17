@@ -1,0 +1,179 @@
+// Tipos do banco no formato do `supabase gen types typescript`.
+// Mantenha em sincronia com supabase/migrations. Para regenerar a partir do projeto:
+//   npx supabase gen types typescript --project-id <id-do-projeto> > src/lib/supabase/database.types.ts
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+export type Database = {
+  public: {
+    Tables: {
+      perfis: {
+        Row: {
+          id: string;
+          tipo: Database["public"]["Enums"]["tipo_perfil"];
+          nome: string;
+          telefone: string | null;
+          oficina: string | null;
+          disponivel: boolean;
+          criado_em: string;
+        };
+        Insert: {
+          id: string;
+          tipo?: Database["public"]["Enums"]["tipo_perfil"];
+          nome: string;
+          telefone?: string | null;
+          oficina?: string | null;
+          disponivel?: boolean;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          tipo?: Database["public"]["Enums"]["tipo_perfil"];
+          nome?: string;
+          telefone?: string | null;
+          oficina?: string | null;
+          disponivel?: boolean;
+          criado_em?: string;
+        };
+        Relationships: [];
+      };
+      chamados: {
+        Row: {
+          id: string;
+          ciclista_id: string;
+          mecanico_id: string;
+          categoria: Database["public"]["Enums"]["categoria_defeito"];
+          detalhes: string | null;
+          endereco: string;
+          status: Database["public"]["Enums"]["status_chamado"];
+          estimativa: number | null;
+          tempo_chegada_min: number | null;
+          valor_final: number | null;
+          comissao: number | null;
+          motivo_variacao: string | null;
+          motivo_cancelamento: string | null;
+          criado_em: string;
+          aceito_em: string | null;
+          confirmado_em: string | null;
+          chegada_em: string | null;
+          concluido_em: string | null;
+          encerrado_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          ciclista_id: string;
+          mecanico_id: string;
+          categoria: Database["public"]["Enums"]["categoria_defeito"];
+          detalhes?: string | null;
+          endereco: string;
+          status?: Database["public"]["Enums"]["status_chamado"];
+          estimativa?: number | null;
+          tempo_chegada_min?: number | null;
+          valor_final?: number | null;
+          motivo_variacao?: string | null;
+          motivo_cancelamento?: string | null;
+          criado_em?: string;
+          aceito_em?: string | null;
+          confirmado_em?: string | null;
+          chegada_em?: string | null;
+          concluido_em?: string | null;
+          encerrado_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          ciclista_id?: string;
+          mecanico_id?: string;
+          categoria?: Database["public"]["Enums"]["categoria_defeito"];
+          detalhes?: string | null;
+          endereco?: string;
+          status?: Database["public"]["Enums"]["status_chamado"];
+          estimativa?: number | null;
+          tempo_chegada_min?: number | null;
+          valor_final?: number | null;
+          motivo_variacao?: string | null;
+          motivo_cancelamento?: string | null;
+          criado_em?: string;
+          aceito_em?: string | null;
+          confirmado_em?: string | null;
+          chegada_em?: string | null;
+          concluido_em?: string | null;
+          encerrado_em?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chamados_ciclista_id_fkey";
+            columns: ["ciclista_id"];
+            isOneToOne: false;
+            referencedRelation: "perfis";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chamados_mecanico_id_fkey";
+            columns: ["mecanico_id"];
+            isOneToOne: false;
+            referencedRelation: "perfis";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      avaliacoes: {
+        Row: {
+          chamado_id: string;
+          nota: number;
+          comentario: string | null;
+          gorjeta: number | null;
+          criado_em: string;
+        };
+        Insert: {
+          chamado_id: string;
+          nota: number;
+          comentario?: string | null;
+          gorjeta?: number | null;
+          criado_em?: string;
+        };
+        Update: {
+          chamado_id?: string;
+          nota?: number;
+          comentario?: string | null;
+          gorjeta?: number | null;
+          criado_em?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_chamado_id_fkey";
+            columns: ["chamado_id"];
+            isOneToOne: true;
+            referencedRelation: "chamados";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+    };
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
+    Enums: {
+      tipo_perfil: "ciclista" | "mecanico";
+      categoria_defeito: "pneu" | "corrente" | "freio" | "roda" | "selim";
+      status_chamado:
+        | "aguardando"
+        | "aceito"
+        | "a_caminho"
+        | "em_atendimento"
+        | "concluido"
+        | "recusado"
+        | "cancelado"
+        | "expirado";
+    };
+    CompositeTypes: { [_ in never]: never };
+  };
+};
+
+type PublicSchema = Database["public"];
+
+export type Tabela<Nome extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][Nome]["Row"];
+export type Enum<Nome extends keyof PublicSchema["Enums"]> = PublicSchema["Enums"][Nome];
+
+export type Perfil = Tabela<"perfis">;
+export type Chamado = Tabela<"chamados">;
+export type Avaliacao = Tabela<"avaliacoes">;
+export type StatusChamado = Enum<"status_chamado">;
