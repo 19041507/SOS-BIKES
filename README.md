@@ -32,6 +32,25 @@ Acesse http://localhost:3000.
 
 ## Organização do repositório
 
-- `main`: versão estável.
-- `dev`: integração das funcionalidades.
-- `feat/*`, `fix/*`: uma branch por funcionalidade ou correção, criada a partir da `dev`.
+- `main`: produção. Só recebe a `dev` depois de testada.
+- `dev`: integração e testes.
+- `feat/*`, `fix/*`, `chore/*`: uma branch por funcionalidade ou correção, criada a partir da `dev`.
+
+Todo PR vai para a `dev`. A `main` só recebe PR vindo da `dev`, seguido de uma tag de versão (`vX.Y.Z`).
+
+## Deploy (Vercel)
+
+O projeto usa a configuração padrão da Vercel para Next.js, sem arquivo de configuração extra. A versão do Node vem do campo `engines` do `package.json`.
+
+| Branch | Ambiente |
+|---|---|
+| `main` | Produção (site oficial) |
+| `dev` | Preview (ambiente de teste) |
+| PRs e demais branches | Preview com link próprio, comentado no PR |
+
+### Conectar o repositório (uma vez)
+
+1. Em [vercel.com/new](https://vercel.com/new), importar `19041507/SOS-BIKES` (autorizar o app da Vercel no GitHub, se pedir).
+2. Framework: Next.js (detectado automaticamente). Manter os comandos padrão.
+3. Em **Settings → Git**, conferir que a **Production Branch** é `main`.
+4. Opcional: em **Settings → Domains**, adicionar um domínio para a branch `dev` (ex.: `dev-sos-bikes.vercel.app`) para ter um link fixo do ambiente de teste.
