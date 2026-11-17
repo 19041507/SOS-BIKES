@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition, type FormEvent } from "react";
+import { entrar } from "../_actions/auth";
 
 type Profile = "ciclista" | "mecanico";
 
@@ -11,12 +11,13 @@ const PROFILES: { id: Profile; label: string }[] = [
 ];
 
 export function LoginForm() {
-  const router = useRouter();
   const [profile, setProfile] = useState<Profile>("ciclista");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,9 +25,13 @@ export function LoginForm() {
     if (!/^\S+@\S+\.\S+$/.test(email)) nextErrors.email = "Informe um e-mail válido.";
     if (!password) nextErrors.password = "Informe sua senha.";
     setErrors(nextErrors);
+    setLoginError(null);
     if (Object.keys(nextErrors).length > 0) return;
-    // Sistema fictício: qualquer e-mail e senha preenchidos entram no perfil escolhido.
-    router.push(`/${profile}`);
+    startTransition(async () => {
+      // Em caso de sucesso, a action redireciona para a área do perfil.
+      const result = await entrar({ email, senha: password, perfil: profile });
+      setLoginError(result.erro);
+    });
   }
 
   return (
@@ -101,11 +106,18 @@ export function LoginForm() {
         {errors.password && <p id="password-error" className="text-[13px] text-danger">{errors.password}</p>}
       </div>
 
+      {loginError && (
+        <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-danger">
+          {loginError}
+        </p>
+      )}
+
       <button
         type="submit"
-        className="mt-1 h-13 rounded-xl bg-brand text-base font-semibold text-white transition-colors hover:bg-brand-dark focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        disabled={pending}
+        className="mt-1 h-13 rounded-xl bg-brand text-base font-semibold text-white transition-colors hover:bg-brand-dark focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
       >
-        Entrar
+        {pending ? "Entrando…" : "Entrar"}
       </button>
     </form>
   );

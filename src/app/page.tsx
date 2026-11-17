@@ -1,10 +1,16 @@
+import { Suspense } from "react";
+import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { BrandPanel } from "./_components/BrandPanel";
 import { LoginForm } from "./_components/LoginForm";
+import { RedirecionarSeLogado } from "./_components/RedirecionarSeLogado";
 
 export default function LoginPage() {
   return (
     <main className="grid min-h-dvh flex-1 lg:grid-cols-2">
+      <Suspense fallback={null}>
+        <RedirecionarSeLogado />
+      </Suspense>
       <section className="flex flex-col justify-center bg-white px-6 py-12 sm:px-12">
         <div className="mx-auto flex w-full max-w-sm flex-col gap-8">
           <div className="lg:hidden">
@@ -17,6 +23,12 @@ export default function LoginPage() {
             </p>
           </div>
           <LoginForm />
+          <p className="text-center text-[15px] text-muted">
+            Não tem conta?{" "}
+            <Link href="/cadastro" className="font-semibold text-brand hover:text-brand-dark">
+              Cadastre-se
+            </Link>
+          </p>
         </div>
       </section>
       <BrandPanel />
