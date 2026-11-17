@@ -1,9 +1,9 @@
 type HomeStepProps = {
-  finished: boolean;
+  notice: string | null;
   onStart: () => void;
 };
 
-export function HomeStep({ finished, onStart }: HomeStepProps) {
+export function HomeStep({ notice, onStart }: HomeStepProps) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm font-semibold text-ok">Socorro sobre duas rodas</p>
@@ -24,9 +24,9 @@ export function HomeStep({ finished, onStart }: HomeStepProps) {
         </svg>
         Preciso de socorro
       </button>
-      {finished && (
+      {notice && (
         <div role="status" className="rounded-xl bg-ok-soft px-4 py-3.5 text-[15px] font-medium text-ok-dark">
-          Assistência finalizada. Obrigado pela avaliação!
+          {notice}
         </div>
       )}
     </div>

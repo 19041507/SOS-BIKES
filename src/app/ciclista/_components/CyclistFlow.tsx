@@ -35,7 +35,8 @@ export function CyclistFlow() {
   const [chosen, setChosen] = useState<Mechanic | null>(null);
   const [declinedIds, setDeclinedIds] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
-  const [justFinished, setJustFinished] = useState(false);
+  const [homeNotice, setHomeNotice] = useState<string | null>(null);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   useEffect(() => {
     if (screen === "waiting" && chosen) {
@@ -51,6 +52,8 @@ export function CyclistFlow() {
       }, MECHANIC_RESPONSE);
       return () => clearTimeout(timer);
     }
+    // A simulação fica parada enquanto o ciclista decide se cancela.
+    if (confirmingCancel) return;
     if (screen === "on-the-way") {
       const timer = setTimeout(() => setScreen("in-service"), TRAVEL_TIME);
       return () => clearTimeout(timer);
@@ -59,13 +62,13 @@ export function CyclistFlow() {
       const timer = setTimeout(() => setScreen("finished"), SERVICE_TIME);
       return () => clearTimeout(timer);
     }
-  }, [screen, chosen]);
+  }, [screen, chosen, confirmingCancel]);
 
   useEffect(() => {
-    if (!justFinished) return;
-    const timer = setTimeout(() => setJustFinished(false), 5000);
+    if (!homeNotice) return;
+    const timer = setTimeout(() => setHomeNotice(null), 5000);
     return () => clearTimeout(timer);
-  }, [justFinished]);
+  }, [homeNotice]);
 
   const category = categories.find((item) => item.id === categoryId);
   const available = mechanics.filter((mechanic) => !declinedIds.includes(mechanic.id));
@@ -100,9 +103,9 @@ export function CyclistFlow() {
       <section className="flex min-w-0 flex-[1_1_380px] flex-col gap-4 rounded-2xl border border-line bg-white p-6 md:max-w-[480px]">
         {screen === "home" && (
           <HomeStep
-            finished={justFinished}
+            notice={homeNotice}
             onStart={() => {
-              setJustFinished(false);
+              setHomeNotice(null);
               setScreen("category");
             }}
           />
@@ -145,14 +148,23 @@ export function CyclistFlow() {
           />
         )}
         {(screen === "on-the-way" || screen === "in-service") && chosen && (
-          <TrackingStep mechanic={chosen} stage={screen === "on-the-way" ? 1 : 2} onCancel={reset} />
+          <TrackingStep
+            mechanic={chosen}
+            stage={screen === "on-the-way" ? 1 : 2}
+            onConfirmingCancelChange={setConfirmingCancel}
+            onCancel={() => {
+              setConfirmingCancel(false);
+              reset();
+              setHomeNotice("Chamado cancelado.");
+            }}
+          />
         )}
         {screen === "finished" && chosen && (
           <FinishedStep
             mechanic={chosen}
             onConfirm={() => {
               reset();
-              setJustFinished(true);
+              setHomeNotice("Assistência finalizada. Obrigado pela avaliação!");
             }}
           />
         )}
