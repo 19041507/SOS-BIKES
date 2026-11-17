@@ -42,6 +42,12 @@ export function AppHeader({ links, user, badge }: AppHeaderProps) {
             {user.initials}
           </span>
           <span className="text-[15px] font-medium">{user.name}</span>
+          <Link
+            href="/"
+            className="ml-2 rounded-lg px-3 py-2 text-sm font-semibold text-subtle hover:bg-surface hover:text-ink"
+          >
+            Sair
+          </Link>
         </div>
       </div>
     </header>
