@@ -41,7 +41,7 @@ Todo PR vai para a `dev`. A `main` só recebe PR vindo da `dev`, seguido de uma 
 Todo PR passa pelo CI (GitHub Actions): checagem de tipos, lint e build. Para rodar o mesmo localmente antes de abrir o PR:
 
 ```bash
-npx tsc --noEmit
+npm run typecheck
 npm run lint
 npm run build
 ```
