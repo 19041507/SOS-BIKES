@@ -1,0 +1,9 @@
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+export function formatBRL(value: number) {
+  return brl.format(value);
+}
+
+export function parseBRL(value: string) {
+  return Number(value.replace(/\./g, "").replace(",", ".")) || 0;
+}
