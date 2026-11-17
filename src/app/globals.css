@@ -29,3 +29,65 @@ body {
   background: var(--color-surface);
   color: var(--color-ink);
 }
+
+.route-animated {
+  animation: route-dash 1.2s linear infinite;
+}
+
+.pulse-ring {
+  transform-origin: center;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* Mesmo percurso da rota em BrandPanel (ROUTE) */
+.mechanic-move {
+  left: 78%;
+  top: 18%;
+  animation: mechanic-move 8s ease-in-out infinite;
+}
+
+@keyframes mechanic-move {
+  0%,
+  8% {
+    left: 78%;
+    top: 18%;
+  }
+  24% {
+    left: 60%;
+    top: 18%;
+  }
+  62% {
+    left: 60%;
+    top: 70%;
+  }
+  80%,
+  100% {
+    left: 30%;
+    top: 70%;
+  }
+}
+
+@keyframes route-dash {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-animated,
+  .pulse-ring,
+  .mechanic-move {
+    animation: none;
+  }
+}
