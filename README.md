@@ -30,6 +30,42 @@ npm run dev
 
 Acesse http://localhost:3000.
 
+Para usar o banco localmente, crie um `.env.local` (não vai para o Git) com os mesmos valores configurados na Vercel:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://<id-do-projeto>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+Os dois valores ficam no painel do Supabase, no botão **Connect** da página inicial do projeto. Nunca use a **Secret key** (`sb_secret_...`) no front.
+
+## Banco de dados (Supabase)
+
+| Tabela | Conteúdo |
+|---|---|
+| `perfis` | Um por usuário do Auth: tipo (ciclista ou mecânico), nome, telefone, oficina e disponibilidade. Criado automaticamente no cadastro. |
+| `chamados` | Pedido do ciclista para o mecânico escolhido, com status, estimativa, valor final, comissão de 10% (calculada pelo banco) e o horário de cada etapa. |
+| `avaliacoes` | Nota, comentário e gorjeta registrada, uma por chamado concluído. |
+
+Status do chamado: `aguardando` → `aceito` → `a_caminho` → `em_atendimento` → `concluido`, ou encerrado como `recusado`, `cancelado` ou `expirado`.
+
+O próprio banco garante as regras de negócio, mesmo que alguém chame a API direto:
+- cada pessoa só vê os próprios chamados; ciclistas veem os mecânicos, e cada lado vê o contato da outra pessoa de um chamado em comum;
+- só o mecânico aceita, recusa, informa preço e tempo, chega e conclui; só o ciclista confirma, cancela e avalia;
+- aceitar exige preço e tempo; valor final diferente da estimativa exige motivo; cancelar exige motivo;
+- um ciclista tem no máximo um chamado em andamento;
+- ninguém troca o próprio tipo de perfil.
+
+O ciclista e o mecânico recebem as mudanças de status em tempo real (Supabase Realtime na tabela `chamados`).
+
+### Configurar o banco (uma vez)
+
+1. **Estrutura:** no painel do Supabase, abrir **SQL Editor**, colar o conteúdo de `supabase/migrations/20261117000000_estrutura_inicial.sql` e clicar em **Run**.
+2. **Contas de demonstração:** em **Authentication → Users → Add user → Create new user**, criar uma conta para o ciclista e outra para o mecânico, com **Auto Confirm User** marcado.
+3. **Perfis e histórico:** abrir `supabase/scripts/contas-de-demonstracao.sql`, trocar os dois e-mails do topo pelos usados no passo 2, colar no **SQL Editor** e clicar em **Run**. A mensagem final confirma as contas e os 4 chamados de histórico.
+
+Uma mudança no banco é sempre uma migration nova em `supabase/migrations` (nunca editar uma já aplicada), acompanhada da atualização de `src/lib/supabase/database.types.ts`.
+
 ## Organização do repositório
 
 - `main`: produção. Só recebe a `dev` depois de testada.
