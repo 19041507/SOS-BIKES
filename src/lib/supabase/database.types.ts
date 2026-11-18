@@ -150,7 +150,20 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      mecanicos_disponiveis: {
+        Args: never;
+        Returns: {
+          id: string;
+          nome: string;
+          oficina: string | null;
+          telefone: string | null;
+          media: number | null;
+          avaliacoes: number;
+          atendimentos: number;
+        }[];
+      };
+    };
     Enums: {
       tipo_perfil: "ciclista" | "mecanico";
       categoria_defeito: "pneu" | "corrente" | "freio" | "roda" | "selim";
