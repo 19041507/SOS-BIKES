@@ -9,6 +9,7 @@ export default function MechanicLayout({ children }: LayoutProps<"/mecanico">) {
         links={[
           { href: "/mecanico", label: "Chamados", exato: true },
           { href: "/mecanico/historico", label: "Histórico" },
+          { href: "/mecanico/perfil", label: "Meu perfil" },
         ]}
       >
         {children}
