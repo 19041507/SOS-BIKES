@@ -6,6 +6,7 @@ import type { Enum } from "@/lib/supabase/database.types";
 import { AppHeader } from "./AppHeader";
 import { Logo } from "./Logo";
 import { PerfilProvider } from "./PerfilProvider";
+import { Toaster } from "./ui/Toaster";
 
 type AreaLogadaProps = {
   tipo: Enum<"tipo_perfil">;
@@ -32,7 +33,9 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
         links={links}
         user={{ initials: iniciais(perfil.nome), name: nome }}
       />
-      <PerfilProvider perfil={perfil}>{children}</PerfilProvider>
+      <PerfilProvider perfil={perfil}>
+        <Toaster>{children}</Toaster>
+      </PerfilProvider>
     </>
   );
 }

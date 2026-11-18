@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { StepHeader } from "./StepHeader";
+import { Button } from "@/components/ui/Button";
 
 type LocationStepProps = {
   categoryLabel: string;
@@ -53,13 +54,12 @@ export function LocationStep({ categoryLabel, address, onAddressChange, onBack, 
       <p className="text-sm text-muted">
         Problema informado: <strong className="text-brand">{categoryLabel}</strong>
       </p>
-      <button
-        type="button"
+      <Button
+        size="lg"
         onClick={confirm}
-        className="h-14 rounded-xl bg-brand text-base font-semibold text-white hover:bg-brand-dark"
       >
         Buscar mecânicos disponíveis
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { formatBRL } from "@/lib/money";
+import { Button } from "@/components/ui/Button";
 
 type CloseJobProps = {
   estimate: number;
@@ -56,14 +57,14 @@ export function CloseJob({
           <p className="text-[13px] text-subtle">A ciclista verá o valor final e o motivo informado.</p>
         </div>
       )}
-      <button
-        type="button"
+      <Button
+        variant="success"
+        size="lg"
         disabled={!canFinish || busy}
         onClick={onFinish}
-        className="h-14 rounded-xl bg-ok text-base font-semibold text-white hover:bg-ok-dark disabled:cursor-not-allowed disabled:bg-[#a9bcd8]"
       >
         {busy ? "Concluindo…" : "Concluir atendimento"}
-      </button>
+      </Button>
     </div>
   );
 }

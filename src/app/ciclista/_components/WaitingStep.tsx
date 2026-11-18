@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
+import { Button } from "@/components/ui/Button";
 
 type WaitingStepProps = {
   chamado: ChamadoCompleto;
@@ -48,14 +49,14 @@ export function WaitingStep({ chamado, limitSeconds, cancelling, onCancel }: Wai
       <p className="text-[13px] text-subtle">
         Se não houver resposta em {Math.round(limitSeconds / 60)} minuto{limitSeconds >= 120 ? "s" : ""}, você volta para a lista.
       </p>
-      <button
-        type="button"
+      <Button
+        variant="danger-link"
+        size="md"
         disabled={cancelling}
         onClick={onCancel}
-        className="h-11 text-[15px] font-semibold text-danger disabled:opacity-60"
       >
         {cancelling ? "Cancelando…" : "Cancelar solicitação"}
-      </button>
+      </Button>
     </div>
   );
 }

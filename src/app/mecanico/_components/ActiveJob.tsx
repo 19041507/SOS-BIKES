@@ -3,6 +3,7 @@ import { rotuloCategoria } from "@/lib/categorias";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { formatBRL } from "@/lib/money";
 import { iniciais, linksDeContato, primeiroNome } from "@/lib/pessoas";
+import { Button } from "@/components/ui/Button";
 
 type ActiveJobProps = {
   chamado: ChamadoCompleto;
@@ -49,14 +50,13 @@ export function ActiveJob({ chamado, mechanicName, busy, onNext }: ActiveJobProp
       ) : (
         <p className="text-sm text-muted">Este ciclista não cadastrou telefone.</p>
       )}
-      <button
-        type="button"
+      <Button
+        size="lg"
         disabled={busy}
         onClick={onNext}
-        className="h-14 rounded-xl bg-brand text-base font-semibold text-white hover:bg-brand-dark disabled:cursor-wait disabled:opacity-70"
       >
         {aCaminho ? "Cheguei ao local" : "Concluir atendimento"}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePerfil } from "@/components/PerfilProvider";
+import { useToast } from "@/components/ui/Toaster";
+import { rotuloCategoria } from "@/lib/categorias";
 import {
   PRAZO_RESPOSTA,
   buscarChamado,
@@ -35,6 +37,9 @@ function chamadoEmFoco(chamados: ChamadoCompleto[]) {
 
 export function MechanicPanel() {
   const perfil = usePerfil();
+  const avisar = useToast();
+  /** Chamados já mostrados, para avisar só dos novos (null = ainda não carregou a primeira vez). */
+  const vistos = useRef<Set<string> | null>(null);
   const [online, setOnline] = useState(perfil.disponivel);
   const [chamados, setChamados] = useState<ChamadoCompleto[] | null>(null);
   const [resumo, setResumo] = useState<Resumo | null>(null);
@@ -71,12 +76,18 @@ export function MechanicPanel() {
         }
         setFechando(false);
       }
+      if (vistos.current) {
+        for (const novo of lista.filter((c) => c.status === "aguardando" && !vistos.current?.has(c.id))) {
+          avisar(`Novo chamado de ${primeiroNome(novo.ciclista?.nome ?? "um ciclista")}: ${rotuloCategoria(novo.categoria)}.`, "info");
+        }
+      }
+      vistos.current = new Set(lista.map((c) => c.id));
       setChamados(lista);
     } catch (e) {
       setChamados([]);
       setErro(mensagem(e));
     }
-  }, [perfil.id]);
+  }, [perfil.id, avisar]);
 
   useEffect(() => {
     emFoco.current = atual;
