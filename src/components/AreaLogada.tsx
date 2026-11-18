@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { iniciais, perfilAtual } from "@/lib/auth";
+import { perfilAtual } from "@/lib/auth";
+import { iniciais } from "@/lib/pessoas";
 import type { Enum } from "@/lib/supabase/database.types";
 import { AppHeader } from "./AppHeader";
 import { Logo } from "./Logo";
+import { PerfilProvider } from "./PerfilProvider";
 
 type AreaLogadaProps = {
   tipo: Enum<"tipo_perfil">;
@@ -30,7 +32,7 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
         links={links}
         user={{ initials: iniciais(perfil.nome), name: nome }}
       />
-      {children}
+      <PerfilProvider perfil={perfil}>{children}</PerfilProvider>
     </>
   );
 }
