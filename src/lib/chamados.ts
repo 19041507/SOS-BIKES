@@ -124,29 +124,6 @@ export async function definirDisponibilidade(perfilId: string, disponivel: boole
   if (error) throw new Error(mensagemDeErro(error));
 }
 
-/** Atendimentos concluídos hoje e a nota média do mecânico. */
-export async function resumoDoMecanico(mecanicoId: string) {
-  const inicioDoDia = new Date();
-  inicioDoDia.setHours(0, 0, 0, 0);
-  const cliente = supabase();
-  const [hoje, avaliacoes] = await Promise.all([
-    cliente
-      .from("chamados")
-      .select("valor_final, comissao")
-      .eq("mecanico_id", mecanicoId)
-      .eq("status", "concluido")
-      .gte("concluido_em", inicioDoDia.toISOString()),
-    cliente.from("avaliacoes").select("nota, chamado:chamados!inner(mecanico_id)").eq("chamado.mecanico_id", mecanicoId),
-  ]);
-  const concluidos = resultado(hoje.data, hoje.error);
-  const notas = resultado(avaliacoes.data, avaliacoes.error).map((a) => a.nota);
-  return {
-    atendimentosHoje: concluidos.length,
-    ganhosHoje: concluidos.reduce((total, c) => total + (c.valor_final ?? 0) - (c.comissao ?? 0), 0),
-    media: notas.length ? notas.reduce((a, b) => a + b, 0) / notas.length : null,
-  };
-}
-
 /**
  * Chama `aoMudar` a cada inserção ou atualização em `chamados` que o usuário pode ver
  * (o Realtime respeita o RLS). `filtro` no formato do Realtime, ex.: "mecanico_id=eq.<id>".

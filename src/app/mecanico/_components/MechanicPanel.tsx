@@ -10,21 +10,20 @@ import {
   chamadosEmAndamentoDoMecanico,
   definirDisponibilidade,
   mudarChamado,
-  resumoDoMecanico,
   useMudancasEmChamados,
   type ChamadoCompleto,
 } from "@/lib/chamados";
+import { dadosDoPainel, type DadosDoPainel } from "@/lib/dashboard-mecanico";
 import { formatBRL, parseBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
 import { AvailabilityCard } from "./AvailabilityCard";
 import { StatsCards } from "./StatsCards";
 import { EmptyState } from "./EmptyState";
+import { MechanicDashboard } from "./MechanicDashboard";
 import { IncomingCall } from "./IncomingCall";
 import { ActiveJob } from "./ActiveJob";
 import { CloseJob } from "./CloseJob";
 import { JobSummary } from "./JobSummary";
-
-type Resumo = Awaited<ReturnType<typeof resumoDoMecanico>>;
 
 function mensagem(erro: unknown) {
   return erro instanceof Error ? erro.message : "Algo deu errado. Tente de novo.";
@@ -42,7 +41,8 @@ export function MechanicPanel() {
   const vistos = useRef<Set<string> | null>(null);
   const [online, setOnline] = useState(perfil.disponivel);
   const [chamados, setChamados] = useState<ChamadoCompleto[] | null>(null);
-  const [resumo, setResumo] = useState<Resumo | null>(null);
+  const [painel, setPainel] = useState<DadosDoPainel | null>(null);
+  const [erroPainel, setErroPainel] = useState(false);
   const [concluido, setConcluido] = useState<ChamadoCompleto | null>(null);
   const [fechando, setFechando] = useState(false);
   const [estimativa, setEstimativa] = useState("");
@@ -58,7 +58,12 @@ export function MechanicPanel() {
   const aguardandoNaFila = chamados ? chamados.filter((c) => c.status === "aguardando" && c.id !== atual?.id).length : 0;
 
   const carregarResumo = useCallback(() => {
-    resumoDoMecanico(perfil.id).then(setResumo).catch(() => {});
+    dadosDoPainel(perfil.id)
+      .then((dados) => {
+        setPainel(dados);
+        setErroPainel(false);
+      })
+      .catch(() => setErroPainel(true));
   }, [perfil.id]);
 
   /** Recarrega os chamados e avisa se o que estava na tela saiu da lista (cancelado ou expirado). */
@@ -155,6 +160,8 @@ export function MechanicPanel() {
     setFechando(false);
   }
 
+  // Sem chamado na tela, a seção mostra o dashboard (cards próprios, sem o card em volta).
+  const ocioso = !concluido && chamados !== null && !atual;
   const estimativaAtual = atual?.estimativa ?? 0;
   const valorFinalNumero = parseBRL(valorFinal);
   const precoMudou = valorFinalNumero !== estimativaAtual;
@@ -163,15 +170,19 @@ export function MechanicPanel() {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-wrap items-start gap-4 p-3 sm:p-4">
       <aside className="flex w-full min-w-0 flex-col gap-3 lg:w-auto lg:max-w-[400px] lg:flex-[1_1_320px]">
-        <AvailabilityCard online={online} busy={ocupado} onToggle={alternarDisponibilidade} />
+        <AvailabilityCard online={online} busy={ocupado} hasActiveCall={Boolean(atual)} onToggle={alternarDisponibilidade} />
         <StatsCards
-          jobsToday={resumo?.atendimentosHoje ?? 0}
-          rating={resumo?.media ?? null}
-          earnedToday={resumo?.ganhosHoje ?? 0}
+          jobsToday={painel?.hoje.atendimentos ?? 0}
+          rating={painel?.media ?? null}
+          earnedToday={painel?.hoje.liquido ?? 0}
         />
       </aside>
 
-      <section className="flex min-h-[420px] w-full min-w-0 flex-col gap-4 rounded-2xl border border-line bg-white p-5 sm:p-6 lg:w-auto lg:flex-[999_1_480px]">
+      <section
+        className={`flex w-full min-w-0 flex-col gap-4 lg:w-auto lg:flex-[999_1_480px] ${
+          ocioso ? "" : "min-h-[420px] rounded-2xl border border-line bg-white p-5 sm:p-6"
+        }`}
+      >
         {aviso && (
           <p role="status" className="rounded-xl bg-warn-soft px-4 py-3 text-sm font-medium text-warn">
             {aviso}
@@ -200,16 +211,8 @@ export function MechanicPanel() {
           />
         )}
 
-        {!concluido && chamados && !atual && (
-          <EmptyState
-            live={online}
-            title={online ? "Aguardando chamados" : "Você está indisponível"}
-            description={
-              online
-                ? "Você será avisado aqui quando um ciclista escolher você."
-                : "Ative a disponibilidade para aparecer na lista dos ciclistas."
-            }
-          />
+        {ocioso && (
+          <MechanicDashboard dados={painel} erro={erroPainel} online={online} busy={ocupado} onGoOnline={alternarDisponibilidade} />
         )}
 
         {!concluido && atual?.status === "aguardando" && (

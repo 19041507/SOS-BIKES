@@ -22,7 +22,7 @@ export function StatsCards({ jobsToday, rating, earnedToday }: StatsCardsProps) 
         <p className="text-[13px] text-subtle">Avaliação</p>
         <p className="mt-1 text-xl font-bold tabular-nums">
           {rating === null ? (
-            "—"
+            <span className="text-sm font-medium text-subtle">Sem avaliações ainda</span>
           ) : (
             <>
               <span className="text-star" aria-hidden="true">★</span> {rating.toFixed(1).replace(".", ",")}
