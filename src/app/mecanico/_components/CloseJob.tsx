@@ -1,4 +1,5 @@
 import { formatBRL } from "@/lib/money";
+import { Button } from "@/components/ui/Button";
 
 type CloseJobProps = {
   estimate: number;
@@ -6,6 +7,7 @@ type CloseJobProps = {
   reason: string;
   priceChanged: boolean;
   canFinish: boolean;
+  busy: boolean;
   onFinalPriceChange: (value: string) => void;
   onReasonChange: (value: string) => void;
   onFinish: () => void;
@@ -17,6 +19,7 @@ export function CloseJob({
   reason,
   priceChanged,
   canFinish,
+  busy,
   onFinalPriceChange,
   onReasonChange,
   onFinish,
@@ -54,14 +57,14 @@ export function CloseJob({
           <p className="text-[13px] text-subtle">A ciclista verá o valor final e o motivo informado.</p>
         </div>
       )}
-      <button
-        type="button"
-        disabled={!canFinish}
+      <Button
+        variant="success"
+        size="lg"
+        disabled={!canFinish || busy}
         onClick={onFinish}
-        className="h-14 rounded-xl bg-ok text-base font-semibold text-white hover:bg-ok-dark disabled:cursor-not-allowed disabled:bg-[#a9bcd8]"
       >
-        Concluir atendimento
-      </button>
+        {busy ? "Concluindo…" : "Concluir atendimento"}
+      </Button>
     </div>
   );
 }

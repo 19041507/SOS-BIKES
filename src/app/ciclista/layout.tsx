@@ -7,8 +7,9 @@ export default function CyclistLayout({ children }: LayoutProps<"/ciclista">) {
       <AreaLogada
         tipo="ciclista"
         links={[
-          { href: "/ciclista", label: "Pedir socorro", active: true },
-          { href: "/ciclista", label: "Meus chamados" },
+          { href: "/ciclista", label: "Pedir socorro", exato: true },
+          { href: "/ciclista/chamados", label: "Meus chamados" },
+          { href: "/ciclista/perfil", label: "Meu perfil" },
         ]}
       >
         {children}

@@ -7,7 +7,9 @@ type MapViewProps = {
   className?: string;
 };
 
-const USER = { x: 45, y: 55 };
+/** Onde o ciclista aparece no mapa ilustrativo, em %. */
+export const POSICAO_DO_CICLISTA = { x: 45, y: 55 };
+const USER = POSICAO_DO_CICLISTA;
 
 // Mapa ilustrativo: o projeto é acadêmico e não usa um serviço de mapas real.
 export function MapView({ pins, chip, routeTo, className = "" }: MapViewProps) {
@@ -51,7 +53,7 @@ export function MapView({ pins, chip, routeTo, className = "" }: MapViewProps) {
         <span
           key={pin.id}
           style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-          className="absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-white bg-ok text-[13px] font-bold text-white shadow-md"
+          className="absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-white bg-ok text-[13px] font-bold text-white shadow-md transition-[left,top] duration-1000 ease-linear motion-reduce:transition-none"
         >
           {pin.initials}
         </span>
@@ -67,4 +69,17 @@ export function MapView({ pins, chip, routeTo, className = "" }: MapViewProps) {
       </span>
     </section>
   );
+}
+
+/**
+ * Posição ilustrativa e estável para um pin, a partir do id da pessoa.
+ * Provisória até o mapa real (#22): evita o centro, onde fica o ciclista.
+ */
+export function posicaoNoMapa(id: string) {
+  let hash = 0;
+  for (const letra of id) hash = (hash * 31 + letra.charCodeAt(0)) >>> 0;
+  const x = 12 + (hash % 76);
+  const y = 12 + (Math.floor(hash / 76) % 76);
+  const pertoDoCentro = Math.abs(x - USER.x) < 14 && Math.abs(y - USER.y) < 14;
+  return pertoDoCentro ? { x: (x + 40) % 76 + 12, y } : { x, y };
 }

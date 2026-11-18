@@ -7,8 +7,9 @@ export default function MechanicLayout({ children }: LayoutProps<"/mecanico">) {
       <AreaLogada
         tipo="mecanico"
         links={[
-          { href: "/mecanico", label: "Chamados", active: true },
-          { href: "/mecanico", label: "Histórico" },
+          { href: "/mecanico", label: "Chamados", exato: true },
+          { href: "/mecanico/historico", label: "Histórico" },
+          { href: "/mecanico/perfil", label: "Meu perfil" },
         ]}
       >
         {children}
