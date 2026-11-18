@@ -3,7 +3,7 @@
 import { useState, useTransition, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { cadastrar, type ResultadoDoCadastro } from "../../_actions/auth";
-import { SENHA_MINIMA, emailValido, normalizarTelefone } from "@/lib/cadastro";
+import { SENHA_MINIMA, emailValido, formatarTelefone, normalizarTelefone } from "@/lib/cadastro";
 
 type Profile = "ciclista" | "mecanico";
 type Campo = "nome" | "telefone" | "oficina" | "email" | "senha";
@@ -13,15 +13,6 @@ const PROFILES: { id: Profile; label: string }[] = [
   { id: "ciclista", label: "Sou ciclista" },
   { id: "mecanico", label: "Sou mecânico" },
 ];
-
-/** Digitação livre → "(81) 99999-0000". */
-function formatarTelefone(valor: string) {
-  const d = valor.replace(/\D/g, "").slice(0, 11);
-  if (d.length <= 2) return d.length ? `(${d}` : "";
-  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-}
 
 const inputClass =
   "h-12 w-full rounded-xl border border-field bg-white px-3.5 text-[15px] outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger";

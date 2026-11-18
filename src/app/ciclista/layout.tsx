@@ -9,6 +9,7 @@ export default function CyclistLayout({ children }: LayoutProps<"/ciclista">) {
         links={[
           { href: "/ciclista", label: "Pedir socorro", exato: true },
           { href: "/ciclista/chamados", label: "Meus chamados" },
+          { href: "/ciclista/perfil", label: "Meu perfil" },
         ]}
       >
         {children}
