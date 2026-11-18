@@ -49,6 +49,14 @@ export async function buscarChamado(id: string) {
   return resultado(data, error) as ChamadoCompleto;
 }
 
+/** Todos os chamados da pessoa (como ciclista ou como mecânico), do mais recente para o mais antigo. */
+export async function listarChamados(filtro: { ciclistaId: string } | { mecanicoId: string }) {
+  const consulta = supabase().from("chamados").select(COLUNAS).order("criado_em", { ascending: false }).limit(200);
+  const { data, error } =
+    "ciclistaId" in filtro ? await consulta.eq("ciclista_id", filtro.ciclistaId) : await consulta.eq("mecanico_id", filtro.mecanicoId);
+  return resultado(data, error) as ChamadoCompleto[];
+}
+
 /**
  * Chamado que o ciclista deve ver ao abrir a tela: o que está em andamento ou,
  * se não houver, um concluído nas últimas 24 h que ainda não foi avaliado.
