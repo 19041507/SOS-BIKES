@@ -53,9 +53,23 @@ Para testar, use as contas de demonstração criadas em **Banco de dados → Con
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
 
-O que acontece depois depende da configuração **Authentication → Sign In / Providers → Email → Confirm email** do Supabase:
-- **desligada** (recomendado para o projeto): a conta entra na hora e vai para a área do perfil;
-- **ligada**: o site pede para confirmar pelo link enviado por e-mail. O envio padrão do Supabase tem limite de poucos e-mails por hora.
+A confirmação de e-mail fica **ligada**: só entra quem tem acesso ao e-mail informado. O e-mail tem o visual do site e, ao clicar em "Confirmar meu e-mail", a pessoa entra direto na própria área (rota `/auth/confirmar`). Se o link estiver vencido ou já tiver sido usado, o login mostra um aviso.
+
+### Configurar o e-mail de confirmação (uma vez, no painel do Supabase)
+
+1. **Authentication → Sign In / Providers → Email**: deixar **Confirm email** ligado.
+2. **Authentication → URL Configuration**:
+   - **Site URL**: `https://sos-bikes.vercel.app`
+   - **Redirect URLs**: `https://sos-bikes.vercel.app/**`, `https://sos-bikes-*-19041507s-projects.vercel.app/**` e `http://localhost:3000/**`
+3. **Authentication → Emails → Confirm signup**:
+   - **Subject**: `Confirme seu cadastro no SOS Bikes`
+   - **Body**: colar o conteúdo de `supabase/templates/confirmar-cadastro.html`
+
+O link do e-mail sempre abre o site de produção (Site URL), inclusive para quem se cadastrou num preview: o banco é o mesmo, então a conta funciona em todos os ambientes.
+
+O envio padrão do Supabase permite poucos e-mails por hora. Para a apresentação, vale configurar um SMTP próprio (ex.: Resend, gratuito) em **Authentication → Emails → SMTP Settings**.
+
+As contas de demonstração usam e-mails que não existem; crie-as em **Authentication → Users → Add user** com **Auto Confirm User** marcado (ver **Banco de dados → Configurar o banco**).
 
 ## Banco de dados (Supabase)
 
