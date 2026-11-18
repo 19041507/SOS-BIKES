@@ -19,7 +19,7 @@ import {
 } from "@/lib/chamados";
 import { formatBRL } from "@/lib/money";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
-import { HomeStep } from "./HomeStep";
+import { CyclistDashboard } from "./CyclistDashboard";
 import { CategoryStep } from "./CategoryStep";
 import { LocationStep } from "./LocationStep";
 import { MechanicListStep } from "./MechanicListStep";
@@ -124,6 +124,13 @@ export function CyclistFlow() {
     [carregarMecanicos, avisar],
   );
 
+  // A tela inicial já mostra quem está disponível (a lista começa como null = carregando).
+  useEffect(() => {
+    listarMecanicosDisponiveis()
+      .then(setMecanicos)
+      .catch(() => setMecanicos([]));
+  }, []);
+
   useEffect(() => {
     chamadoAtualDoCiclista(perfil.id)
       .then(aplicar)
@@ -179,6 +186,7 @@ export function CyclistFlow() {
     setAviso(null);
     setErro(null);
     if (avisoParaInicio) setAvisoInicio(avisoParaInicio);
+    carregarMecanicos();
   }
 
   function voltarParaLista(avisoDaLista?: string) {
@@ -217,9 +225,33 @@ export function CyclistFlow() {
     pins = (disponiveis ?? []).map((m) => ({ id: m.id, initials: iniciais(m.nome), ...posicaoNoMapa(m.id) }));
     chip =
       disponiveis === null
-        ? "Mecânicos disponíveis aparecem na etapa 3"
-        : `${disponiveis.length} ${disponiveis.length === 1 ? "mecânico disponível" : "mecânicos disponíveis"} agora`;
+        ? "Carregando mecânicos…"
+        : disponiveis.length === 0
+          ? "Nenhum mecânico disponível agora"
+          : `${disponiveis.length} ${disponiveis.length === 1 ? "mecânico disponível" : "mecânicos disponíveis"} agora`;
   }
+
+  if (chamado === null && draft === "home") {
+    return (
+      <CyclistDashboard
+        perfil={perfil}
+        mechanics={disponiveis}
+        notice={avisoInicio}
+        onStart={(atalho) => {
+          setAvisoInicio(null);
+          if (atalho) {
+            setCategoria(atalho);
+            setDraft("location");
+          } else {
+            setDraft("category");
+          }
+        }}
+      />
+    );
+  }
+
+  // No celular, o mapa só aparece quando mostra algo útil (a escolha do mecânico ou o chamado).
+  const mapaNoCelular = chamado || draft === "mechanics" ? "" : "hidden lg:block";
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-wrap items-stretch gap-4 p-3 sm:p-4">
@@ -232,15 +264,6 @@ export function CyclistFlow() {
           </div>
         )}
 
-        {chamado === null && draft === "home" && (
-          <HomeStep
-            notice={avisoInicio}
-            onStart={() => {
-              setAvisoInicio(null);
-              setDraft("category");
-            }}
-          />
-        )}
         {chamado === null && draft === "category" && (
           <CategoryStep
             selected={categoria}
@@ -341,7 +364,7 @@ export function CyclistFlow() {
       </section>
 
       <MapView
-        className="min-h-[260px] w-full min-w-0 sm:min-h-[360px] lg:min-h-[420px] lg:w-auto lg:flex-[999_1_480px]"
+        className={`min-h-[260px] w-full min-w-0 sm:min-h-[360px] lg:min-h-[420px] lg:w-auto lg:flex-[999_1_480px] ${mapaNoCelular}`}
         pins={pins}
         chip={chip}
         routeTo={rota}
