@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { AvisoConfirmacao } from "./_components/AvisoConfirmacao";
 import { BrandPanel } from "./_components/BrandPanel";
 import { LoginForm } from "./_components/LoginForm";
 import { RedirecionarSeLogado } from "./_components/RedirecionarSeLogado";
@@ -22,6 +23,9 @@ export default function LoginPage() {
               Acesse sua conta para pedir socorro ou atender chamados.
             </p>
           </div>
+          <Suspense fallback={null}>
+            <AvisoConfirmacao />
+          </Suspense>
           <LoginForm />
           <p className="text-center text-[15px] text-muted">
             Não tem conta?{" "}
