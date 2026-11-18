@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { formatBRL } from "@/lib/money";
+import { progressoDaChegada, useAgora } from "@/lib/movimento";
 import { iniciais, linksDeContato, primeiroNome } from "@/lib/pessoas";
 
 const STEPS = ["Confirmado", "A caminho", "Em atendimento", "Finalizado"];
@@ -25,6 +26,8 @@ export function TrackingStep({ chamado, busy, onCancel }: TrackingStepProps) {
   const nome = mecanico?.nome ?? "Mecânico";
   const stage = chamado.status === "em_atendimento" ? 2 : 1;
   const contato = linksDeContato(mecanico?.telefone ?? null);
+  const agora = useAgora();
+  const { minutosRestantes } = progressoDaChegada(chamado.confirmado_em, chamado.tempo_chegada_min, agora);
 
   return (
     <div className="flex flex-col gap-4.5">
@@ -34,14 +37,20 @@ export function TrackingStep({ chamado, busy, onCancel }: TrackingStepProps) {
           {stage === 1 ? `${primeiroNome(nome)} está a caminho` : "Atendimento em andamento"}
         </h2>
         {stage === 1 && chamado.tempo_chegada_min && (
-          <p className="mt-1 text-sm text-muted">Chegada estimada em {chamado.tempo_chegada_min} min.</p>
+          <p className="mt-1 text-sm text-muted" aria-live="polite">
+            {minutosRestantes ? `Chegada estimada em ~${minutosRestantes} min.` : "Deve chegar a qualquer momento."}
+          </p>
         )}
       </div>
 
       <ol className="flex gap-1" aria-label="Etapas do atendimento">
         {STEPS.map((label, index) => (
           <li key={label} className="flex flex-1 flex-col gap-1.5" aria-current={index === stage ? "step" : undefined}>
-            <span className={`h-1.5 rounded-full ${index <= stage ? "bg-ok" : "bg-line"}`} />
+            <span className="h-1.5 overflow-hidden rounded-full bg-line">
+              <span
+                className={`block h-full rounded-full bg-ok transition-[width] duration-700 ease-out motion-reduce:transition-none ${index <= stage ? "w-full" : "w-0"}`}
+              />
+            </span>
             <span className={`text-xs ${index === stage ? "font-bold" : "font-medium"} ${index <= stage ? "text-ok-dark" : "text-subtle"}`}>
               {label}
             </span>

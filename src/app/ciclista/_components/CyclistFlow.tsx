@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MapView, posicaoNoMapa } from "@/components/MapView";
+import { MapView, POSICAO_DO_CICLISTA, posicaoNoMapa } from "@/components/MapView";
 import { usePerfil } from "@/components/PerfilProvider";
 import { useToast } from "@/components/ui/Toaster";
 import { rotuloCategoria, type Categoria } from "@/lib/categorias";
@@ -18,6 +18,7 @@ import {
   type MecanicoDisponivel,
 } from "@/lib/chamados";
 import { formatBRL } from "@/lib/money";
+import { progressoDaChegada, useAgora, useMenosMovimento } from "@/lib/movimento";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
 import { CyclistDashboard } from "./CyclistDashboard";
 import { CategoryStep } from "./CategoryStep";
@@ -31,14 +32,17 @@ import { FinishedStep } from "./FinishedStep";
 /** Etapas antes de existir um chamado; depois, a tela segue o status do chamado no banco. */
 type Draft = "home" | "category" | "location" | "mechanics";
 
-function textoDoMapa(chamado: ChamadoCompleto, nome: string) {
+/** No caminho, o pin para em 85% do trajeto para não cobrir o ciclista. */
+const PERCURSO_MAXIMO = 0.85;
+
+function textoDoMapa(chamado: ChamadoCompleto, nome: string, minutosRestantes: number | null) {
   switch (chamado.status) {
     case "aguardando":
       return `Aguardando resposta de ${nome}`;
     case "aceito":
       return `${nome} aceitou o chamado`;
     case "a_caminho":
-      return `${nome} chega em ${chamado.tempo_chegada_min} min`;
+      return minutosRestantes ? `${nome} chega em ~${minutosRestantes} min` : `${nome} deve chegar a qualquer momento`;
     case "em_atendimento":
       return "Mecânico no local";
     default:
@@ -53,6 +57,8 @@ function mensagem(erro: unknown) {
 export function CyclistFlow() {
   const perfil = usePerfil();
   const avisar = useToast();
+  const agora = useAgora();
+  const menosMovimento = useMenosMovimento();
   /** Último chamado aplicado, para avisar só quando o status muda. */
   const ultimo = useRef<ChamadoCompleto | null>(null);
   // undefined = carregando o chamado atual
@@ -217,9 +223,16 @@ export function CyclistFlow() {
   let pins: { id: string; initials: string; x: number; y: number }[] = [];
   let rota: { x: number; y: number } | undefined;
   if (chamado) {
-    const posicao = posicaoNoMapa(chamado.mecanico_id);
+    const origem = posicaoNoMapa(chamado.mecanico_id);
+    const { progresso, minutosRestantes } = progressoDaChegada(chamado.confirmado_em, chamado.tempo_chegada_min, agora);
+    // A caminho, o pin avança em direção ao ciclista conforme o tempo estimado passa.
+    const avanco = chamado.status === "a_caminho" && !menosMovimento ? progresso * PERCURSO_MAXIMO : 0;
+    const posicao = {
+      x: origem.x + (POSICAO_DO_CICLISTA.x - origem.x) * avanco,
+      y: origem.y + (POSICAO_DO_CICLISTA.y - origem.y) * avanco,
+    };
     pins = [{ id: chamado.mecanico_id, initials: iniciais(chamado.mecanico?.nome ?? "?"), ...posicao }];
-    chip = textoDoMapa(chamado, nomeDoMecanico);
+    chip = textoDoMapa(chamado, nomeDoMecanico, minutosRestantes);
     if (chamado.status === "a_caminho" || chamado.status === "em_atendimento") rota = posicao;
   } else if (chamado === null) {
     pins = (disponiveis ?? []).map((m) => ({ id: m.id, initials: iniciais(m.nome), ...posicaoNoMapa(m.id) }));
