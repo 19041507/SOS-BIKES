@@ -1,17 +1,30 @@
 import { MapView } from "@/components/MapView";
 import { incomingRequest } from "@/data/requests";
+import { parseBRL } from "@/lib/money";
 
 type IncomingCallProps = {
   estimate: string;
   eta: string;
+  secondsLeft: number;
+  totalSeconds: number;
   onEstimateChange: (value: string) => void;
   onEtaChange: (value: string) => void;
   onDecline: () => void;
   onAccept: () => void;
 };
 
-export function IncomingCall({ estimate, eta, onEstimateChange, onEtaChange, onDecline, onAccept }: IncomingCallProps) {
-  const canAccept = estimate.trim() !== "" && eta.trim() !== "";
+export function IncomingCall({
+  estimate,
+  eta,
+  secondsLeft,
+  totalSeconds,
+  onEstimateChange,
+  onEtaChange,
+  onDecline,
+  onAccept,
+}: IncomingCallProps) {
+  const canAccept = parseBRL(estimate) > 0 && Number.isInteger(Number(eta)) && Number(eta) > 0;
+  const urgent = secondsLeft <= 15;
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -22,6 +35,25 @@ export function IncomingCall({ estimate, eta, onEstimateChange, onEtaChange, onD
         <span className="rounded-full bg-warn-soft px-3 py-1.5 text-[13px] font-semibold text-warn">
           a {incomingRequest.distance} de você
         </span>
+      </div>
+
+      <div>
+        <p className={`text-sm font-semibold tabular-nums ${urgent ? "text-danger" : "text-muted"}`}>
+          Responda em {secondsLeft} s
+        </p>
+        <div
+          role="progressbar"
+          aria-label="Tempo para responder o chamado"
+          aria-valuemin={0}
+          aria-valuemax={totalSeconds}
+          aria-valuenow={secondsLeft}
+          className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line"
+        >
+          <div
+            style={{ width: `${(secondsLeft / totalSeconds) * 100}%` }}
+            className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${urgent ? "bg-danger" : "bg-ok"}`}
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4">
@@ -42,9 +74,10 @@ export function IncomingCall({ estimate, eta, onEstimateChange, onEtaChange, onD
           <input
             id="estimate"
             inputMode="decimal"
+            placeholder="Ex.: 25,00"
             value={estimate}
             onChange={(event) => onEstimateChange(event.target.value)}
-            className="h-12 rounded-xl border border-field px-3 text-[17px] font-semibold"
+            className="h-12 rounded-xl border border-field px-3 text-[17px] font-semibold placeholder:font-normal placeholder:text-slate-400"
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -52,9 +85,10 @@ export function IncomingCall({ estimate, eta, onEstimateChange, onEtaChange, onD
           <input
             id="eta"
             inputMode="numeric"
+            placeholder="Ex.: 10"
             value={eta}
             onChange={(event) => onEtaChange(event.target.value)}
-            className="h-12 rounded-xl border border-field px-3 text-[17px] font-semibold"
+            className="h-12 rounded-xl border border-field px-3 text-[17px] font-semibold placeholder:font-normal placeholder:text-slate-400"
           />
         </div>
       </div>

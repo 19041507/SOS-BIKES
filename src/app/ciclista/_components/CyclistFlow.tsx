@@ -25,6 +25,8 @@ type Screen =
 
 // Tempos da simulação (ms)
 const MECHANIC_RESPONSE = 3000;
+/** Tempo máximo de espera pela resposta do mecânico, em segundos */
+const WAIT_LIMIT = 60;
 const TRAVEL_TIME = 6000;
 const SERVICE_TIME = 6000;
 
@@ -35,22 +37,35 @@ export function CyclistFlow() {
   const [chosen, setChosen] = useState<Mechanic | null>(null);
   const [declinedIds, setDeclinedIds] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
-  const [justFinished, setJustFinished] = useState(false);
+  const [homeNotice, setHomeNotice] = useState<string | null>(null);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   useEffect(() => {
     if (screen === "waiting" && chosen) {
-      const timer = setTimeout(() => {
+      const firstName = chosen.name.split(" ")[0];
+      const response = setTimeout(() => {
         if (chosen.declines) {
           setDeclinedIds((ids) => [...ids, chosen.id]);
-          setNotice(`${chosen.name.split(" ")[0]} não pode atender agora. Escolha outro mecânico.`);
+          setNotice(`${firstName} não pode atender agora. Escolha outro mecânico.`);
           setChosen(null);
           setScreen("mechanics");
         } else {
           setScreen("proposal");
         }
       }, MECHANIC_RESPONSE);
-      return () => clearTimeout(timer);
+      // Na simulação o mecânico sempre responde antes; o limite cobre a falta de resposta.
+      const limit = setTimeout(() => {
+        setNotice(`${firstName} não respondeu a tempo. Escolha outro mecânico.`);
+        setChosen(null);
+        setScreen("mechanics");
+      }, WAIT_LIMIT * 1000);
+      return () => {
+        clearTimeout(response);
+        clearTimeout(limit);
+      };
     }
+    // A simulação fica parada enquanto o ciclista decide se cancela.
+    if (confirmingCancel) return;
     if (screen === "on-the-way") {
       const timer = setTimeout(() => setScreen("in-service"), TRAVEL_TIME);
       return () => clearTimeout(timer);
@@ -59,13 +74,13 @@ export function CyclistFlow() {
       const timer = setTimeout(() => setScreen("finished"), SERVICE_TIME);
       return () => clearTimeout(timer);
     }
-  }, [screen, chosen]);
+  }, [screen, chosen, confirmingCancel]);
 
   useEffect(() => {
-    if (!justFinished) return;
-    const timer = setTimeout(() => setJustFinished(false), 5000);
+    if (!homeNotice) return;
+    const timer = setTimeout(() => setHomeNotice(null), 5000);
     return () => clearTimeout(timer);
-  }, [justFinished]);
+  }, [homeNotice]);
 
   const category = categories.find((item) => item.id === categoryId);
   const available = mechanics.filter((mechanic) => !declinedIds.includes(mechanic.id));
@@ -100,9 +115,9 @@ export function CyclistFlow() {
       <section className="flex min-w-0 flex-[1_1_380px] flex-col gap-4 rounded-2xl border border-line bg-white p-6 md:max-w-[480px]">
         {screen === "home" && (
           <HomeStep
-            finished={justFinished}
+            notice={homeNotice}
             onStart={() => {
-              setJustFinished(false);
+              setHomeNotice(null);
               setScreen("category");
             }}
           />
@@ -136,7 +151,7 @@ export function CyclistFlow() {
             }}
           />
         )}
-        {screen === "waiting" && chosen && <WaitingStep mechanic={chosen} onCancel={backToList} />}
+        {screen === "waiting" && chosen && <WaitingStep mechanic={chosen} limitSeconds={WAIT_LIMIT} onCancel={backToList} />}
         {screen === "proposal" && chosen && (
           <ProposalStep
             mechanic={chosen}
@@ -145,14 +160,23 @@ export function CyclistFlow() {
           />
         )}
         {(screen === "on-the-way" || screen === "in-service") && chosen && (
-          <TrackingStep mechanic={chosen} stage={screen === "on-the-way" ? 1 : 2} onCancel={reset} />
+          <TrackingStep
+            mechanic={chosen}
+            stage={screen === "on-the-way" ? 1 : 2}
+            onConfirmingCancelChange={setConfirmingCancel}
+            onCancel={() => {
+              setConfirmingCancel(false);
+              reset();
+              setHomeNotice("Chamado cancelado.");
+            }}
+          />
         )}
         {screen === "finished" && chosen && (
           <FinishedStep
             mechanic={chosen}
             onConfirm={() => {
               reset();
-              setJustFinished(true);
+              setHomeNotice("Assistência finalizada. Obrigado pela avaliação!");
             }}
           />
         )}

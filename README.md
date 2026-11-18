@@ -30,6 +30,74 @@ npm run dev
 
 Acesse http://localhost:3000.
 
+Para usar o banco localmente, crie um `.env.local` (não vai para o Git) com os mesmos valores configurados na Vercel:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://<id-do-projeto>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+Os dois valores ficam no painel do Supabase, no botão **Connect** da página inicial do projeto. Nunca use a **Secret key** (`sb_secret_...`) no front. Sem esse arquivo o site abre, mas o login responde que não está configurado.
+
+## Login
+
+O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "Sou ciclista" ou "Sou mecânico"; se a conta for do outro tipo, o login avisa qual opção escolher.
+
+- `/ciclista` só abre para contas de ciclista e `/mecanico` só para contas de mecânico. Quem não está logado volta para o login; quem já está logado e abre o login vai direto para a própria área.
+- A sessão fica em cookies e é renovada a cada requisição pelo `src/proxy.ts`.
+- **Sair** encerra a sessão e volta para o login.
+
+Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
+
+## Cadastro
+
+Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
+
+A confirmação de e-mail fica **ligada**: só entra quem tem acesso ao e-mail informado. O e-mail tem o visual do site e, ao clicar em "Confirmar meu e-mail", a pessoa entra direto na própria área (rota `/auth/confirmar`). Se o link estiver vencido ou já tiver sido usado, o login mostra um aviso.
+
+### Configurar o e-mail de confirmação (uma vez, no painel do Supabase)
+
+1. **Authentication → Sign In / Providers → Email**: deixar **Confirm email** ligado.
+2. **Authentication → URL Configuration**:
+   - **Site URL**: `https://sos-bikes.vercel.app`
+   - **Redirect URLs**: `https://sos-bikes.vercel.app/**`, `https://sos-bikes-*-19041507s-projects.vercel.app/**` e `http://localhost:3000/**`
+3. **Authentication → Emails → Confirm signup**:
+   - **Subject**: `Confirme seu cadastro no SOS Bikes`
+   - **Body**: colar o conteúdo de `supabase/templates/confirmar-cadastro.html`
+
+O link do e-mail sempre abre o site de produção (Site URL), inclusive para quem se cadastrou num preview: o banco é o mesmo, então a conta funciona em todos os ambientes.
+
+O envio padrão do Supabase permite poucos e-mails por hora. Para a apresentação, vale configurar um SMTP próprio (ex.: Resend, gratuito) em **Authentication → Emails → SMTP Settings**.
+
+As contas de demonstração usam e-mails que não existem; crie-as em **Authentication → Users → Add user** com **Auto Confirm User** marcado (ver **Banco de dados → Configurar o banco**).
+
+## Banco de dados (Supabase)
+
+| Tabela | Conteúdo |
+|---|---|
+| `perfis` | Um por usuário do Auth: tipo (ciclista ou mecânico), nome, telefone, oficina e disponibilidade. Criado automaticamente no cadastro. |
+| `chamados` | Pedido do ciclista para o mecânico escolhido, com status, estimativa, valor final, comissão de 10% (calculada pelo banco) e o horário de cada etapa. |
+| `avaliacoes` | Nota, comentário e gorjeta registrada, uma por chamado concluído. |
+
+Status do chamado: `aguardando` → `aceito` → `a_caminho` → `em_atendimento` → `concluido`, ou encerrado como `recusado`, `cancelado` ou `expirado`.
+
+O próprio banco garante as regras de negócio, mesmo que alguém chame a API direto:
+- cada pessoa só vê os próprios chamados; ciclistas veem os mecânicos, e cada lado vê o contato da outra pessoa de um chamado em comum;
+- só o mecânico aceita, recusa, informa preço e tempo, chega e conclui; só o ciclista confirma, cancela e avalia;
+- aceitar exige preço e tempo; valor final diferente da estimativa exige motivo; cancelar exige motivo;
+- um ciclista tem no máximo um chamado em andamento;
+- ninguém troca o próprio tipo de perfil.
+
+O ciclista e o mecânico recebem as mudanças de status em tempo real (Supabase Realtime na tabela `chamados`).
+
+### Configurar o banco (uma vez)
+
+1. **Estrutura:** no painel do Supabase, abrir **SQL Editor**, colar o conteúdo de `supabase/migrations/20261117000000_estrutura_inicial.sql` e clicar em **Run**.
+2. **Contas de demonstração:** em **Authentication → Users → Add user → Create new user**, criar uma conta para o ciclista e outra para o mecânico, com **Auto Confirm User** marcado.
+3. **Perfis e histórico:** abrir `supabase/scripts/contas-de-demonstracao.sql`, trocar os dois e-mails do topo pelos usados no passo 2, colar no **SQL Editor** e clicar em **Run**. A mensagem final confirma as contas e os 4 chamados de histórico.
+
+Uma mudança no banco é sempre uma migration nova em `supabase/migrations` (nunca editar uma já aplicada), acompanhada da atualização de `src/lib/supabase/database.types.ts`.
+
 ## Organização do repositório
 
 - `main`: produção. Só recebe a `dev` depois de testada.
@@ -37,6 +105,14 @@ Acesse http://localhost:3000.
 - `feat/*`, `fix/*`, `chore/*`: uma branch por funcionalidade ou correção, criada a partir da `dev`.
 
 Todo PR vai para a `dev`. A `main` só recebe PR vindo da `dev`, seguido de uma tag de versão (`vX.Y.Z`).
+
+Todo PR passa pelo CI (GitHub Actions): checagem de tipos, lint e build. Para rodar o mesmo localmente antes de abrir o PR:
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
 
 ## Deploy (Vercel)
 
