@@ -1,14 +1,28 @@
-import type { Mechanic } from "@/data/mechanics";
+import type { MecanicoDisponivel } from "@/lib/chamados";
+import { iniciais } from "@/lib/pessoas";
 import { StepHeader } from "./StepHeader";
 
 type MechanicListStepProps = {
-  mechanics: Mechanic[];
+  mechanics: MecanicoDisponivel[] | null;
   notice: string | null;
+  error: string | null;
+  requesting: string | null;
   onBack: () => void;
-  onChoose: (mechanic: Mechanic) => void;
+  onRefresh: () => void;
+  onChoose: (mechanic: MecanicoDisponivel) => void;
 };
 
-export function MechanicListStep({ mechanics, notice, onBack, onChoose }: MechanicListStepProps) {
+function Avaliacao({ mechanic }: { mechanic: MecanicoDisponivel }) {
+  if (!mechanic.avaliacoes) return <span>Novo na plataforma</span>;
+  return (
+    <span>
+      <span className="text-star" aria-hidden="true">★</span> {String(mechanic.media).replace(".", ",")}{" "}
+      ({mechanic.avaliacoes} {mechanic.avaliacoes === 1 ? "avaliação" : "avaliações"})
+    </span>
+  );
+}
+
+export function MechanicListStep({ mechanics, notice, error, requesting, onBack, onRefresh, onChoose }: MechanicListStepProps) {
   return (
     <div className="flex flex-col gap-3.5">
       <StepHeader eyebrow="Etapa 3 de 3" title="Escolha um mecânico" onBack={onBack} />
@@ -17,32 +31,64 @@ export function MechanicListStep({ mechanics, notice, onBack, onChoose }: Mechan
           {notice}
         </div>
       )}
-      {mechanics.map((mechanic) => (
-        <div key={mechanic.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line p-3.5">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-muted text-sm font-bold text-brand">
-            {mechanic.initials}
-          </span>
-          <div className="min-w-0 flex-[1_1_140px]">
-            <p className="font-semibold">{mechanic.name}</p>
-            <p className="mt-0.5 text-[13px] text-subtle">
-              {mechanic.kind} · {mechanic.distance} · <span className="text-star">★</span> {mechanic.rating} ({mechanic.reviews})
-            </p>
-          </div>
+      {error && (
+        <div role="alert" className="rounded-xl bg-red-50 px-3.5 py-3 text-sm leading-snug font-medium text-danger">
+          {error}
+        </div>
+      )}
+
+      {mechanics === null && (
+        <ul className="flex flex-col gap-3" aria-label="Carregando mecânicos">
+          {[0, 1, 2].map((item) => (
+            <li key={item} className="h-[76px] rounded-2xl bg-slate-100 motion-safe:animate-pulse" />
+          ))}
+        </ul>
+      )}
+
+      {mechanics?.length === 0 && (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-field px-4 py-8 text-center">
+          <p className="font-semibold">Nenhum mecânico disponível agora</p>
+          <p className="text-sm text-muted">Os mecânicos aparecem aqui quando ficam disponíveis no painel deles.</p>
           <button
             type="button"
-            onClick={() => onChoose(mechanic)}
-            className="h-11 rounded-xl bg-ok px-4.5 text-[15px] font-semibold text-white hover:bg-ok-dark"
+            onClick={onRefresh}
+            className="h-11 rounded-xl border border-field bg-white px-5 text-[15px] font-semibold hover:bg-surface"
           >
-            Solicitar
+            Atualizar lista
           </button>
         </div>
-      ))}
-      {mechanics.length === 0 && (
-        <p className="text-[15px] text-muted">Nenhum mecânico disponível no momento.</p>
       )}
+
+      {mechanics && mechanics.length > 0 && (
+        <ul className="flex flex-col gap-3">
+          {mechanics.map((mechanic) => (
+            <li key={mechanic.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line p-3.5">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-muted text-sm font-bold text-brand">
+                {iniciais(mechanic.nome)}
+              </span>
+              <div className="min-w-0 flex-[1_1_150px]">
+                <p className="truncate font-semibold">{mechanic.nome}</p>
+                <p className="mt-0.5 text-[13px] text-subtle">{mechanic.oficina ?? "Mecânico autônomo"}</p>
+                <p className="text-[13px] text-subtle">
+                  <Avaliacao mechanic={mechanic} />
+                  {mechanic.atendimentos > 0 && ` · ${mechanic.atendimentos} ${mechanic.atendimentos === 1 ? "atendimento" : "atendimentos"}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={requesting !== null}
+                onClick={() => onChoose(mechanic)}
+                className="h-11 w-full rounded-xl bg-ok px-5 text-[15px] font-semibold text-white hover:bg-ok-dark disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+              >
+                {requesting === mechanic.id ? "Enviando…" : "Solicitar"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <p className="text-[13px] leading-normal text-subtle">
-        O mecânico escolhido informa o preço estimado e o tempo de chegada. Você
-        confirma antes do atendimento começar.
+        O mecânico escolhido informa o preço estimado e o tempo de chegada. Você confirma antes do atendimento começar.
       </p>
     </div>
   );

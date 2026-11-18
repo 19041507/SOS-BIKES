@@ -1,10 +1,10 @@
-import { categories } from "@/data/mechanics";
+import { CATEGORIAS, type Categoria } from "@/lib/categorias";
 import { StepHeader } from "./StepHeader";
 
 type CategoryStepProps = {
-  selected: string | null;
+  selected: Categoria | null;
   details: string;
-  onSelect: (id: string) => void;
+  onSelect: (id: Categoria) => void;
   onDetailsChange: (value: string) => void;
   onBack: () => void;
   onNext: () => void;
@@ -15,7 +15,7 @@ export function CategoryStep({ selected, details, onSelect, onDetailsChange, onB
     <div className="flex flex-col gap-4">
       <StepHeader eyebrow="Etapa 1 de 3" title="Qual é o problema?" onBack={onBack} />
       <div className="grid grid-cols-2 gap-2.5">
-        {categories.map((category) => {
+        {CATEGORIAS.map((category) => {
           const isSelected = selected === category.id;
           return (
             <button
