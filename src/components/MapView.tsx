@@ -7,7 +7,9 @@ type MapViewProps = {
   className?: string;
 };
 
-const USER = { x: 45, y: 55 };
+/** Onde o ciclista aparece no mapa ilustrativo, em %. */
+export const POSICAO_DO_CICLISTA = { x: 45, y: 55 };
+const USER = POSICAO_DO_CICLISTA;
 
 // Mapa ilustrativo: o projeto é acadêmico e não usa um serviço de mapas real.
 export function MapView({ pins, chip, routeTo, className = "" }: MapViewProps) {
@@ -51,7 +53,7 @@ export function MapView({ pins, chip, routeTo, className = "" }: MapViewProps) {
         <span
           key={pin.id}
           style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-          className="absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-white bg-ok text-[13px] font-bold text-white shadow-md"
+          className="absolute flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-white bg-ok text-[13px] font-bold text-white shadow-md transition-[left,top] duration-1000 ease-linear motion-reduce:transition-none"
         >
           {pin.initials}
         </span>

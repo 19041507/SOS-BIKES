@@ -1,4 +1,4 @@
-import { formatBRL } from "@/lib/money";
+import { ValorAnimado } from "@/components/ui/ValorAnimado";
 
 type StatsCardsProps = {
   jobsToday: number;
@@ -11,7 +11,9 @@ export function StatsCards({ jobsToday, rating, earnedToday }: StatsCardsProps) 
     <div className="grid grid-cols-2 gap-2.5">
       <div className="col-span-2 rounded-xl border border-line bg-white p-4">
         <p className="text-[13px] text-subtle">Ganhos hoje</p>
-        <p className="mt-1 text-2xl font-bold tabular-nums">{formatBRL(earnedToday)}</p>
+        <p className="mt-1 text-2xl font-bold tabular-nums">
+          <ValorAnimado valor={earnedToday} />
+        </p>
         <p className="mt-0.5 text-xs text-subtle">já descontada a comissão de 10%</p>
       </div>
       <div className="rounded-xl border border-line bg-white p-4">
