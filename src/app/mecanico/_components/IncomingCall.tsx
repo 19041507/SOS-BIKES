@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { rotuloCategoria } from "@/lib/categorias";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { parseBRL } from "@/lib/money";
+import { useTituloDeAlerta } from "@/lib/movimento";
 import { primeiroNome } from "@/lib/pessoas";
 import { Button } from "@/components/ui/Button";
 
@@ -40,6 +41,7 @@ export function IncomingCall({
   const canAccept = parseBRL(estimate) > 0 && Number.isInteger(Number(eta)) && Number(eta) > 0 && !busy;
   const urgent = secondsLeft <= 15;
   const nome = chamado.ciclista?.nome ?? "Um ciclista";
+  useTituloDeAlerta(true, "(1) Novo chamado · SOS Bikes");
 
   useEffect(() => {
     const timer = setInterval(() => setSecondsLeft(segundosRestantes(chamado.criado_em, totalSeconds)), 1000);
@@ -47,10 +49,16 @@ export function IncomingCall({
   }, [chamado.criado_em, totalSeconds]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 motion-safe:animate-[chamado-entrada_350ms_ease-out]">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-[13px] font-semibold text-warn">Novo chamado</p>
+          <p className="flex items-center gap-2 text-[13px] font-semibold text-warn">
+            <span className="relative flex size-2.5" aria-hidden="true">
+              <span className="absolute inline-flex size-full rounded-full bg-warn opacity-60 motion-safe:animate-ping" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-warn" />
+            </span>
+            Novo chamado
+          </p>
           <h2 className="mt-0.5 font-display text-[22px] font-bold">{primeiroNome(nome)} escolheu você</h2>
         </div>
         {queued > 0 && (
