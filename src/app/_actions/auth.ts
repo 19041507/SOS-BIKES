@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/supabase/config";
@@ -92,12 +93,16 @@ export async function cadastrar(dados: DadosDeCadastro): Promise<ResultadoDoCada
     return { erros: { geral: "O cadastro não está configurado neste ambiente." } };
   }
 
+  // Usado pelo template padrão do Supabase; o template do projeto aponta para a Site URL.
+  const origem = (await headers()).get("origin");
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password: dados.senha,
     options: {
       data: { nome, tipo: dados.perfil, telefone, oficina: oficina || null },
+      emailRedirectTo: origem ? `${origem}/auth/confirmar` : undefined,
     },
   });
 
