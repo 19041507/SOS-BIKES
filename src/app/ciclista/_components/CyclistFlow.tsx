@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MapView, posicaoNoMapa } from "@/components/MapView";
 import { usePerfil } from "@/components/PerfilProvider";
+import { useToast } from "@/components/ui/Toaster";
 import { rotuloCategoria, type Categoria } from "@/lib/categorias";
 import {
   PRAZO_RESPOSTA,
@@ -16,6 +17,7 @@ import {
   type ChamadoCompleto,
   type MecanicoDisponivel,
 } from "@/lib/chamados";
+import { formatBRL } from "@/lib/money";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
 import { HomeStep } from "./HomeStep";
 import { CategoryStep } from "./CategoryStep";
@@ -50,6 +52,9 @@ function mensagem(erro: unknown) {
 
 export function CyclistFlow() {
   const perfil = usePerfil();
+  const avisar = useToast();
+  /** Último chamado aplicado, para avisar só quando o status muda. */
+  const ultimo = useRef<ChamadoCompleto | null>(null);
   // undefined = carregando o chamado atual
   const [chamado, setChamado] = useState<ChamadoCompleto | null | undefined>(undefined);
   const [draft, setDraft] = useState<Draft>("home");
@@ -82,6 +87,17 @@ export function CyclistFlow() {
         return;
       }
       const nome = primeiroNome(atual.mecanico?.nome ?? "O mecânico");
+      const anterior = ultimo.current;
+      ultimo.current = atual;
+      if (anterior?.id === atual.id && anterior.status !== atual.status) {
+        if (atual.status === "aceito") {
+          avisar(`${nome} aceitou seu chamado: ${formatBRL(atual.estimativa ?? 0)} · chega em ${atual.tempo_chegada_min} min.`, "sucesso");
+        } else if (atual.status === "em_atendimento") {
+          avisar(`${nome} chegou ao local.`, "info");
+        } else if (atual.status === "concluido") {
+          avisar("Atendimento concluído. Conte como foi!", "sucesso");
+        }
+      }
       switch (atual.status) {
         case "recusado":
         case "expirado":
@@ -105,7 +121,7 @@ export function CyclistFlow() {
           setChamado(atual);
       }
     },
-    [carregarMecanicos],
+    [carregarMecanicos, avisar],
   );
 
   useEffect(() => {

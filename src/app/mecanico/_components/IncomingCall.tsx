@@ -3,6 +3,7 @@ import { rotuloCategoria } from "@/lib/categorias";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { parseBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
+import { Button } from "@/components/ui/Button";
 
 type IncomingCallProps = {
   chamado: ChamadoCompleto;
@@ -126,22 +127,22 @@ export function IncomingCall({
       <p className="text-sm text-muted">O ciclista é avisado de que o valor final pode variar conforme o serviço realizado.</p>
 
       <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="lg"
           disabled={busy}
           onClick={onDecline}
-          className="h-14 rounded-xl border border-field bg-white text-base font-semibold hover:bg-surface disabled:opacity-60"
         >
           Recusar
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="success"
+          size="lg"
           disabled={!canAccept}
           onClick={onAccept}
-          className="h-14 rounded-xl bg-ok text-base font-semibold text-white hover:bg-ok-dark disabled:cursor-not-allowed disabled:bg-[#a9bcd8]"
         >
           {busy ? "Enviando…" : "Aceitar e enviar"}
-        </button>
+        </Button>
       </div>
     </div>
   );

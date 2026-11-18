@@ -1,6 +1,7 @@
 import type { MecanicoDisponivel } from "@/lib/chamados";
 import { iniciais } from "@/lib/pessoas";
 import { StepHeader } from "./StepHeader";
+import { Button } from "@/components/ui/Button";
 
 type MechanicListStepProps = {
   mechanics: MecanicoDisponivel[] | null;
@@ -49,13 +50,13 @@ export function MechanicListStep({ mechanics, notice, error, requesting, onBack,
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-field px-4 py-8 text-center">
           <p className="font-semibold">Nenhum mecânico disponível agora</p>
           <p className="text-sm text-muted">Os mecânicos aparecem aqui quando ficam disponíveis no painel deles.</p>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="md"
             onClick={onRefresh}
-            className="h-11 rounded-xl border border-field bg-white px-5 text-[15px] font-semibold hover:bg-surface"
           >
             Atualizar lista
-          </button>
+          </Button>
         </div>
       )}
 
