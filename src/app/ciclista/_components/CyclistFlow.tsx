@@ -108,7 +108,8 @@ export function CyclistFlow() {
         case "recusado":
         case "expirado":
           setChamado(null);
-          setRecusaram((ids) => [...ids, atual.mecanico_id]);
+          // Quem recusou some da lista neste pedido; quem só não respondeu continua disponível.
+          if (atual.status === "recusado") setRecusaram((ids) => [...ids, atual.mecanico_id]);
           setAviso(
             atual.status === "recusado"
               ? `${nome} não pode atender agora. Escolha outro mecânico.`

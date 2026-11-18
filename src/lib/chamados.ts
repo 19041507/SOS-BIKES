@@ -145,14 +145,25 @@ export function useMudancasEmChamados(filtro: string | null, aoMudar: () => void
   useEffect(() => {
     if (!filtro) return;
     const cliente = supabase();
-    const canal = cliente
-      .channel(`chamados:${filtro}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "chamados", filter: filtro }, () =>
-        callback.current(),
-      )
-      .subscribe();
+    let ativo = true;
+    let canal: ReturnType<typeof cliente.channel> | null = null;
+
+    // O canal precisa entrar já com o token do usuário: sem ele, o Realtime aplica o RLS como
+    // anônimo e não entrega nada. O supabase-js só repassa o token depois de carregar a sessão,
+    // então o setAuth() busca o token antes de assinar.
+    cliente.realtime.setAuth().then(() => {
+      if (!ativo) return;
+      canal = cliente
+        .channel(`chamados:${filtro}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "chamados", filter: filtro }, () =>
+          callback.current(),
+        )
+        .subscribe();
+    });
+
     return () => {
-      cliente.removeChannel(canal);
+      ativo = false;
+      if (canal) cliente.removeChannel(canal);
     };
   }, [filtro]);
 }
