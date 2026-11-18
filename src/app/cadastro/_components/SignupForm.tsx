@@ -73,14 +73,15 @@ export function SignupForm() {
       <div role="status" className="flex flex-col gap-4 rounded-2xl border border-line bg-ok-soft p-6">
         <h2 className="font-display text-xl font-bold text-ok-dark">Confirme seu e-mail</h2>
         <p className="text-[15px] leading-relaxed text-ink">
-          Enviamos um link de confirmação para <strong>{confirmarEmail}</strong>. Abra o e-mail, clique no
-          link e depois entre com sua senha.
+          Enviamos um link de confirmação para <strong>{confirmarEmail}</strong>. Abra o e-mail e clique em
+          “Confirmar meu e-mail”: você entra direto na sua conta.
         </p>
+        <p className="text-sm text-muted">Não chegou? Confira a caixa de spam.</p>
         <Link
           href="/"
-          className="flex h-12 items-center justify-center rounded-xl bg-brand text-[15px] font-semibold text-white hover:bg-brand-dark"
+          className="flex h-12 items-center justify-center rounded-xl border border-field bg-white text-[15px] font-semibold text-ink hover:bg-surface"
         >
-          Ir para o login
+          Voltar para o login
         </Link>
       </div>
     );

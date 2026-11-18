@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Confirme seu e-mail · SOS Bikes</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f5f7fa;">
+    <!-- Texto de prévia exibido na caixa de entrada -->
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
+      Falta só um passo: confirme seu e-mail para começar a usar o SOS Bikes.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f7fa;">
+      <tr>
+        <td align="center" style="padding: 32px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 560px;">
+
+            <!-- Cabeçalho -->
+            <tr>
+              <td style="background-color: #1d5fbf; border-radius: 16px 16px 0 0; padding: 28px 32px;">
+                <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 800; letter-spacing: 1px; color: #ffffff;">
+                  SOS <span style="color: #8fe3b0;">BIKES</span>
+                </p>
+                <p style="margin: 6px 0 0; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #dce8f8;">
+                  Socorro sobre duas rodas
+                </p>
+              </td>
+            </tr>
+
+            <!-- Conteúdo -->
+            <tr>
+              <td style="background-color: #ffffff; padding: 36px 32px 28px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+                <p style="margin: 0 0 8px; font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #4a5568;">
+                  {{ if .Data.nome }}Olá, {{ .Data.nome }}!{{ else }}Olá!{{ end }}
+                </p>
+                <h1 style="margin: 0 0 16px; font-family: Arial, Helvetica, sans-serif; font-size: 26px; line-height: 1.25; font-weight: 700; color: #0f1b2d;">
+                  Confirme seu e-mail
+                </h1>
+                <p style="margin: 0 0 28px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.6; color: #4a5568;">
+                  Falta só um passo para
+                  {{ if eq .Data.tipo "mecanico" }}receber chamados de ciclistas perto de você{{ else }}pedir socorro quando sua bike der problema no caminho{{ end }}.
+                  Clique no botão abaixo para confirmar seu e-mail e entrar na sua conta.
+                </p>
+
+                <!-- Botão -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td align="center" style="border-radius: 12px; background-color: #1d5fbf;">
+                      <a href="{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&amp;type=email"
+                         target="_blank"
+                         style="display: block; padding: 16px 24px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; text-decoration: none; border-radius: 12px;">
+                        Confirmar meu e-mail
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 24px 0 6px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #64748b;">
+                  Se o botão não funcionar, copie e cole este endereço no navegador:
+                </p>
+                <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.5; word-break: break-all;">
+                  <a href="{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&amp;type=email" target="_blank" style="color: #1d5fbf;">{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&amp;type=email</a>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Aviso -->
+            <tr>
+              <td style="background-color: #e7f5ec; padding: 18px 32px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+                <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5; color: #0f5a30;">
+                  Não foi você que se cadastrou? É só ignorar este e-mail: sem a confirmação, a conta não é ativada.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Rodapé -->
+            <tr>
+              <td style="background-color: #ffffff; border-radius: 0 0 16px 16px; border: 1px solid #e2e8f0; border-top: 0; padding: 20px 32px;">
+                <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.6; color: #64748b;">
+                  SOS Bikes · Projeto acadêmico do curso de Administração da Faculdade Católica Imaculada Conceição do Recife (FICR).
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
