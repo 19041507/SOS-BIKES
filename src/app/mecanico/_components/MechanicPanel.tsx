@@ -207,6 +207,8 @@ export function MechanicPanel() {
             onBack={() => {
               setConcluido(null);
               limparFormulario();
+              // A avaliação do ciclista chega depois da conclusão e não passa pelo canal de chamados.
+              carregarResumo();
             }}
           />
         )}
