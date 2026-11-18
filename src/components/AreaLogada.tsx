@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { perfilAtual } from "@/lib/auth";
 import { iniciais } from "@/lib/pessoas";
@@ -34,6 +35,17 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
         links={links}
         user={{ initials: iniciais(perfil.nome), name: nome }}
       />
+      {!perfil.telefone && (
+        <div role="status" className="border-b border-warn/20 bg-warn-soft">
+          <p className="mx-auto max-w-7xl px-4 py-2.5 text-sm text-warn">
+            <strong>Complete seu perfil:</strong> adicione seu WhatsApp para{" "}
+            {tipo === "mecanico" ? "os ciclistas" : "o mecânico"} conseguir falar com você.{" "}
+            <Link href={`/${tipo}/perfil`} className="font-semibold underline underline-offset-2">
+              Completar agora
+            </Link>
+          </p>
+        </div>
+      )}
       <PerfilProvider perfil={perfil}>
         <Toaster>{children}</Toaster>
       </PerfilProvider>
