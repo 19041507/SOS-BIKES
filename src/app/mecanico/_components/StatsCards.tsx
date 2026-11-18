@@ -2,7 +2,7 @@ import { formatBRL } from "@/lib/money";
 
 type StatsCardsProps = {
   jobsToday: number;
-  rating: string;
+  rating: number | null;
   earnedToday: number;
 };
 
@@ -21,7 +21,13 @@ export function StatsCards({ jobsToday, rating, earnedToday }: StatsCardsProps) 
       <div className="rounded-xl border border-line bg-white p-4">
         <p className="text-[13px] text-subtle">Avaliação</p>
         <p className="mt-1 text-xl font-bold tabular-nums">
-          <span className="text-star" aria-hidden="true">★</span> {rating}
+          {rating === null ? (
+            "—"
+          ) : (
+            <>
+              <span className="text-star" aria-hidden="true">★</span> {rating.toFixed(1).replace(".", ",")}
+            </>
+          )}
         </p>
       </div>
     </div>
