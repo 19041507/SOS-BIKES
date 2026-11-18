@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Confetes } from "@/components/ui/Confetes";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { formatBRL, parseBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
@@ -26,10 +27,11 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
       : "min-h-12 rounded-xl border border-field bg-white text-[15px] font-semibold hover:bg-surface";
 
   return (
-    <div className="flex flex-col items-center gap-4 text-center">
-      <span className="flex size-16 items-center justify-center rounded-full bg-ok text-white">
+    <div className="relative flex flex-col items-center gap-4 text-center">
+      <Confetes />
+      <span className="flex size-16 items-center justify-center rounded-full bg-ok text-white motion-safe:animate-[chamado-entrada_300ms_ease-out]">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M20 6 9 17l-5-5" />
+          <path d="M20 6 9 17l-5-5" className="check-desenho" />
         </svg>
       </span>
       <div>
