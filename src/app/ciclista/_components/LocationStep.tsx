@@ -1,34 +1,64 @@
+import { useState } from "react";
 import { StepHeader } from "./StepHeader";
 
 type LocationStepProps = {
   categoryLabel: string;
+  address: string;
+  onAddressChange: (value: string) => void;
   onBack: () => void;
   onNext: () => void;
 };
 
-export function LocationStep({ categoryLabel, onBack, onNext }: LocationStepProps) {
+export function LocationStep({ categoryLabel, address, onAddressChange, onBack, onNext }: LocationStepProps) {
+  const [error, setError] = useState<string | null>(null);
+
+  function confirm() {
+    if (address.trim().length < 5) {
+      setError("Informe a rua e o bairro onde você está.");
+      return;
+    }
+    onNext();
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      <StepHeader eyebrow="Etapa 2 de 3" title="Confirme sua localização" onBack={onBack} />
-      <div className="flex items-start gap-3 rounded-xl border border-line p-4">
-        <svg className="shrink-0 text-ok" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-        <div>
-          <p className="text-[13px] text-subtle">Localização pelo GPS</p>
-          <p className="mt-0.5 font-semibold">R. da Aurora, Boa Vista — Recife</p>
+      <StepHeader eyebrow="Etapa 2 de 3" title="Onde você está?" onBack={onBack} />
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="address" className="text-sm font-semibold">Endereço ou ponto de referência</label>
+        <div className="relative">
+          <svg className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ok" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <input
+            id="address"
+            autoComplete="street-address"
+            placeholder="Ex.: R. da Aurora, 300 — Boa Vista"
+            value={address}
+            onChange={(event) => {
+              onAddressChange(event.target.value);
+              setError(null);
+            }}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? "address-error" : "address-hint"}
+            className="h-12 w-full rounded-xl border border-field bg-white pr-3.5 pl-11 text-[15px] outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger"
+          />
         </div>
+        {error ? (
+          <p id="address-error" className="text-[13px] text-danger">{error}</p>
+        ) : (
+          <p id="address-hint" className="text-[13px] text-subtle">O mecânico usa esse endereço para chegar até você.</p>
+        )}
       </div>
       <p className="text-sm text-muted">
         Problema informado: <strong className="text-brand">{categoryLabel}</strong>
       </p>
       <button
         type="button"
-        onClick={onNext}
+        onClick={confirm}
         className="h-14 rounded-xl bg-brand text-base font-semibold text-white hover:bg-brand-dark"
       >
-        Confirmar e buscar mecânicos
+        Buscar mecânicos disponíveis
       </button>
     </div>
   );

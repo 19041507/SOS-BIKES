@@ -90,9 +90,21 @@ O próprio banco garante as regras de negócio, mesmo que alguém chame a API di
 
 O ciclista e o mecânico recebem as mudanças de status em tempo real (Supabase Realtime na tabela `chamados`).
 
+A função `mecanicos_disponiveis()` devolve a lista que o ciclista vê: só mecânicos marcados como disponíveis, com a nota média e os totais de avaliações e atendimentos (sem expor as avaliações em si).
+
+### Como um chamado acontece
+
+1. O mecânico liga **Disponível** no painel e passa a aparecer para os ciclistas.
+2. O ciclista escolhe o defeito, informa onde está e solicita um mecânico da lista.
+3. O chamado aparece na hora no painel do mecânico, que tem 60 segundos para aceitar (informando preço e tempo) ou recusar. Sem resposta, o chamado expira e o ciclista volta para a lista.
+4. O ciclista confirma ou escolhe outro mecânico; o mecânico avisa que chegou e, ao concluir, registra o valor final.
+5. O ciclista avalia e, se quiser, registra a gorjeta.
+
+Para ver os dois lados ao mesmo tempo, entre como ciclista num navegador (ou aba anônima) e como mecânico em outro.
+
 ### Configurar o banco (uma vez)
 
-1. **Estrutura:** no painel do Supabase, abrir **SQL Editor**, colar o conteúdo de `supabase/migrations/20261117000000_estrutura_inicial.sql` e clicar em **Run**.
+1. **Estrutura:** no painel do Supabase, abrir **SQL Editor** e rodar, **em ordem**, cada arquivo de `supabase/migrations` (colar o conteúdo e clicar em **Run**). Cada migration roda uma vez só; ao atualizar o projeto, rode apenas as novas.
 2. **Contas de demonstração:** em **Authentication → Users → Add user → Create new user**, criar uma conta para o ciclista e outra para o mecânico, com **Auto Confirm User** marcado.
 3. **Perfis e histórico:** abrir `supabase/scripts/contas-de-demonstracao.sql`, trocar os dois e-mails do topo pelos usados no passo 2, colar no **SQL Editor** e clicar em **Run**. A mensagem final confirma as contas e os 4 chamados de histórico.
 

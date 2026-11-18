@@ -1,26 +1,31 @@
 import { useEffect, useState } from "react";
-import type { Mechanic } from "@/data/mechanics";
+import type { ChamadoCompleto } from "@/lib/chamados";
+import { iniciais, primeiroNome } from "@/lib/pessoas";
 
 type WaitingStepProps = {
-  mechanic: Mechanic;
-  /** Tempo máximo de espera, em segundos */
+  chamado: ChamadoCompleto;
+  /** Tempo máximo de espera, em segundos, contado a partir da criação do chamado */
   limitSeconds: number;
+  cancelling: boolean;
   onCancel: () => void;
 };
 
-function formatElapsed(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
+function segundosDesde(data: string) {
+  return Math.max(0, Math.floor((Date.now() - new Date(data).getTime()) / 1000));
 }
 
-export function WaitingStep({ mechanic, limitSeconds, onCancel }: WaitingStepProps) {
-  const [elapsed, setElapsed] = useState(0);
-  const firstName = mechanic.name.split(" ")[0];
+function formatElapsed(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+export function WaitingStep({ chamado, limitSeconds, cancelling, onCancel }: WaitingStepProps) {
+  const [elapsed, setElapsed] = useState(() => segundosDesde(chamado.criado_em));
+  const nome = chamado.mecanico?.nome ?? "o mecânico";
 
   useEffect(() => {
-    const timer = setInterval(() => setElapsed((seconds) => seconds + 1), 1000);
+    const timer = setInterval(() => setElapsed(segundosDesde(chamado.criado_em)), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [chamado.criado_em]);
 
   return (
     <div className="flex flex-col items-center gap-4 py-6 text-center">
@@ -30,25 +35,26 @@ export function WaitingStep({ mechanic, limitSeconds, onCancel }: WaitingStepPro
           aria-hidden="true"
         />
         <span className="flex size-14 items-center justify-center rounded-full bg-brand-muted text-lg font-bold text-brand">
-          {mechanic.initials}
+          {iniciais(nome)}
         </span>
       </div>
       <div role="status">
-        <h2 className="font-display text-[22px] font-bold">Aguardando {firstName}</h2>
-        <p className="mt-1 text-sm font-semibold tabular-nums text-subtle">
-          Aguardando há {formatElapsed(elapsed)}
-        </p>
+        <h2 className="font-display text-[22px] font-bold">Aguardando {primeiroNome(nome)}</h2>
+        <p className="mt-1 text-sm font-semibold tabular-nums text-subtle">Aguardando há {formatElapsed(elapsed)}</p>
       </div>
       <p className="text-[15px] leading-normal text-muted">
-        Seu chamado foi enviado. {firstName} vai aceitar e informar o preço estimado e o
-        tempo de chegada.
+        Seu chamado foi enviado. {primeiroNome(nome)} vai aceitar e informar o preço estimado e o tempo de chegada.
       </p>
       <p className="text-[13px] text-subtle">
-        Se não houver resposta em {Math.round(limitSeconds / 60)} minuto
-        {limitSeconds >= 120 ? "s" : ""}, você volta para a lista.
+        Se não houver resposta em {Math.round(limitSeconds / 60)} minuto{limitSeconds >= 120 ? "s" : ""}, você volta para a lista.
       </p>
-      <button type="button" onClick={onCancel} className="h-11 text-[15px] font-semibold text-danger">
-        Cancelar solicitação
+      <button
+        type="button"
+        disabled={cancelling}
+        onClick={onCancel}
+        className="h-11 text-[15px] font-semibold text-danger disabled:opacity-60"
+      >
+        {cancelling ? "Cancelando…" : "Cancelar solicitação"}
       </button>
     </div>
   );

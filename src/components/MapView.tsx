@@ -68,3 +68,16 @@ export function MapView({ pins, chip, routeTo, className = "" }: MapViewProps) {
     </section>
   );
 }
+
+/**
+ * Posição ilustrativa e estável para um pin, a partir do id da pessoa.
+ * Provisória até o mapa real (#22): evita o centro, onde fica o ciclista.
+ */
+export function posicaoNoMapa(id: string) {
+  let hash = 0;
+  for (const letra of id) hash = (hash * 31 + letra.charCodeAt(0)) >>> 0;
+  const x = 12 + (hash % 76);
+  const y = 12 + (Math.floor(hash / 76) % 76);
+  const pertoDoCentro = Math.abs(x - USER.x) < 14 && Math.abs(y - USER.y) < 14;
+  return pertoDoCentro ? { x: (x + 40) % 76 + 12, y } : { x, y };
+}
