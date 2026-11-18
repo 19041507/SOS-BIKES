@@ -194,6 +194,8 @@ export function CyclistFlow() {
     setErro(null);
     if (avisoParaInicio) setAvisoInicio(avisoParaInicio);
     carregarMecanicos();
+    // A avaliação fica no fim de uma tela longa; o dashboard começa do topo.
+    window.scrollTo({ top: 0 });
   }
 
   function voltarParaLista(avisoDaLista?: string) {
@@ -227,7 +229,8 @@ export function CyclistFlow() {
     const origem = posicaoNoMapa(chamado.mecanico_id);
     const { progresso, minutosRestantes } = progressoDaChegada(chamado.confirmado_em, chamado.tempo_chegada_min, agora);
     // A caminho, o pin avança em direção ao ciclista conforme o tempo estimado passa.
-    const avanco = chamado.status === "a_caminho" && !menosMovimento ? progresso * PERCURSO_MAXIMO : 0;
+    const noLocal = chamado.status === "em_atendimento" || chamado.status === "concluido";
+    const avanco = noLocal ? PERCURSO_MAXIMO : chamado.status === "a_caminho" && !menosMovimento ? progresso * PERCURSO_MAXIMO : 0;
     const posicao = {
       x: origem.x + (POSICAO_DO_CICLISTA.x - origem.x) * avanco,
       y: origem.y + (POSICAO_DO_CICLISTA.y - origem.y) * avanco,
