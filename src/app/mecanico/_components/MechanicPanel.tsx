@@ -17,7 +17,6 @@ import { dadosDoPainel, type DadosDoPainel } from "@/lib/dashboard-mecanico";
 import { formatBRL, parseBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
 import { AvailabilityCard } from "./AvailabilityCard";
-import { StatsCards } from "./StatsCards";
 import { EmptyState } from "./EmptyState";
 import { MechanicDashboard } from "./MechanicDashboard";
 import { IncomingCall } from "./IncomingCall";
@@ -168,19 +167,12 @@ export function MechanicPanel() {
   const podeConcluir = valorFinalNumero > 0 && (!precoMudou || motivo.trim() !== "");
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-wrap items-start gap-4 p-3 sm:p-4">
-      <aside className="flex w-full min-w-0 flex-col gap-3 lg:w-auto lg:max-w-[400px] lg:flex-[1_1_320px]">
-        <AvailabilityCard online={online} busy={ocupado} hasActiveCall={Boolean(atual)} onToggle={alternarDisponibilidade} />
-        <StatsCards
-          jobsToday={painel?.hoje.atendimentos ?? 0}
-          rating={painel?.media ?? null}
-          earnedToday={painel?.hoje.liquido ?? 0}
-        />
-      </aside>
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-3 sm:p-4">
+      <AvailabilityCard online={online} busy={ocupado} hasActiveCall={Boolean(atual)} onToggle={alternarDisponibilidade} />
 
       <section
-        className={`flex w-full min-w-0 flex-col gap-4 lg:w-auto lg:flex-[999_1_480px] ${
-          ocioso ? "" : "min-h-[420px] rounded-2xl border border-line bg-white p-5 sm:p-6"
+        className={`flex w-full min-w-0 flex-col gap-4 ${
+          ocioso ? "" : "mx-auto min-h-[420px] max-w-3xl rounded-2xl border border-line bg-white p-5 sm:p-6"
         }`}
       >
         {aviso && (
@@ -214,7 +206,7 @@ export function MechanicPanel() {
         )}
 
         {ocioso && (
-          <MechanicDashboard dados={painel} erro={erroPainel} online={online} busy={ocupado} onGoOnline={alternarDisponibilidade} />
+          <MechanicDashboard dados={painel} erro={erroPainel} />
         )}
 
         {!concluido && atual?.status === "aguardando" && (
