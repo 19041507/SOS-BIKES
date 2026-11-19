@@ -81,9 +81,10 @@ function Grafico({ grafico }: { grafico: DadosDoPainel["grafico"] }) {
 /** 0,7 → "42 s"; 6,4 → "6 min"; 95 → "1 h 35 min". */
 function duracao(minutos: number) {
   if (minutos < 1) return `${Math.max(1, Math.round(minutos * 60))} s`;
-  if (minutos < 60) return `${Math.round(minutos)} min`;
-  const horas = Math.floor(minutos / 60);
-  const resto = Math.round(minutos % 60);
+  const inteiros = Math.round(minutos);
+  if (inteiros < 60) return `${inteiros} min`;
+  const horas = Math.floor(inteiros / 60);
+  const resto = inteiros % 60;
   return resto ? `${horas} h ${resto} min` : `${horas} h`;
 }
 
