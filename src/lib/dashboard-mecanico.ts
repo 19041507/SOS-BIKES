@@ -29,11 +29,13 @@ export type AvaliacaoRecebida = {
 export type DadosDoPainel = {
   hoje: { atendimentos: number; liquido: number };
   semana: number;
-  mes: number;
+  /** Líquido dos 7 dias anteriores à semana atual, para comparar. */
+  semanaAnterior: number;
+  mes: { atendimentos: number; liquido: number };
   /** Líquido de cada um dos últimos 7 dias, do mais antigo para hoje. */
   grafico: { dia: Date; liquido: number }[];
-  /** Aceitos ÷ respondidos ou expirados nos últimos 30 dias; null sem chamados. */
-  taxaDeAceite: number | null;
+  /** Chamados dos últimos 30 dias já respondidos ou expirados, e quantos foram aceitos. */
+  aceite: { aceitos: number; recebidos: number };
   recentes: Atendimento[];
   avaliacoes: AvaliacaoRecebida[];
   media: number | null;
@@ -70,6 +72,7 @@ export async function dadosDoPainel(mecanicoId: string): Promise<DadosDoPainel> 
   const desdeDia = (inicio: Date) => concluidos.filter((c) => c.quando >= inicio);
 
   const seteDias = new Date(hoje.getTime() - 6 * DIA);
+  const catorzeDias = new Date(hoje.getTime() - 13 * DIA);
   const grafico = Array.from({ length: 7 }, (_, i) => {
     const dia = new Date(seteDias.getTime() + i * DIA);
     const fim = new Date(dia.getTime() + DIA);
@@ -90,9 +93,10 @@ export async function dadosDoPainel(mecanicoId: string): Promise<DadosDoPainel> 
   return {
     hoje: { atendimentos: desdeDia(hoje).length, liquido: somar(desdeDia(hoje)) },
     semana: somar(desdeDia(seteDias)),
-    mes: somar(desdeDia(inicioDoMes)),
+    semanaAnterior: somar(concluidos.filter((c) => c.quando >= catorzeDias && c.quando < seteDias)),
+    mes: { atendimentos: desdeDia(inicioDoMes).length, liquido: somar(desdeDia(inicioDoMes)) },
     grafico,
-    taxaDeAceite: ultimos30.length ? aceitos / ultimos30.length : null,
+    aceite: { aceitos, recebidos: ultimos30.length },
     recentes: concluidos.slice(0, 3).map((c) => ({
       id: c.id,
       categoria: c.categoria,
