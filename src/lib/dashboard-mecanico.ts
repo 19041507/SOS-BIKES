@@ -36,6 +36,14 @@ export type DadosDoPainel = {
   grafico: { dia: Date; liquido: number }[];
   /** Chamados dos últimos 30 dias já respondidos ou expirados, e quantos foram aceitos. */
   aceite: { aceitos: number; recebidos: number };
+  /**
+   * Tempo médio de atendimento (SLA) nos últimos 30 dias, em minutos; null sem dados.
+   * resposta: do pedido ao aceite · chegada: da confirmação à chegada (e o tempo que o
+   * mecânico estimou, para comparar) · atendimento: da chegada à conclusão.
+   */
+  tempos: { resposta: number | null; chegada: number | null; chegadaEstimada: number | null; atendimento: number | null };
+  /** Gorjetas registradas pelos ciclistas nos últimos 30 dias (pagas direto ao mecânico). */
+  gorjetas: { total: number; quantidade: number };
   recentes: Atendimento[];
   avaliacoes: AvaliacaoRecebida[];
   media: number | null;
@@ -55,7 +63,7 @@ export async function dadosDoPainel(mecanicoId: string): Promise<DadosDoPainel> 
     supabase
       .from("chamados")
       .select(
-        "id, status, categoria, valor_final, comissao, criado_em, aceito_em, concluido_em, ciclista:perfis!chamados_ciclista_id_fkey(nome), avaliacao:avaliacoes(nota, comentario, criado_em)",
+        "id, status, categoria, valor_final, comissao, tempo_chegada_min, criado_em, aceito_em, confirmado_em, chegada_em, concluido_em, ciclista:perfis!chamados_ciclista_id_fkey(nome), avaliacao:avaliacoes(nota, comentario, gorjeta, criado_em)",
       )
       .eq("mecanico_id", mecanicoId)
       .gte("criado_em", desde.toISOString())
@@ -82,6 +90,15 @@ export async function dadosDoPainel(mecanicoId: string): Promise<DadosDoPainel> 
   const ultimos30 = chamados.data.filter((c) => new Date(c.criado_em) >= trintaDias && c.status !== "aguardando");
   const aceitos = ultimos30.filter((c) => c.aceito_em).length;
 
+  const minutosEntre = (inicio: string | null, fim: string | null) =>
+    inicio && fim ? (new Date(fim).getTime() - new Date(inicio).getTime()) / 60_000 : null;
+  const media = (valores: (number | null)[]) => {
+    const validos = valores.filter((v): v is number => v !== null && v >= 0);
+    return validos.length ? validos.reduce((a, b) => a + b, 0) / validos.length : null;
+  };
+  const chegaram = ultimos30.filter((c) => c.confirmado_em && c.chegada_em);
+  const gorjetas = ultimos30.map((c) => c.avaliacao?.gorjeta ?? 0).filter((g) => g > 0);
+
   const avaliacoes = chamados.data
     .filter((c) => c.avaliacao)
     .sort((a, b) => (b.avaliacao!.criado_em > a.avaliacao!.criado_em ? 1 : -1))
@@ -97,6 +114,13 @@ export async function dadosDoPainel(mecanicoId: string): Promise<DadosDoPainel> 
     mes: { atendimentos: desdeDia(inicioDoMes).length, liquido: somar(desdeDia(inicioDoMes)) },
     grafico,
     aceite: { aceitos, recebidos: ultimos30.length },
+    tempos: {
+      resposta: media(ultimos30.map((c) => minutosEntre(c.criado_em, c.aceito_em))),
+      chegada: media(chegaram.map((c) => minutosEntre(c.confirmado_em, c.chegada_em))),
+      chegadaEstimada: media(chegaram.map((c) => c.tempo_chegada_min)),
+      atendimento: media(ultimos30.map((c) => minutosEntre(c.chegada_em, c.concluido_em))),
+    },
+    gorjetas: { total: gorjetas.reduce((a, b) => a + b, 0), quantidade: gorjetas.length },
     recentes: concluidos.slice(0, 3).map((c) => ({
       id: c.id,
       categoria: c.categoria,
