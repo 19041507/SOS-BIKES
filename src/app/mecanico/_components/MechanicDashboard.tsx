@@ -78,6 +78,48 @@ function Grafico({ grafico }: { grafico: DadosDoPainel["grafico"] }) {
   );
 }
 
+/** 0,7 → "42 s"; 6,4 → "6 min"; 95 → "1 h 35 min". */
+function duracao(minutos: number) {
+  if (minutos < 1) return `${Math.max(1, Math.round(minutos * 60))} s`;
+  if (minutos < 60) return `${Math.round(minutos)} min`;
+  const horas = Math.floor(minutos / 60);
+  const resto = Math.round(minutos % 60);
+  return resto ? `${horas} h ${resto} min` : `${horas} h`;
+}
+
+function TempoDeAtendimento({ tempos }: { tempos: DadosDoPainel["tempos"] }) {
+  const semDados = tempos.resposta === null && tempos.chegada === null && tempos.atendimento === null;
+  const atrasou = tempos.chegada !== null && tempos.chegadaEstimada !== null && tempos.chegada > tempos.chegadaEstimada;
+  const linhas = [
+    { rotulo: "Resposta", ajuda: "do pedido ao seu aceite", valor: tempos.resposta },
+    { rotulo: "Chegada", ajuda: "da confirmação até chegar", valor: tempos.chegada },
+    { rotulo: "Atendimento", ajuda: "da chegada à conclusão", valor: tempos.atendimento },
+  ];
+
+  if (semDados) return <p className="text-[15px] text-muted">Aparece depois dos primeiros atendimentos.</p>;
+
+  return (
+    <dl className="flex flex-col divide-y divide-line">
+      {linhas.map((linha) => (
+        <div key={linha.rotulo} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+          <dt>
+            <span className="block font-semibold">{linha.rotulo}</span>
+            <span className="block text-xs text-subtle">{linha.ajuda}</span>
+          </dt>
+          <dd className="text-right">
+            <span className="block text-lg font-bold tabular-nums">{linha.valor === null ? "–" : duracao(linha.valor)}</span>
+            {linha.rotulo === "Chegada" && tempos.chegadaEstimada !== null && (
+              <span className={`block text-xs ${atrasou ? "font-semibold text-warn" : "text-subtle"}`}>
+                você estima {duracao(tempos.chegadaEstimada)}
+              </span>
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function LinkVerHistorico() {
   return (
     <Link href="/mecanico/historico" className="text-sm font-semibold text-brand hover:text-brand-dark">
@@ -155,14 +197,24 @@ export function MechanicDashboard({ dados, erro }: MechanicDashboardProps) {
         <p className="-mt-2 text-xs text-subtle">Na taxa de aceite, chamados sem resposta no prazo contam como não aceitos.</p>
       )}
 
-      <Card className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display text-lg font-bold">Ganhos dos últimos 7 dias</h2>
-          {dados && <p className="text-sm text-muted">Total: <strong className="text-ink tabular-nums">{formatBRL(totalDaSemana)}</strong></p>}
-        </div>
-        {dados ? <Grafico grafico={dados.grafico} /> : <Esqueleto className="h-44" />}
-        <p className="text-xs text-subtle">Valores líquidos, já sem a comissão de 10%. Gorjetas não entram.</p>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="flex flex-col gap-4 lg:col-span-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-display text-lg font-bold">Ganhos dos últimos 7 dias</h2>
+            {dados && <p className="text-sm text-muted">Total: <strong className="text-ink tabular-nums">{formatBRL(totalDaSemana)}</strong></p>}
+          </div>
+          {dados ? <Grafico grafico={dados.grafico} /> : <Esqueleto className="h-44" />}
+          <p className="text-xs text-subtle">Valores líquidos, já sem a comissão de 10%. Gorjetas não entram.</p>
+        </Card>
+
+        <Card className="flex flex-col gap-3">
+          <div>
+            <h2 className="font-display text-lg font-bold">Tempo de atendimento</h2>
+            <p className="text-xs text-subtle">Médias dos últimos 30 dias</p>
+          </div>
+          {dados ? <TempoDeAtendimento tempos={dados.tempos} /> : <Esqueleto className="h-36" />}
+        </Card>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="flex flex-col gap-3 lg:col-span-2">
@@ -219,6 +271,13 @@ export function MechanicDashboard({ dados, erro }: MechanicDashboardProps) {
                 </li>
               ))}
             </ul>
+          )}
+          {dados && dados.gorjetas.quantidade > 0 && (
+            <p className="mt-auto border-t border-line pt-3 text-sm text-muted">
+              Gorjetas registradas (30 dias):{" "}
+              <strong className="text-ink tabular-nums">{formatBRL(dados.gorjetas.total)}</strong> em {dados.gorjetas.quantidade}{" "}
+              {dados.gorjetas.quantidade === 1 ? "atendimento" : "atendimentos"}
+            </p>
           )}
         </Card>
       </div>
