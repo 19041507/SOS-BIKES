@@ -9,6 +9,7 @@ type AvailabilityCardProps = {
   onToggle: () => void;
 };
 
+/** Faixa de status do topo do painel, com a chave de disponibilidade. */
 export function AvailabilityCard({ online, busy, hasActiveCall, onToggle }: AvailabilityCardProps) {
   const [confirming, setConfirming] = useState(false);
 
@@ -21,14 +22,26 @@ export function AvailabilityCard({ online, busy, hasActiveCall, onToggle }: Avai
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4">
+    <div
+      className={`flex flex-col gap-3 rounded-2xl border px-4 py-3.5 ${
+        online ? "border-ok/30 bg-ok-soft" : "border-dashed border-field bg-white"
+      }`}
+    >
       <div className="flex items-center gap-3">
-        <div className="flex-1">
-          <p className="font-semibold">{online ? "Disponível" : "Indisponível"}</p>
-          <p className="mt-0.5 text-[13px] text-subtle">
-            {online ? "Ciclistas próximos podem escolher você" : "Ative para receber chamados"}
-          </p>
-        </div>
+        {online && (
+          <span className="relative flex size-3 shrink-0" aria-hidden="true">
+            <span className="absolute inline-flex size-full rounded-full bg-ok opacity-60 motion-safe:animate-ping" />
+            <span className="relative inline-flex size-3 rounded-full bg-ok" />
+          </span>
+        )}
+        <p role="status" className="flex-1 text-[15px]">
+          <strong className={online ? "text-ok-dark" : "text-ink"}>{online ? "Disponível" : "Indisponível"}</strong>
+          <span className={online ? "text-ok-dark" : "text-muted"}>
+            {online
+              ? " · Os chamados aparecem aqui assim que um ciclista escolher você."
+              : " · Ligue para aparecer na lista dos ciclistas."}
+          </span>
+        </p>
         <button
           type="button"
           role="switch"
@@ -42,9 +55,9 @@ export function AvailabilityCard({ online, busy, hasActiveCall, onToggle }: Avai
         </button>
       </div>
       {confirming && (
-        <div role="alertdialog" aria-label="Ficar indisponível" className="flex flex-col gap-2.5 rounded-xl bg-warn-soft p-3 text-sm text-warn">
-          <p>Você tem um chamado em andamento. Ficar indisponível não cancela esse chamado, só impede que novos ciclistas escolham você.</p>
-          <div className="grid grid-cols-2 gap-2">
+        <div role="alertdialog" aria-label="Ficar indisponível" className="flex flex-col gap-2.5 rounded-xl bg-warn-soft p-3 text-sm text-warn sm:flex-row sm:items-center">
+          <p className="flex-1">Você tem um chamado em andamento. Ficar indisponível não cancela esse chamado, só impede que novos ciclistas escolham você.</p>
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button variant="secondary" onClick={() => setConfirming(false)}>
               Continuar disponível
             </Button>
