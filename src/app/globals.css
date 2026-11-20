@@ -30,6 +30,16 @@ body {
   color: var(--color-ink);
 }
 
+/* Mantém o cartão entre a logo e a rota, à esquerda do trecho vertical. */
+@media (min-width: 400px) and (max-width: 627px) {
+  .brand-arrival {
+    top: 34%;
+    right: auto;
+    left: 4%;
+  }
+}
+
+
 .route-animated {
   animation: route-dash 1.2s linear infinite;
 }
