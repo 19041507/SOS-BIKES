@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { MapView, posicaoNoMapa } from "@/components/MapView";
 import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { CATEGORIAS, rotuloCategoria, type Categoria } from "@/lib/categorias";
 import type { MecanicoDisponivel } from "@/lib/chamados";
@@ -58,6 +59,9 @@ export function CyclistDashboard({ perfil, mechanics, notice, onStart }: Cyclist
           </svg>
           Preciso de socorro
         </Button>
+        <Link href="/ciclista/favoritos" className="flex min-h-11 w-fit items-center gap-2 rounded-lg px-1 text-[15px] font-semibold text-brand hover:underline">
+          Ver meus mecânicos favoritos
+        </Link>
         <div>
           <p className="text-sm font-semibold text-subtle">Ou vá direto pelo defeito:</p>
           <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">

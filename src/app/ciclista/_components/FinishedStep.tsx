@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Confetes } from "@/components/ui/Confetes";
+import { SalvarMecanico } from "@/components/SalvarMecanico";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { formatBRL, parseBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
@@ -58,6 +59,13 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
           </p>
         )}
       </dl>
+
+      {chamado.mecanico && (
+        <div className="flex self-stretch flex-col gap-2 rounded-xl bg-brand-soft p-3.5 text-left">
+          <p className="text-sm text-brand-dark">Gostou do atendimento de {primeiroNome(chamado.mecanico.nome)}? Salve para chamar novamente.</p>
+          <SalvarMecanico mecanico={chamado.mecanico} />
+        </div>
+      )}
 
       <div className="flex gap-1" role="group" aria-label="Avaliação">
         {[1, 2, 3, 4, 5].map((value) => (

@@ -49,6 +49,27 @@ O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "
 
 Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
 
+## Mecânicos favoritos
+
+O ciclista pode salvar ou remover mecânicos na lista de escolha, na tela de
+avaliação e nos detalhes de um chamado. A lista **Favoritos**, no menu e no início
+da área do ciclista, mantém os mecânicos salvos por conta, inclusive os que estão
+indisponíveis. **Chamar novamente** inicia um novo pedido para o mecânico escolhido:
+defeito → endereço → confirmar a solicitação. O aceite, a nova estimativa e a
+confirmação do ciclista continuam obrigatórios.
+
+Para habilitar a persistência, aplique a nova migration
+[mecanicos_favoritos.sql](supabase/migrations/20261120000000_mecanicos_favoritos.sql)
+no Supabase depois das anteriores. Ela cria a tabela e a consulta de favoritos,
+isola os registros por ciclista e bloqueia novos pedidos para mecânicos
+indisponíveis. Sem essa migration, o sistema mostra o erro ao carregar favoritos.
+
+Na [prévia local](http://localhost:3000/previa#ciclista-favoritos), os favoritos
+funcionam em memória e são reiniciados ao recarregar a página. Para validar as
+regras do banco, execute
+[mecanicos-favoritos.sql](supabase/tests/mecanicos-favoritos.sql) em um banco de teste
+com as migrations aplicadas; o script usa uma transação e desfaz os dados no final.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
