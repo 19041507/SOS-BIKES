@@ -39,6 +39,16 @@ body {
   animation: pulse-ring 2s ease-out infinite;
 }
 
+@media (min-width: 1024px) {
+  /* Preenche a tela e acompanha o formulário quando o conteúdo é mais alto. */
+  .brand-panel {
+    align-self: stretch;
+    height: auto;
+    min-height: 100dvh;
+  }
+
+}
+
 /* Mesmo percurso da rota em BrandPanel (ROUTE) */
 .mechanic-move {
   left: 78%;
