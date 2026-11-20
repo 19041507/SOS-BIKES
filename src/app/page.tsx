@@ -5,6 +5,7 @@ import { AvisoConfirmacao } from "./_components/AvisoConfirmacao";
 import { BrandPanel } from "./_components/BrandPanel";
 import { LoginForm } from "./_components/LoginForm";
 import { RedirecionarSeLogado } from "./_components/RedirecionarSeLogado";
+import { LegalLinks } from "@/components/LegalLinks";
 
 export default function LoginPage() {
   return (
@@ -27,12 +28,12 @@ export default function LoginPage() {
             <AvisoConfirmacao />
           </Suspense>
           <LoginForm />
-          <p className="text-center text-[15px] text-muted">
+          <div className="flex flex-col gap-2"><p className="text-center text-[15px] text-muted">
             Não tem conta?{" "}
             <Link href="/cadastro" className="font-semibold text-brand hover:text-brand-dark">
               Cadastre-se
             </Link>
-          </p>
+          </p><LegalLinks /></div>
         </div>
       </section>
       <BrandPanel />

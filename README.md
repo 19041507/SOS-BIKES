@@ -49,6 +49,30 @@ O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "
 
 Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
 
+## Termos, privacidade e local do atendimento
+
+As páginas públicas [Termos de Uso](http://localhost:3000/termos) e
+[Política de Privacidade](http://localhost:3000/privacidade) estão acessíveis no
+login, cadastro e rodapé das áreas internas. O cadastro exige aceite dos termos
+no formulário e na action do servidor. A versão aceita e a data gerada no servidor
+são enviadas aos metadados de cadastro do Supabase Auth; isso não constitui um
+registro de auditoria imutável.
+
+Antes de renderizar o campo de endereço, a etapa de localização apresenta a
+finalidade e solicita uma autorização específica. Recusar volta à etapa anterior;
+retirar a autorização apaga o endereço do pedido ainda não enviado. O app não
+solicita GPS nem acompanha deslocamentos. O endereço só é transmitido ao banco
+ao solicitar um mecânico.
+
+Configure `SOS_BIKES_CONTROLLER_NAME` e `SOS_BIKES_PRIVACY_EMAIL` no ambiente e
+reinicie o servidor (ou gere um novo build) para identificar o responsável e o
+canal real de privacidade. Enquanto faltarem, os documentos mostram que estão em
+revisão. Ainda é preciso validar as bases legais, prazos de retenção, procedimento
+de atendimento aos titulares e regiões/transferências dos fornecedores antes da
+operação com dados reais. Os documentos descrevem as permissões atuais, inclusive
+a consulta a perfis de mecânicos por pessoas autenticadas; não certificam a
+conformidade integral com a LGPD.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.

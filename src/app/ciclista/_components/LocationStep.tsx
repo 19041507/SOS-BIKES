@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { StepHeader } from "./StepHeader";
 import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 
 type LocationStepProps = {
   categoryLabel: string;
@@ -12,6 +13,21 @@ type LocationStepProps = {
 
 export function LocationStep({ categoryLabel, address, onAddressChange, onBack, onNext }: LocationStepProps) {
   const [error, setError] = useState<string | null>(null);
+  const [autorizado, setAutorizado] = useState(false);
+
+  if (!autorizado) return (
+    <div className="flex flex-col gap-4">
+      <StepHeader eyebrow="Etapa 2 de 3" title="Antes de informar o local" onBack={onBack} />
+      <div className="rounded-2xl border border-brand/20 bg-brand-soft p-4 text-sm leading-relaxed text-brand-dark">
+        <p className="font-semibold">Seu endereço ajuda o mecânico a chegar até você.</p>
+        <p className="mt-2">Você digita o endereço ou uma referência manualmente. Não acessamos seu GPS nem rastreamos seus deslocamentos.</p>
+        <p className="mt-2">O local informado será compartilhado com o mecânico escolhido quando você enviar o pedido. Você pode voltar sem informar, mas o atendimento precisa de um endereço.</p>
+      </div>
+      <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center text-sm font-semibold text-brand underline">Ler a política de privacidade (nova aba)</Link>
+      <Button size="lg" onClick={() => setAutorizado(true)}>Concordo em informar o local</Button>
+      <Button variant="secondary" onClick={onBack}>Agora não</Button>
+    </div>
+  );
 
   function confirm() {
     if (address.trim().length < 5) {
@@ -54,6 +70,7 @@ export function LocationStep({ categoryLabel, address, onAddressChange, onBack, 
       <p className="text-sm text-muted">
         Problema informado: <strong className="text-brand">{categoryLabel}</strong>
       </p>
+      <button type="button" onClick={() => { onAddressChange(""); setError(null); setAutorizado(false); }} className="min-h-11 rounded-lg text-left text-sm font-semibold text-brand underline">Retirar autorização e apagar endereço</button>
       <Button
         size="lg"
         onClick={confirm}

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/supabase/config";
 import { SENHA_MINIMA, emailValido, normalizarTelefone } from "@/lib/cadastro";
+import { VERSAO_TERMOS } from "@/lib/legal";
 import type { Enum } from "@/lib/supabase/database.types";
 
 type DadosDeEntrada = {
@@ -59,6 +60,7 @@ export async function entrar({ email, senha, perfil }: DadosDeEntrada): Promise<
 }
 
 type DadosDeCadastro = {
+  aceitouTermos: boolean;
   perfil: Enum<"tipo_perfil">;
   nome: string;
   telefone: string;
@@ -87,6 +89,7 @@ export async function cadastrar(dados: DadosDeCadastro): Promise<ResultadoDoCada
   if (!telefone) erros.telefone = "Informe o WhatsApp com DDD.";
   if (!emailValido(email)) erros.email = "Informe um e-mail válido.";
   if (dados.senha.length < SENHA_MINIMA) erros.senha = `A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`;
+  if (dados.aceitouTermos !== true) erros.aceitouTermos = "Aceite os termos de uso para criar sua conta.";
   if (Object.keys(erros).length > 0) return { erros };
 
   if (!supabaseConfigurado) {
@@ -101,7 +104,7 @@ export async function cadastrar(dados: DadosDeCadastro): Promise<ResultadoDoCada
     email,
     password: dados.senha,
     options: {
-      data: { nome, tipo: dados.perfil, telefone, oficina: oficina || null },
+      data: { nome, tipo: dados.perfil, telefone, oficina: oficina || null, termos_versao: VERSAO_TERMOS, termos_aceitos_em: new Date().toISOString() },
       emailRedirectTo: origem ? `${origem}/auth/confirmar` : undefined,
     },
   });
