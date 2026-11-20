@@ -25,6 +25,33 @@
   --font-display: var(--font-poppins), var(--font-inter), sans-serif;
 }
 
+/* A prévia reserva espaço para seu seletor sem aumentar a altura do login. */
+.preview-page {
+  --preview-toolbar-height: 116px;
+}
+
+.preview-toolbar {
+  min-height: var(--preview-toolbar-height);
+}
+
+.preview-page .auth-page {
+  min-height: calc(100dvh - var(--preview-toolbar-height));
+}
+
+@media (min-width: 640px) {
+  .preview-page {
+    --preview-toolbar-height: 69px;
+  }
+}
+
+
+@media (min-width: 1024px) {
+  .preview-page .brand-panel {
+    min-height: calc(100dvh - var(--preview-toolbar-height));
+  }
+
+}
+
 body {
   background: var(--color-surface);
   color: var(--color-ink);

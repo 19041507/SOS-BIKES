@@ -30,6 +30,12 @@ npm run dev
 
 Acesse http://localhost:3000.
 
+Para conferir o visual de todas as telas sem configurar o banco, acesse
+http://localhost:3000/previa. O seletor no topo inclui login, cadastro, áreas de
+ciclista e mecânico, históricos, perfis e etapas do atendimento. A prévia usa os
+componentes do site com dados fictícios e não salva alterações. Essa rota só
+fica disponível no servidor de desenvolvimento (`npm run dev`).
+
 Para usar o banco localmente, crie um `.env.local` (não vai para o Git) com os mesmos valores configurados na Vercel:
 
 ```

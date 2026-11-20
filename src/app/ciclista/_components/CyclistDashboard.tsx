@@ -11,6 +11,7 @@ import { iniciais, primeiroNome } from "@/lib/pessoas";
 type Resumo = Awaited<ReturnType<typeof resumoDoCiclista>>;
 
 type CyclistDashboardProps = {
+  initialResumo?: Resumo;
   perfil: { id: string; nome: string };
   mechanics: MecanicoDisponivel[] | null;
   notice: string | null;
@@ -28,15 +29,16 @@ function Estrelas({ nota }: { nota: number }) {
   );
 }
 
-export function CyclistDashboard({ perfil, mechanics, notice, onStart }: CyclistDashboardProps) {
-  const [resumo, setResumo] = useState<Resumo | null>(null);
+export function CyclistDashboard({ perfil, mechanics, notice, onStart, initialResumo }: CyclistDashboardProps) {
+  const [resumo, setResumo] = useState<Resumo | null>(initialResumo ?? null);
   const [erroResumo, setErroResumo] = useState(false);
 
   useEffect(() => {
+    if (initialResumo) return;
     resumoDoCiclista(perfil.id)
       .then(setResumo)
       .catch(() => setErroResumo(true));
-  }, [perfil.id]);
+  }, [perfil.id, initialResumo]);
 
   const destaques = mechanics?.slice(0, 3) ?? [];
   const pins = (mechanics ?? []).map((m) => ({ id: m.id, initials: iniciais(m.nome), ...posicaoNoMapa(m.id) }));

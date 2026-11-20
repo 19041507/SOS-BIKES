@@ -14,17 +14,18 @@ const ABAS: { id: string; rotulo: string; status: StatusChamado[] | null }[] = [
   { id: "encerrados", rotulo: "Cancelados", status: ["cancelado", "recusado", "expirado"] },
 ];
 
-export function ListaDeChamados() {
+export function ListaDeChamados({ initialChamados }: { initialChamados?: ChamadoCompleto[] } = {}) {
   const perfil = usePerfil();
-  const [chamados, setChamados] = useState<ChamadoCompleto[] | null>(null);
+  const [chamados, setChamados] = useState<ChamadoCompleto[] | null>(initialChamados ?? null);
   const [erro, setErro] = useState(false);
   const [aba, setAba] = useState("todos");
 
   useEffect(() => {
+    if (initialChamados) return;
     listarChamados({ ciclistaId: perfil.id })
       .then(setChamados)
       .catch(() => setErro(true));
-  }, [perfil.id]);
+  }, [perfil.id, initialChamados]);
 
   const filtro = ABAS.find((a) => a.id === aba)?.status;
   const visiveis = chamados?.filter((c) => !filtro || filtro.includes(c.status)) ?? null;

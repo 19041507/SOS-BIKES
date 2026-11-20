@@ -13,18 +13,19 @@ const PERIODOS = [
   { id: "tudo", rotulo: "Tudo", dias: null },
 ] as const;
 
-export function HistoricoDoMecanico() {
+export function HistoricoDoMecanico({ initialChamados }: { initialChamados?: ChamadoCompleto[] } = {}) {
   const perfil = usePerfil();
-  const [chamados, setChamados] = useState<ChamadoCompleto[] | null>(null);
+  const [chamados, setChamados] = useState<ChamadoCompleto[] | null>(initialChamados ?? null);
   const [erro, setErro] = useState(false);
   const [periodo, setPeriodo] = useState<(typeof PERIODOS)[number]["id"]>("30");
   const [soConcluidos, setSoConcluidos] = useState(false);
 
   useEffect(() => {
+    if (initialChamados) return;
     listarChamados({ mecanicoId: perfil.id })
       .then(setChamados)
       .catch(() => setErro(true));
-  }, [perfil.id]);
+  }, [perfil.id, initialChamados]);
 
   const dias = PERIODOS.find((p) => p.id === periodo)?.dias ?? null;
   const [inicio] = useState(() => Date.now());
