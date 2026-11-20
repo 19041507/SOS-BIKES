@@ -10,7 +10,7 @@ const PROFILES: { id: Profile; label: string }[] = [
   { id: "mecanico", label: "Sou mecânico" },
 ];
 
-export function LoginForm() {
+export function LoginForm({ onLogin = entrar }: { onLogin?: typeof entrar } = {}) {
   const [profile, setProfile] = useState<Profile>("ciclista");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +29,7 @@ export function LoginForm() {
     if (Object.keys(nextErrors).length > 0) return;
     startTransition(async () => {
       // Em caso de sucesso, a action redireciona para a área do perfil.
-      const result = await entrar({ email, senha: password, perfil: profile });
+      const result = await onLogin({ email, senha: password, perfil: profile });
       setLoginError(result.erro);
     });
   }
@@ -69,7 +69,11 @@ export function LoginForm() {
           autoComplete="email"
           placeholder="voce@email.com"
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setErrors((current) => ({ ...current, email: undefined }));
+            setLoginError(null);
+          }}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
           className="h-12 rounded-xl border border-field bg-white px-3.5 text-[15px] outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger"
@@ -85,7 +89,11 @@ export function LoginForm() {
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setErrors((current) => ({ ...current, password: undefined }));
+              setLoginError(null);
+            }}
             aria-invalid={!!errors.password}
             aria-describedby={errors.password ? "password-error" : undefined}
             className="h-12 w-full rounded-xl border border-field bg-white pr-12 pl-3.5 text-[15px] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger"
