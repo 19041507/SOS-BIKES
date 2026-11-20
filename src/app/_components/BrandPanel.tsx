@@ -19,9 +19,9 @@ const VERTICAL_STREETS = [
 
 export function BrandPanel() {
   return (
-    <aside className="hidden flex-col bg-brand text-white lg:flex">
+    <aside className="brand-panel order-first flex h-60 flex-col bg-brand text-white sm:h-72 lg:order-last lg:h-auto">
       <div
-        className="relative min-h-[420px] flex-1 overflow-hidden"
+        className="brand-map relative flex-1 overflow-hidden lg:basis-[52dvh] lg:min-h-[clamp(240px,48dvh,420px)]"
         style={{ maskImage: "linear-gradient(to bottom, black 78%, transparent)" }}
         aria-hidden="true"
       >
@@ -68,28 +68,28 @@ export function BrandPanel() {
           LF
         </span>
 
-        <div className="absolute top-10 left-10 rounded-xl bg-white px-4 py-2.5 shadow-lg xl:left-14">
+        <div className="absolute top-6 left-6 rounded-xl bg-white px-4 py-2.5 shadow-lg lg:top-10 lg:left-10 xl:left-14">
           <Logo />
         </div>
 
-        <div className="absolute top-[30%] left-[6%] w-60 rounded-2xl bg-white p-4 text-ink shadow-xl">
+        <div className="brand-call absolute top-[28%] left-[6%] hidden w-[min(15rem,46%)] rounded-2xl bg-white p-4 text-ink shadow-xl lg:block">
           <p className="text-xs font-semibold text-warn">Novo chamado</p>
           <p className="mt-1 font-semibold">Pneu furado</p>
           <p className="text-sm text-subtle">R. da Aurora · a 800 m</p>
         </div>
 
-        <div className="absolute top-[38%] right-[5%] flex w-60 items-center gap-3 rounded-2xl bg-white p-4 text-ink shadow-xl">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ok text-sm font-bold text-white">
+        <div className="brand-arrival absolute top-[55%] right-[5%] flex w-48 items-center gap-2 rounded-2xl bg-white p-3 text-ink shadow-xl lg:top-[38%] lg:w-60 lg:gap-3 lg:p-4">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-ok text-xs font-bold text-white lg:size-10 lg:text-sm">
             LF
           </span>
           <div>
-            <p className="text-sm font-semibold">Lucas está a caminho</p>
-            <p className="text-[13px] text-subtle">Chega em 6 min · ★ 4,9</p>
+            <p className="text-xs font-semibold lg:text-sm">Lucas está a caminho</p>
+            <p className="text-[11px] text-subtle lg:text-[13px]">Chega em 6 min · ★ 4,9</p>
           </div>
         </div>
       </div>
 
-      <div className="px-10 pt-2 pb-12 xl:px-14 xl:pb-14">
+      <div className="brand-copy hidden shrink-0 px-10 pt-2 pb-12 lg:block xl:px-14 xl:pb-14">
         <h2 className="max-w-md font-display text-4xl leading-tight font-bold xl:text-5xl">
           Socorro sobre duas rodas.
         </h2>
@@ -97,7 +97,7 @@ export function BrandPanel() {
           Pane no caminho? Informe o defeito, compartilhe sua localização e escolha um
           mecânico próximo.
         </p>
-        <div className="mt-8 flex max-w-md items-center gap-4 border-t border-white/20 pt-6">
+        <div className="brand-stat mt-8 flex max-w-md items-center gap-4 border-t border-white/20 pt-6">
           <span className="font-display text-5xl font-bold">82%</span>
           <p className="text-sm leading-snug text-white/90">
             dos ciclistas da região usam a bicicleta para ir ao trabalho.
