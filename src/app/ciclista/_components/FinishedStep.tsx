@@ -59,7 +59,10 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
         )}
       </dl>
 
-      <div className="flex gap-1" role="group" aria-label="Avaliação">
+      <p id="rating-label" className="self-stretch text-left text-sm font-semibold">
+        Sua nota <span className="font-normal text-subtle">(obrigatória)</span>
+      </p>
+      <div className="-mt-2 flex gap-1" role="group" aria-labelledby="rating-label" aria-describedby={rating === 0 ? "rating-hint" : undefined}>
         {[1, 2, 3, 4, 5].map((value) => (
           <button
             key={value}
@@ -120,9 +123,16 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
         </p>
       )}
 
+      {rating === 0 && (
+        <p id="rating-hint" className="self-stretch text-sm text-muted">
+          Escolha de 1 a 5 estrelas para enviar.
+        </p>
+      )}
+
       <button
         type="button"
         disabled={rating === 0 || busy}
+        aria-describedby={rating === 0 ? "rating-hint" : undefined}
         onClick={() => onConfirm({ nota: rating, comentario: comment, gorjeta })}
         className="h-14 self-stretch rounded-xl bg-brand text-base font-semibold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-[#a9bcd8]"
       >
