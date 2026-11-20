@@ -49,6 +49,21 @@ O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "
 
 Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
 
+## Avaliação do ciclista pelo mecânico
+
+Após concluir, o mecânico pode dar de 1 a 5 estrelas ao ciclista e deixar um
+comentário opcional. Também pode avaliar pelos detalhes do histórico. Cada
+atendimento aceita uma avaliação de cada lado, de forma independente. Nos
+detalhes, os dois participantes veem a nota e o comentário; outras contas não
+têm acesso. A avaliação não impede a conclusão do serviço nem depende da nota
+enviada pelo ciclista.
+
+Aplique a migration
+[avaliacoes_ciclistas.sql](supabase/migrations/20261120010000_avaliacoes_ciclistas.sql)
+para habilitar a persistência. Na [prévia do encerramento](http://localhost:3000/previa#mecanico-resumo),
+é possível enviar a nota e conferir o resultado alternando para os detalhes do
+ciclista, sem gravar no banco.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
