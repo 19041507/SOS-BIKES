@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function SignupPage() {
   return (
-    <main className="auth-page grid min-h-dvh flex-1 grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1">
+    <main className="grid min-h-dvh flex-1 grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1">
       <Suspense fallback={null}>
         <RedirecionarSeLogado />
       </Suspense>

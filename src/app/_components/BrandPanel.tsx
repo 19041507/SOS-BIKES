@@ -19,9 +19,9 @@ const VERTICAL_STREETS = [
 
 export function BrandPanel() {
   return (
-    <aside className="brand-panel order-first flex h-60 flex-col bg-brand text-white sm:h-72 lg:order-last lg:h-auto">
+    <aside className="brand-panel order-first flex flex-col bg-brand text-white lg:order-last">
       <div
-        className="brand-map relative flex-1 overflow-hidden lg:basis-[52dvh] lg:min-h-[clamp(240px,48dvh,420px)]"
+        className="relative flex-1 overflow-hidden lg:basis-[52dvh] lg:min-h-[clamp(240px,48dvh,420px)]"
         style={{ maskImage: "linear-gradient(to bottom, black 78%, transparent)" }}
         aria-hidden="true"
       >
@@ -78,7 +78,7 @@ export function BrandPanel() {
           <p className="text-sm text-subtle">R. da Aurora · a 800 m</p>
         </div>
 
-        <div className="brand-arrival absolute top-[55%] right-[5%] flex w-48 items-center gap-2 rounded-2xl bg-white p-3 text-ink shadow-xl lg:top-[38%] lg:w-60 lg:gap-3 lg:p-4">
+        <div className="brand-arrival absolute flex items-center gap-2 rounded-2xl bg-white p-3 text-ink shadow-xl lg:p-4">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-ok text-xs font-bold text-white lg:size-10 lg:text-sm">
             LF
           </span>
