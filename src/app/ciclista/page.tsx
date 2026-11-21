@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 async function Conteudo({ searchParams }: PageProps<"/ciclista">) {
   const { mecanico } = await searchParams;
   const id = typeof mecanico === "string" ? mecanico : undefined;
-  return <CyclistFlow key={id ?? "inicio"} mecanicoFavoritoId={id} />;
+  return <CyclistFlow mecanicoFavoritoId={id} />;
 }
 
 export default function CyclistPage(props: PageProps<"/ciclista">) {

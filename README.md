@@ -64,11 +64,27 @@ no Supabase depois das anteriores. Ela cria a tabela e a consulta de favoritos,
 isola os registros por ciclista e bloqueia novos pedidos para mecânicos
 indisponíveis. Sem essa migration, o sistema mostra o erro ao carregar favoritos.
 
-Na [prévia local](http://localhost:3000/previa#ciclista-favoritos), os favoritos
-funcionam em memória e são reiniciados ao recarregar a página. Para validar as
-regras do banco, execute
+Esta funcionalidade depende da aprovação do grupo para entrar na versão.
+A migration deve ser aplicada no Supabase **antes do merge/deploy**. Sem ela,
+somente os controles de favoritos ficam indisponíveis; o pedido normal continua
+funcionando e não vira uma ação de “Recarregar favoritos”.
+
+A política de disponibilidade afeta todo pedido, com ou sem favorito: o banco
+recusa inserir um chamado para um mecânico indisponível. Não há consulta extra
+antes do envio; somente um insert recusado por RLS consulta a lista para exibir
+um aviso de indisponibilidade. Os demais erros mantêm a mensagem normal.
+
+Para validar as regras de isolamento e disponibilidade do banco, execute
 [mecanicos-favoritos.sql](supabase/tests/mecanicos-favoritos.sql) em um banco de teste
-com as migrations aplicadas; o script usa uma transação e desfaz os dados no final.
+com as migrations aplicadas; o script usa uma transação e desfaz os dados no final:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/mecanicos-favoritos.sql
+```
+
+Use somente um banco de teste com o schema de Auth do Supabase e os papéis
+`authenticated`/`anon`. Este teste deve ser executado antes de liberar a migration;
+não o rode no banco de produção.
 
 ## Cadastro
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { MapView, POSICAO_DO_CICLISTA, posicaoNoMapa } from "@/components/MapView";
 import { usePerfil } from "@/components/PerfilProvider";
 import { useToast } from "@/components/ui/Toaster";
@@ -56,6 +57,7 @@ function mensagem(erro: unknown) {
 }
 
 export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: string } = {}) {
+  const router = useRouter();
   const perfil = usePerfil();
   const avisar = useToast();
   const agora = useAgora();
@@ -66,6 +68,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   const [chamado, setChamado] = useState<ChamadoCompleto | null | undefined>(undefined);
   const [draft, setDraft] = useState<Draft>(mecanicoFavoritoId ? "category" : "home");
   const [preferidoId, setPreferidoId] = useState(mecanicoFavoritoId ?? null);
+  const [favoritoDaUrl, setFavoritoDaUrl] = useState(mecanicoFavoritoId);
   const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [detalhes, setDetalhes] = useState("");
   const [endereco, setEndereco] = useState("");
@@ -76,6 +79,21 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   const [erro, setErro] = useState<string | null>(null);
   const [solicitando, setSolicitando] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+
+  // A navegação pode preservar esta tela. Um novo favorito inicia outro rascunho;
+  // remover o parâmetro não remonta o fluxo nem perde o defeito/endereço escolhidos.
+  if (favoritoDaUrl !== mecanicoFavoritoId) {
+    setFavoritoDaUrl(mecanicoFavoritoId);
+    if (mecanicoFavoritoId) {
+      setPreferidoId(mecanicoFavoritoId);
+      setDraft("category");
+      setCategoria(null);
+      setDetalhes("");
+      setEndereco("");
+      setAviso(null);
+      setErro(null);
+    }
+  }
 
   const carregarMecanicos = useCallback(async () => {
     setMecanicos(null);
@@ -186,6 +204,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   }
 
   function recomecar(avisoParaInicio?: string) {
+    router.replace("/ciclista", { scroll: false });
     setPreferidoId(null);
     setChamado(null);
     setDraft("home");
@@ -214,12 +233,6 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     setAviso(null);
     setErro(null);
     try {
-      const atuais = await listarMecanicosDisponiveis();
-      setMecanicos(atuais);
-      if (!atuais.some(m => m.id === mecanico.id)) {
-        setAviso("Este mecânico ficou indisponível. Atualize a lista ou escolha outro mecânico.");
-        return;
-      }
       aplicar(await abrirChamado({ ciclistaId: perfil.id, mecanicoId: mecanico.id, categoria, detalhes, endereco }));
     } catch (e) {
       setErro(mensagem(e));
@@ -330,7 +343,16 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
         )}
 
         {chamado === null && draft === "mechanics" && preferidoId && (
-          <Button variant="secondary" onClick={() => { setPreferidoId(null); setAviso(null); void carregarMecanicos(); }}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setPreferidoId(null);
+              setAviso(null);
+              setErro(null);
+              router.replace("/ciclista", { scroll: false });
+              void carregarMecanicos();
+            }}
+          >
             Ver outros mecânicos
           </Button>
         )}
