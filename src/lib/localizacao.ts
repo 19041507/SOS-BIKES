@@ -25,16 +25,6 @@ export function obterPosicao(): Promise<Posicao> {
   });
 }
 
-/** Só lê a posição se a pessoa já autorizou antes, sem abrir o pedido de permissão. */
-export async function posicaoSeJaAutorizada(): Promise<Posicao | null> {
-  try {
-    const permissao = await navigator.permissions.query({ name: "geolocation" });
-    return permissao.state === "granted" ? await obterPosicao() : null;
-  } catch {
-    return null;
-  }
-}
-
 type RespostaDoNominatim = {
   display_name?: string;
   address?: { road?: string; house_number?: string; suburb?: string; neighbourhood?: string; city?: string; town?: string };

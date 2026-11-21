@@ -14,7 +14,7 @@ import {
   useMudancasEmChamados,
   type ChamadoCompleto,
 } from "@/lib/chamados";
-import { obterPosicao, posicaoSeJaAutorizada, type Posicao } from "@/lib/localizacao";
+import { distanciaKm, obterPosicao, type Posicao } from "@/lib/localizacao";
 import { dadosDoPainel, type DadosDoPainel } from "@/lib/dashboard-mecanico";
 import { formatBRL, parseBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
@@ -106,25 +106,45 @@ export function MechanicPanel() {
     carregarResumo();
   }, [carregarChamados, carregarResumo]);
 
-  /** Atualiza a posição na lista dos ciclistas. `pedir` abre o pedido de permissão do navegador. */
-  const atualizarPosicao = useCallback(async (pedir: boolean) => {
-    const posicao = pedir ? await obterPosicao() : await posicaoSeJaAutorizada();
-    if (!posicao) return;
+  /** Última posição gravada no banco, para não gravar a cada leitura do GPS. */
+  const ultimaSalva = useRef<{ posicao: Posicao; em: number } | null>(null);
+
+  /**
+   * Mostra a posição e grava no banco quando ele se moveu mais de 100 m (no máximo 1 vez
+   * por minuto) ou a cada ~4 min parado: a lista dos ciclistas ignora posições com mais de 30 min.
+   */
+  const salvarPosicao = useCallback(async (posicao: Posicao, forcar = false) => {
     setMinhaPosicao(posicao);
+    const ultima = ultimaSalva.current;
+    const passou = ultima ? Date.now() - ultima.em : Infinity;
+    const moveu = ultima ? distanciaKm(ultima.posicao, posicao) >= 0.1 : true;
+    if (!forcar && !(moveu && passou >= 60_000) && passou < 4 * 60_000) return;
+    ultimaSalva.current = { posicao, em: Date.now() };
     await salvarMinhaLocalizacao(posicao);
   }, []);
 
-  // Já disponível ao abrir o painel: só atualiza se a localização já foi liberada antes.
+  // Disponível com o painel aberto: acompanha o GPS (o navegador pede a permissão, se faltar).
+  // Site não roda em segundo plano, então com a tela fechada a posição envelhece e some da lista.
   useEffect(() => {
-    if (!perfil.disponivel) return;
-    posicaoSeJaAutorizada()
-      .then(async (posicao) => {
-        if (!posicao) return;
-        setMinhaPosicao(posicao);
-        await salvarMinhaLocalizacao(posicao);
-      })
-      .catch(() => {});
-  }, [perfil.disponivel]);
+    if (!online || !("geolocation" in navigator)) return;
+    const acompanhamento = navigator.geolocation.watchPosition(
+      ({ coords }) => salvarPosicao({ lat: coords.latitude, lng: coords.longitude }).catch(() => {}),
+      (erro) => {
+        if (erro.code === erro.PERMISSION_DENIED) {
+          setAviso("Sem a localização, você aparece no fim da lista dos ciclistas, sem a distância.");
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 60_000, timeout: 30_000 },
+    );
+    // Parado, o GPS pode não avisar nada: relê a cada 4 min para a posição não vencer.
+    const relogio = setInterval(() => {
+      obterPosicao().then((posicao) => salvarPosicao(posicao)).catch(() => {});
+    }, 4 * 60_000);
+    return () => {
+      navigator.geolocation.clearWatch(acompanhamento);
+      clearInterval(relogio);
+    };
+  }, [online, salvarPosicao]);
 
   // Novos chamados e respostas do ciclista chegam em tempo real.
   useMudancasEmChamados(`mecanico_id=eq.${perfil.id}`, carregarChamados);
@@ -161,7 +181,7 @@ export function MechanicPanel() {
     setOcupado(true);
     // Pede a localização ainda dentro do toque: o Safari pode ignorar o pedido depois de um await.
     const localizacao = proximo
-      ? atualizarPosicao(true).catch(() =>
+      ? obterPosicao().then((posicao) => salvarPosicao(posicao, true)).catch(() =>
           setAviso("Sem a localização, você aparece no fim da lista dos ciclistas, sem a distância."),
         )
       : null;
@@ -254,14 +274,13 @@ export function MechanicPanel() {
             onEtaChange={setTempo}
             onDecline={() => executar(() => mudarChamado(atual.id, { status: "recusado" })).then(limparFormulario)}
             onAccept={() =>
-              executar(async () => {
-                await atualizarPosicao(false).catch(() => {});
-                return mudarChamado(atual.id, {
+              executar(() =>
+                mudarChamado(atual.id, {
                   status: "aceito",
                   estimativa: parseBRL(estimativa),
                   tempo_chegada_min: Number(tempo),
-                });
-              }).then(() => setValorFinal(estimativa))
+                }),
+              ).then(() => setValorFinal(estimativa))
             }
           />
         )}
