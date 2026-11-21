@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import { divIcon, latLngBounds } from "leaflet";
-import { MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, ZoomControl, useMap } from "react-leaflet";
 import { CENTRO_PADRAO, type Posicao } from "@/lib/localizacao";
 import type { MapaProps } from "./Mapa";
 
@@ -46,7 +46,15 @@ function Enquadrar({ pontos }: { pontos: Posicao[] }) {
 export default function MapaReal({ ciclista, pins, rota, chip, enquadrar, className = "" }: MapaProps) {
   return (
     <section aria-label="Mapa" className={`relative isolate overflow-hidden rounded-2xl border border-line bg-map ${className}`}>
-      <MapContainer center={ciclista ?? CENTRO_PADRAO} zoom={14} scrollWheelZoom={false} className="absolute inset-0 size-full">
+      <MapContainer
+        center={ciclista ?? CENTRO_PADRAO}
+        zoom={14}
+        scrollWheelZoom={false}
+        zoomControl={false}
+        className="absolute inset-0 size-full"
+      >
+        {/* O canto de cima à esquerda é do texto do mapa. */}
+        <ZoomControl position="bottomright" />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -58,9 +66,12 @@ export default function MapaReal({ ciclista, pins, rota, chip, enquadrar, classN
             pathOptions={{ className: "stroke-ok", weight: 5, dashArray: "2 10", lineCap: "round" }}
           />
         )}
-        {ciclista && <Marker position={ciclista} icon={ICONE_DO_CICLISTA} keyboard={false} />}
+        {/* O ciclista fica por cima quando o mecânico está muito perto. */}
+        {ciclista && <Marker position={ciclista} icon={ICONE_DO_CICLISTA} keyboard={false} zIndexOffset={1000} />}
         {pins.map((pin) => (
-          <Marker key={pin.id} position={pin} icon={iconeDoMecanico(pin.initials)} keyboard={false} />
+          <Marker key={pin.id} position={pin} icon={iconeDoMecanico(pin.initials)} keyboard={false}>
+            {pin.rotulo && <Popup closeButton={false}>{pin.rotulo}</Popup>}
+          </Marker>
         ))}
       </MapContainer>
       <span className="pointer-events-none absolute top-4 left-4 z-[1000] rounded-full bg-white px-4 py-2.5 text-sm font-semibold shadow-md">

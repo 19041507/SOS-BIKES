@@ -41,7 +41,9 @@ export function CyclistDashboard({ perfil, mechanics, notice, onStart }: Cyclist
 
   const destaques = mechanics?.slice(0, 3) ?? [];
   const pins = (mechanics ?? []).flatMap((m) =>
-    m.latitude != null && m.longitude != null ? [{ id: m.id, initials: iniciais(m.nome), lat: m.latitude, lng: m.longitude }] : [],
+    m.latitude != null && m.longitude != null
+      ? [{ id: m.id, initials: iniciais(m.nome), rotulo: m.nome, lat: m.latitude, lng: m.longitude }]
+      : [],
   );
   const total = mechanics?.length ?? 0;
 

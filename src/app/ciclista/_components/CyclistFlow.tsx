@@ -19,7 +19,7 @@ import {
   type ChamadoCompleto,
   type MecanicoDisponivel,
 } from "@/lib/chamados";
-import { pontoNoCaminho, posicaoDoChamado, type Posicao } from "@/lib/localizacao";
+import { formatarDistancia, pontoNoCaminho, posicaoDoChamado, type Posicao } from "@/lib/localizacao";
 import { formatBRL } from "@/lib/money";
 import { progressoDaChegada, useAgora, useMenosMovimento } from "@/lib/movimento";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
@@ -274,21 +274,39 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   let pins: PinDoMapa[] = [];
   let pontoDoCiclista: Posicao | null = posicao;
   let rota: { de: Posicao; ate: Posicao } | undefined;
+  /** De onde o mecânico sai: fixa, para o mapa não reenquadrar a cada passo. */
+  let origem: Posicao | null = null;
   if (chamado) {
     pontoDoCiclista = posicaoDoChamado(chamado);
     const { progresso, minutosRestantes } = progressoDaChegada(chamado.confirmado_em, chamado.tempo_chegada_min, agora);
-    if (origemDoMecanico && pontoDoCiclista && comMecanico) {
+    // Aguardando a resposta, a posição vem da lista em que o ciclista escolheu o mecânico.
+    const daLista = mecanicos?.find((m) => m.id === chamado.mecanico_id);
+    origem =
+      origemDoMecanico && comMecanico
+        ? origemDoMecanico
+        : chamado.status === "aguardando" && daLista?.latitude != null && daLista.longitude != null
+          ? { lat: daLista.latitude, lng: daLista.longitude }
+          : null;
+    if (origem && pontoDoCiclista) {
       // A caminho, o pin avança em direção ao ciclista conforme o tempo estimado passa.
       const noLocal = chamado.status === "em_atendimento";
       const avanco = noLocal ? PERCURSO_MAXIMO : chamado.status === "a_caminho" && !menosMovimento ? progresso * PERCURSO_MAXIMO : 0;
-      const ponto = pontoNoCaminho(origemDoMecanico, pontoDoCiclista, avanco);
-      pins = [{ id: chamado.mecanico_id, initials: iniciais(chamado.mecanico?.nome ?? "?"), ...ponto }];
+      const ponto = pontoNoCaminho(origem, pontoDoCiclista, avanco);
+      pins = [{ id: chamado.mecanico_id, initials: iniciais(chamado.mecanico?.nome ?? "?"), rotulo: chamado.mecanico?.nome, ...ponto }];
       if (chamado.status === "a_caminho") rota = { de: ponto, ate: pontoDoCiclista };
     }
     chip = textoDoMapa(chamado, nomeDoMecanico, minutosRestantes);
   } else if (chamado === null) {
     pins = (disponiveis ?? []).flatMap((m) =>
-      m.latitude != null && m.longitude != null ? [{ id: m.id, initials: iniciais(m.nome), lat: m.latitude, lng: m.longitude }] : [],
+      m.latitude != null && m.longitude != null
+        ? [{
+            id: m.id,
+            initials: iniciais(m.nome),
+            rotulo: m.distancia_km != null ? `${m.nome} · a ${formatarDistancia(m.distancia_km)}` : m.nome,
+            lat: m.latitude,
+            lng: m.longitude,
+          }]
+        : [],
     );
     chip =
       disponiveis === null
@@ -297,10 +315,9 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
           ? "Nenhum mecânico disponível agora"
           : `${disponiveis.length} ${disponiveis.length === 1 ? "mecânico disponível" : "mecânicos disponíveis"} agora`;
   }
-  // O enquadramento usa a origem do mecânico (fixa), não o ponto que anda.
   const enquadrar = [
     ...(pontoDoCiclista ? [pontoDoCiclista] : []),
-    ...(chamado ? (origemDoMecanico && comMecanico ? [origemDoMecanico] : []) : pins),
+    ...(chamado ? (origem ? [origem] : []) : pins),
   ];
 
   if (chamado === null && draft === "home") {

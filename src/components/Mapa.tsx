@@ -3,7 +3,12 @@
 import dynamic from "next/dynamic";
 import type { Posicao } from "@/lib/localizacao";
 
-export type PinDoMapa = Posicao & { id: string; initials: string };
+export type PinDoMapa = Posicao & {
+  id: string;
+  initials: string;
+  /** Texto ao clicar no pin (nome, distância). */
+  rotulo?: string;
+};
 
 export type MapaProps = {
   /** Ponto azul do ciclista. */
