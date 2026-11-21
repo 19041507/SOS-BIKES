@@ -18,6 +18,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [loginError, setLoginError] = useState<string | null>(null);
+  /** "Esqueci minha senha" só aparece depois de uma tentativa com e-mail ou senha incorretos. */
+  const [errouSenha, setErrouSenha] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -32,6 +34,7 @@ export function LoginForm() {
       // Em caso de sucesso, a action redireciona para a área do perfil.
       const result = await entrar({ email, senha: password, perfil: profile });
       setLoginError(result.erro);
+      if (result.senhaIncorreta) setErrouSenha(true);
     });
   }
 
@@ -85,12 +88,14 @@ export function LoginForm() {
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between gap-3">
           <label htmlFor="password" className="text-sm font-semibold">Senha</label>
-          <Link
-            href={email.trim() ? `/recuperar-senha?email=${encodeURIComponent(email.trim())}` : "/recuperar-senha"}
-            className="text-sm font-semibold text-brand hover:text-brand-dark"
-          >
-            Esqueci minha senha
-          </Link>
+          {errouSenha && (
+            <Link
+              href={email.trim() ? `/recuperar-senha?email=${encodeURIComponent(email.trim())}` : "/recuperar-senha"}
+              className="text-sm font-semibold text-brand hover:text-brand-dark"
+            >
+              Esqueci minha senha
+            </Link>
+          )}
         </div>
         <div className="relative">
           <input

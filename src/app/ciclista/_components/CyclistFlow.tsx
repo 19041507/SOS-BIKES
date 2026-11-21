@@ -41,6 +41,7 @@ import { ProposalStep } from "./ProposalStep";
 import { TrackingStep } from "./TrackingStep";
 import { FinishedStep } from "./FinishedStep";
 import { Button } from "@/components/ui/Button";
+import { AtivarNotificacoes } from "@/components/AtivarNotificacoes";
 
 /** Etapas antes de existir um chamado; depois, a tela segue o status do chamado no banco. */
 type Draft = "home" | "category" | "location" | "mechanics";
@@ -500,6 +501,13 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
           </Button>
         )}
 
+        {chamado?.status === "aguardando" && (
+          <AtivarNotificacoes
+            perfil="ciclista"
+            titulo="Saiba quando o mecânico responder"
+            texto="Avisamos no celular quando ele aceitar, chegar ou mandar mensagem, mesmo com o app fechado."
+          />
+        )}
         {chamado?.status === "aguardando" && (
           <WaitingStep
             chamado={chamado}
