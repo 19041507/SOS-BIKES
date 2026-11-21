@@ -19,7 +19,7 @@ const VERTICAL_STREETS = [
 
 export function BrandPanel() {
   return (
-    <aside className="brand-panel order-first flex h-60 flex-col bg-brand text-white sm:h-72 lg:order-last lg:h-auto">
+    <aside className="brand-panel order-first flex flex-col bg-brand text-white lg:order-last">
       <div
         className="brand-map relative flex-1 overflow-hidden lg:basis-[52dvh] lg:min-h-[clamp(240px,48dvh,420px)]"
         style={{ maskImage: "linear-gradient(to bottom, black 78%, transparent)" }}
