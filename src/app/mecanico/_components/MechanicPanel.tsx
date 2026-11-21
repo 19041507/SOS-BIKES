@@ -24,6 +24,7 @@ import { MechanicDashboard } from "./MechanicDashboard";
 import { IncomingCall } from "./IncomingCall";
 import { ActiveJob } from "./ActiveJob";
 import { Conversa } from "@/components/chat/Conversa";
+import { AtivarNotificacoes } from "@/components/AtivarNotificacoes";
 import { CloseJob } from "./CloseJob";
 import { JobSummary } from "./JobSummary";
 
@@ -220,6 +221,13 @@ export function MechanicPanel() {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-3 sm:p-4">
       <AvailabilityCard online={online} busy={ocupado} hasActiveCall={Boolean(atual)} onToggle={alternarDisponibilidade} />
+      {online && (
+        <AtivarNotificacoes
+          perfil="mecanico"
+          titulo="Receba chamados com o app fechado"
+          texto="Avisamos no celular quando um ciclista escolher você. Você tem 1 minuto para responder."
+        />
+      )}
 
       <section
         className={`flex w-full min-w-0 flex-col gap-4 ${
