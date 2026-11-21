@@ -60,6 +60,8 @@ export type Database = {
           categoria: Database["public"]["Enums"]["categoria_defeito"];
           detalhes: string | null;
           endereco: string;
+          latitude: number | null;
+          longitude: number | null;
           status: Database["public"]["Enums"]["status_chamado"];
           estimativa: number | null;
           tempo_chegada_min: number | null;
@@ -81,6 +83,8 @@ export type Database = {
           categoria: Database["public"]["Enums"]["categoria_defeito"];
           detalhes?: string | null;
           endereco: string;
+          latitude?: number | null;
+          longitude?: number | null;
           status?: Database["public"]["Enums"]["status_chamado"];
           estimativa?: number | null;
           tempo_chegada_min?: number | null;
@@ -101,6 +105,8 @@ export type Database = {
           categoria?: Database["public"]["Enums"]["categoria_defeito"];
           detalhes?: string | null;
           endereco?: string;
+          latitude?: number | null;
+          longitude?: number | null;
           status?: Database["public"]["Enums"]["status_chamado"];
           estimativa?: number | null;
           tempo_chegada_min?: number | null;
@@ -171,7 +177,7 @@ export type Database = {
         Returns: { id: string; nome: string; oficina: string | null; disponivel: boolean; media: number | null; avaliacoes: number; atendimentos: number }[];
       };
       mecanicos_disponiveis: {
-        Args: never;
+        Args: { lat?: number; lng?: number };
         Returns: {
           id: string;
           nome: string;
@@ -180,7 +186,18 @@ export type Database = {
           media: number | null;
           avaliacoes: number;
           atendimentos: number;
+          latitude: number | null;
+          longitude: number | null;
+          distancia_km: number | null;
         }[];
+      };
+      atualizar_minha_localizacao: {
+        Args: { lat: number; lng: number };
+        Returns: undefined;
+      };
+      localizacao_do_mecanico_do_chamado: {
+        Args: { chamado: string };
+        Returns: { latitude: number; longitude: number }[];
       };
     };
     Enums: {

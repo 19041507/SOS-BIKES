@@ -10,9 +10,11 @@ import {
   chamadosEmAndamentoDoMecanico,
   definirDisponibilidade,
   mudarChamado,
+  salvarMinhaLocalizacao,
   useMudancasEmChamados,
   type ChamadoCompleto,
 } from "@/lib/chamados";
+import { obterPosicao, posicaoSeJaAutorizada, type Posicao } from "@/lib/localizacao";
 import { dadosDoPainel, type DadosDoPainel } from "@/lib/dashboard-mecanico";
 import { formatBRL, parseBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
@@ -51,6 +53,7 @@ export function MechanicPanel() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [minhaPosicao, setMinhaPosicao] = useState<Posicao | null>(null);
   const emFoco = useRef<ChamadoCompleto | null>(null);
 
   const atual = chamados ? chamadoEmFoco(chamados) : null;
@@ -102,6 +105,26 @@ export function MechanicPanel() {
     carregarResumo();
   }, [carregarChamados, carregarResumo]);
 
+  /** Atualiza a posição na lista dos ciclistas. `pedir` abre o pedido de permissão do navegador. */
+  const atualizarPosicao = useCallback(async (pedir: boolean) => {
+    const posicao = pedir ? await obterPosicao() : await posicaoSeJaAutorizada();
+    if (!posicao) return;
+    setMinhaPosicao(posicao);
+    await salvarMinhaLocalizacao(posicao);
+  }, []);
+
+  // Já disponível ao abrir o painel: só atualiza se a localização já foi liberada antes.
+  useEffect(() => {
+    if (!perfil.disponivel) return;
+    posicaoSeJaAutorizada()
+      .then(async (posicao) => {
+        if (!posicao) return;
+        setMinhaPosicao(posicao);
+        await salvarMinhaLocalizacao(posicao);
+      })
+      .catch(() => {});
+  }, [perfil.disponivel]);
+
   // Novos chamados e respostas do ciclista chegam em tempo real.
   useMudancasEmChamados(`mecanico_id=eq.${perfil.id}`, carregarChamados);
 
@@ -135,8 +158,15 @@ export function MechanicPanel() {
     const proximo = !online;
     setOnline(proximo);
     setOcupado(true);
+    // Pede a localização ainda dentro do toque: o Safari pode ignorar o pedido depois de um await.
+    const localizacao = proximo
+      ? atualizarPosicao(true).catch(() =>
+          setAviso("Sem a localização, você aparece no fim da lista dos ciclistas, sem a distância."),
+        )
+      : null;
     try {
       await definirDisponibilidade(perfil.id, proximo);
+      await localizacao;
     } catch (e) {
       setOnline(!proximo);
       setErro(mensagem(e));
@@ -218,17 +248,19 @@ export function MechanicPanel() {
             estimate={estimativa}
             eta={tempo}
             busy={ocupado}
+            mechanicPosition={minhaPosicao}
             onEstimateChange={setEstimativa}
             onEtaChange={setTempo}
             onDecline={() => executar(() => mudarChamado(atual.id, { status: "recusado" })).then(limparFormulario)}
             onAccept={() =>
-              executar(() =>
-                mudarChamado(atual.id, {
+              executar(async () => {
+                await atualizarPosicao(false).catch(() => {});
+                return mudarChamado(atual.id, {
                   status: "aceito",
                   estimativa: parseBRL(estimativa),
                   tempo_chegada_min: Number(tempo),
-                }),
-              ).then(() => setValorFinal(estimativa))
+                });
+              }).then(() => setValorFinal(estimativa))
             }
           />
         )}
@@ -244,6 +276,7 @@ export function MechanicPanel() {
           <ActiveJob
             chamado={atual}
             mechanicName={perfil.nome}
+            mechanicPosition={minhaPosicao}
             busy={ocupado}
             onNext={() =>
               atual.status === "a_caminho"

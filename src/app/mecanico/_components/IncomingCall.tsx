@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Mapa } from "@/components/Mapa";
 import { rotuloCategoria } from "@/lib/categorias";
 import type { ChamadoCompleto } from "@/lib/chamados";
+import { distanciaKm, formatarDistancia, minutosSugeridos, posicaoDoChamado, type Posicao } from "@/lib/localizacao";
 import { parseBRL } from "@/lib/money";
 import { useTituloDeAlerta } from "@/lib/movimento";
 import { primeiroNome } from "@/lib/pessoas";
@@ -15,6 +17,8 @@ type IncomingCallProps = {
   estimate: string;
   eta: string;
   busy: boolean;
+  /** Posição do mecânico, para a distância e a sugestão de tempo */
+  mechanicPosition: Posicao | null;
   onEstimateChange: (value: string) => void;
   onEtaChange: (value: string) => void;
   onDecline: () => void;
@@ -32,6 +36,7 @@ export function IncomingCall({
   estimate,
   eta,
   busy,
+  mechanicPosition,
   onEstimateChange,
   onEtaChange,
   onDecline,
@@ -42,6 +47,16 @@ export function IncomingCall({
   const urgent = secondsLeft <= 15;
   const nome = chamado.ciclista?.nome ?? "Um ciclista";
   useTituloDeAlerta(true, "(1) Novo chamado · SOS Bikes");
+  const local = posicaoDoChamado(chamado);
+  const distancia = local && mechanicPosition ? distanciaKm(mechanicPosition, local) : null;
+  const sugerido = useRef(false);
+
+  // Sugere o tempo pela distância uma vez; o mecânico pode mudar ou apagar.
+  useEffect(() => {
+    if (distancia === null || sugerido.current) return;
+    sugerido.current = true;
+    if (!eta) onEtaChange(String(minutosSugeridos(distancia)));
+  }, [distancia, eta, onEtaChange]);
 
   useEffect(() => {
     const timer = setInterval(() => setSecondsLeft(segundosRestantes(chamado.criado_em, totalSeconds)), 1000);
@@ -99,6 +114,7 @@ export function IncomingCall({
         <div className="sm:col-span-2">
           <dt className="text-[13px] text-subtle">Onde</dt>
           <dd className="font-semibold">{chamado.endereco}</dd>
+          {distancia !== null && <dd className="text-sm text-muted">a {formatarDistancia(distancia)} em linha reta</dd>}
         </div>
         {chamado.detalhes && (
           <div className="sm:col-span-2">
@@ -107,6 +123,16 @@ export function IncomingCall({
           </div>
         )}
       </dl>
+
+      {local && (
+        <Mapa
+          className="h-[180px]"
+          ciclista={local}
+          pins={[]}
+          chip="Local do ciclista"
+          enquadrar={[local]}
+        />
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">

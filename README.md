@@ -84,16 +84,14 @@ no formulário e na action do servidor. A versão aceita e a data gerada no serv
 são enviadas aos metadados de cadastro do Supabase Auth; isso não constitui um
 registro de auditoria imutável.
 
-Antes de renderizar o campo de endereço, a etapa de localização apresenta a
-finalidade e solicita uma autorização específica. Recusar volta à etapa anterior;
-retirar a autorização apaga o endereço do pedido ainda não enviado. O app não
-solicita GPS nem acompanha deslocamentos. O endereço só é transmitido ao banco
-ao solicitar um mecânico.
-
-A escolha fica no `CyclistFlow`, junto com o endereço, durante o pedido: voltar
-da lista de mecânicos não pede autorização novamente. Recomeçar o pedido ou
-retirar a autorização limpa essa escolha e o endereço. Não há persistência da
-autorização de localização entre sessões.
+Na primeira vez que o ciclista entra, uma tela explica para que serve a
+localização, com **Ativar localização** e **Agora não**; só depois aparece o pedido
+de permissão do navegador. A escolha de ter visto a tela fica no `localStorage` do
+aparelho. Com a permissão liberada, o app lê a posição ao abrir a área do
+ciclista: o ponto aparece no mapa, a lista vem pela distância e o endereço do
+pedido já vem preenchido (editável). Sem permissão, o endereço é digitado. O
+botão "Usar minha localização" na etapa do endereço serve para tentar de novo.
+As coordenadas só ficam no banco quando o pedido é enviado.
 
 Os documentos identificam diretamente o SOS Bikes como projeto acadêmico de
 estudantes de Administração da FICR, sem serviço comercial nem canal de
