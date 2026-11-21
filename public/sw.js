@@ -2,8 +2,9 @@
 // - Navegação: sempre a rede primeiro; sem internet, mostra /offline.html.
 // - Arquivos com hash do Next (/_next/static) e ícones: cache primeiro.
 // - Nada da área logada, do Supabase ou de outros domínios fica no cache.
+// - Web Push: mostra os avisos do atendimento com o app fechado (ver /api/notificacoes).
 // Mudou a lógica? Troque a versão para apagar o cache antigo.
-const CACHE = "sos-bikes-v1";
+const CACHE = "sos-bikes-v2";
 const OFFLINE = "/offline.html";
 
 self.addEventListener("install", (event) => {
@@ -46,4 +47,34 @@ self.addEventListener("fetch", (event) => {
       ),
     );
   }
+});
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  const aviso = event.data.json();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((janelas) => {
+      // Com o app visível, os avisos da própria tela já aparecem.
+      if (janelas.some((janela) => janela.visibilityState === "visible")) return;
+      return self.registration.showNotification(aviso.titulo, {
+        body: aviso.texto,
+        icon: "/icons/icon-192.png",
+        tag: aviso.tag,
+        renotify: true,
+        data: { url: aviso.url },
+      });
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url ?? "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((janelas) => {
+      const aberta = janelas.find((janela) => new URL(janela.url).origin === self.location.origin);
+      if (aberta) return aberta.navigate(url).then((janela) => (janela ?? aberta).focus());
+      return self.clients.openWindow(url);
+    }),
+  );
 });
