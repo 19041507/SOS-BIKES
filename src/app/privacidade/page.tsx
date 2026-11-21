@@ -19,7 +19,7 @@ export default function PrivacidadePage() {
       </section>
       <section>
         <h2>2. Local do atendimento e sua escolha</h2>
-        <p>Antes de abrir o campo de endereço, explicamos a finalidade e pedimos sua autorização para informar o local. Você pode recusar e voltar. Sem endereço não é possível enviar o pedido de socorro. Antes de enviar, você pode retirar a autorização e apagar o endereço pelo próprio formulário. O local é enviado no pedido, não ao apenas digitar ou buscar mecânicos.</p>
+        <p>Depois do login, explicamos para que serve a localização e você escolhe se quer ativá-la. Se ativar, o app lê a posição do aparelho ao abrir a área do ciclista, para mostrar os mecânicos mais próximos e preencher o endereço do pedido; não acompanhamos sua posição em segundo plano. Se não ativar, você digita o endereço. Sem endereço não é possível enviar o pedido de socorro. As coordenadas são usadas para calcular a distância dos mecânicos e só ficam guardadas quando você envia o pedido. Você pode retirar a permissão nas configurações do navegador.</p>
       </section>
       <section>
         <h2>3. Quem pode acessar</h2>

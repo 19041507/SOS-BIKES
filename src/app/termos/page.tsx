@@ -29,7 +29,7 @@ export default function TermosPage() {
       </section>
       <section>
         <h2>6. Dados pessoais e alterações</h2>
-        <p>Leia a <Link href="/privacidade">Política de Privacidade</Link> para conhecer os dados utilizados e seus direitos. O compartilhamento do local é apresentado antes do campo de endereço. Atualizações destes termos serão identificadas pela data da versão. Estes termos não afastam direitos previstos na legislação aplicável.</p>
+        <p>Leia a <Link href="/privacidade">Política de Privacidade</Link> para conhecer os dados utilizados e seus direitos. A localização é explicada antes do pedido de permissão do navegador. Atualizações destes termos serão identificadas pela data da versão. Estes termos não afastam direitos previstos na legislação aplicável.</p>
       </section>
     </DocumentoLegal>
   );
