@@ -144,3 +144,50 @@ export async function sair() {
   }
   redirect("/");
 }
+
+/**
+ * Envia o link para criar uma senha nova. Responde igual com ou sem conta,
+ * para não revelar quais e-mails estão cadastrados.
+ */
+export async function pedirNovaSenha(email: string): Promise<{ erro: string } | { enviado: true }> {
+  const limpo = email.trim().toLowerCase();
+  if (!emailValido(limpo)) return { erro: "Informe um e-mail válido." };
+  if (!supabaseConfigurado) return { erro: "A recuperação de senha não está configurada neste ambiente." };
+
+  // Usado pelo template padrão do Supabase; o template do projeto aponta para a Site URL.
+  const origem = (await headers()).get("origin");
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(limpo, {
+    redirectTo: origem ? `${origem}/auth/confirmar` : undefined,
+  });
+
+  if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit") {
+    return { erro: "Muitos pedidos em pouco tempo. Tente de novo em alguns minutos." };
+  }
+  return { enviado: true };
+}
+
+/** Salva a senha nova (com a sessão criada pelo link do e-mail) e volta para o login. */
+export async function definirNovaSenha(senha: string): Promise<{ erro: string }> {
+  if (senha.length < SENHA_MINIMA) return { erro: `A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.` };
+  if (!supabaseConfigurado) return { erro: "A recuperação de senha não está configurada neste ambiente." };
+
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return { erro: "O link expirou. Peça um novo em “Esqueci minha senha”." };
+
+  const { error } = await supabase.auth.updateUser({ password: senha });
+  if (error) {
+    switch (error.code) {
+      case "same_password":
+        return { erro: "Use uma senha diferente da anterior." };
+      case "weak_password":
+        return { erro: "Senha fraca. Use letras e números." };
+      default:
+        return { erro: "Não foi possível salvar a senha. Tente de novo." };
+    }
+  }
+
+  await supabase.auth.signOut();
+  redirect("/?senha=alterada");
+}
