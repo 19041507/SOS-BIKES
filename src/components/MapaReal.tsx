@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import { divIcon, latLngBounds } from "leaflet";
-import { MapContainer, Marker, Polyline, Popup, TileLayer, ZoomControl, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, ZoomControl, useMap, useMapEvents } from "react-leaflet";
 import { CENTRO_PADRAO, type Posicao } from "@/lib/localizacao";
 import type { MapaProps } from "./Mapa";
 
@@ -56,7 +56,15 @@ function AcompanharTamanho() {
   return null;
 }
 
-export default function MapaReal({ ciclista, pins, rota, chip, enquadrar, className = "" }: MapaProps) {
+/** Tocar no mapa leva o ponto do ciclista até lá. */
+function TocarParaMover({ onMover }: { onMover: (posicao: Posicao) => void }) {
+  useMapEvents({
+    click: (evento) => onMover({ lat: evento.latlng.lat, lng: evento.latlng.lng }),
+  });
+  return null;
+}
+
+export default function MapaReal({ ciclista, pins, rota, chip, enquadrar, onMoverCiclista, className = "" }: MapaProps) {
   return (
     <section aria-label="Mapa" className={`relative isolate overflow-hidden rounded-2xl border border-line bg-map ${className}`}>
       <MapContainer
@@ -81,7 +89,26 @@ export default function MapaReal({ ciclista, pins, rota, chip, enquadrar, classN
           />
         )}
         {/* O ciclista fica por cima quando o mecânico está muito perto. */}
-        {ciclista && <Marker position={ciclista} icon={ICONE_DO_CICLISTA} keyboard={false} zIndexOffset={1000} />}
+        {onMoverCiclista && <TocarParaMover onMover={onMoverCiclista} />}
+        {ciclista && (
+          <Marker
+            position={ciclista}
+            icon={ICONE_DO_CICLISTA}
+            keyboard={false}
+            zIndexOffset={1000}
+            draggable={Boolean(onMoverCiclista)}
+            eventHandlers={
+              onMoverCiclista
+                ? {
+                    dragend: (evento) => {
+                      const { lat, lng } = evento.target.getLatLng();
+                      onMoverCiclista({ lat, lng });
+                    },
+                  }
+                : undefined
+            }
+          />
+        )}
         {pins.map((pin) => (
           <Marker key={pin.id} position={pin} icon={iconeDoMecanico(pin.initials)} keyboard={false}>
             {pin.rotulo && <Popup closeButton={false}>{pin.rotulo}</Popup>}

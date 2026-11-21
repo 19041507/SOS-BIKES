@@ -19,6 +19,8 @@ export type MapaProps = {
   chip: string;
   /** Pontos que o mapa deve mostrar inteiros; sem nenhum, fica no centro padrão. */
   enquadrar: Posicao[];
+  /** Quando existe, o ponto do ciclista pode ser arrastado, e tocar no mapa move o ponto. */
+  onMoverCiclista?: (posicao: Posicao) => void;
   className?: string;
 };
 
