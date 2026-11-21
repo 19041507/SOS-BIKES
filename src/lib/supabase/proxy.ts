@@ -4,7 +4,7 @@ import { supabaseConfigurado, supabaseCredenciais } from "./config";
 import type { Database } from "./database.types";
 
 const AREAS_PROTEGIDAS = ["/ciclista", "/mecanico"];
-const PAGINAS_DE_ENTRADA = ["/", "/cadastro"];
+const PAGINAS_DE_ENTRADA = ["/", "/cadastro", "/recuperar-senha"];
 
 /**
  * Renova a sessão do Supabase a cada requisição e manda para o login quem tenta abrir
@@ -39,14 +39,18 @@ export async function atualizarSessao(request: NextRequest) {
 
   function redirecionar(destino: string) {
     const url = request.nextUrl.clone();
-    url.pathname = destino;
-    url.search = "";
+    const [pathname, busca] = destino.split("?");
+    url.pathname = pathname;
+    url.search = busca ? `?${busca}` : "";
     const redirecionamento = NextResponse.redirect(url);
     response.cookies.getAll().forEach((cookie) => redirecionamento.cookies.set(cookie));
     return redirecionamento;
   }
 
   if (!logado && areaProtegida) return redirecionar("/");
+
+  // A senha nova só pode ser criada com a sessão aberta pelo link do e-mail.
+  if (!logado && caminho === "/nova-senha") return redirecionar("/recuperar-senha?link=invalido");
 
   // Quem já está logado vai direto para a própria área em vez de ver o login ou o cadastro.
   if (claims && PAGINAS_DE_ENTRADA.includes(caminho)) {

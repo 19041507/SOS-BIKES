@@ -9,6 +9,7 @@ import { supabaseConfigurado } from "@/lib/supabase/config";
  *   qualquer aparelho, mesmo que o e-mail seja aberto em outro navegador.
  * - `code`: link do template padrão do Supabase. Só funciona no navegador do cadastro.
  * Confirmado, a pessoa já entra e vai para a área do perfil.
+ * Link de recuperação de senha (`type=recovery`): entra e vai criar a senha nova.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -26,6 +27,11 @@ export async function GET(request: NextRequest) {
         ? await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
         : await supabase.auth.exchangeCodeForSession(code!);
 
+    if (!error && type === "recovery") {
+      destino.pathname = "/nova-senha";
+      return NextResponse.redirect(destino);
+    }
+
     if (!error) {
       const { data: auth } = await supabase.auth.getUser();
       const { data: perfil } = auth.user
@@ -37,6 +43,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(destino);
       }
     }
+  }
+
+  if (type === "recovery") {
+    destino.pathname = "/recuperar-senha";
+    destino.searchParams.set("link", "invalido");
+    return NextResponse.redirect(destino);
   }
 
   destino.pathname = "/";

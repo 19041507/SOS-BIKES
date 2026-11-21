@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
+import Link from "next/link";
 import { entrar } from "../_actions/auth";
 
 type Profile = "ciclista" | "mecanico";
@@ -82,7 +83,15 @@ export function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-semibold">Senha</label>
+        <div className="flex items-baseline justify-between gap-3">
+          <label htmlFor="password" className="text-sm font-semibold">Senha</label>
+          <Link
+            href={email.trim() ? `/recuperar-senha?email=${encodeURIComponent(email.trim())}` : "/recuperar-senha"}
+            className="text-sm font-semibold text-brand hover:text-brand-dark"
+          >
+            Esqueci minha senha
+          </Link>
+        </div>
         <div className="relative">
           <input
             id="password"
