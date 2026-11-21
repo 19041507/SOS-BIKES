@@ -98,7 +98,7 @@ autorização de localização entre sessões.
 Os documentos identificam diretamente o SOS Bikes como projeto acadêmico de
 estudantes de Administração da FICR, sem serviço comercial nem canal de
 atendimento. Não dependem de variáveis de ambiente para essa identificação e não
-descrevem favoritos nem ferramentas locais de desenvolvimento.
+descrevem ferramentas locais de desenvolvimento.
 O aceite permanece apenas nos metadados do Auth (`termos_versao` e
 `termos_aceitos_em`), não em `perfis`, e os links legais permanecem no rodapé de
 todas as telas de `AreaLogada`; confirmar essas decisões com o grupo antes da
@@ -108,6 +108,43 @@ O caráter acadêmico não certifica conformidade integral com a LGPD. Antes de 
 eventual operação real, ainda seria necessário definir canal de privacidade e
 validar bases legais, retenção, atendimento aos titulares e condições dos
 fornecedores.
+
+## Mecânicos favoritos
+
+O ciclista pode salvar ou remover mecânicos na lista de escolha, na tela de
+avaliação e nos detalhes de um chamado. A lista **Favoritos**, no menu e no início
+da área do ciclista, mantém os mecânicos salvos por conta, inclusive os que estão
+indisponíveis. **Chamar novamente** inicia um novo pedido para o mecânico escolhido:
+defeito → endereço → confirmar a solicitação. O aceite, a nova estimativa e a
+confirmação do ciclista continuam obrigatórios.
+
+Para habilitar a persistência, aplique a nova migration
+[mecanicos_favoritos.sql](supabase/migrations/20261120000000_mecanicos_favoritos.sql)
+no Supabase depois das anteriores. Ela cria a tabela e a consulta de favoritos,
+isola os registros por ciclista e bloqueia novos pedidos para mecânicos
+indisponíveis. Sem essa migration, o sistema mostra o erro ao carregar favoritos.
+
+Esta funcionalidade depende da aprovação do grupo para entrar na versão.
+A migration deve ser aplicada no Supabase **antes do merge/deploy**. Sem ela,
+somente os controles de favoritos ficam indisponíveis; o pedido normal continua
+funcionando e não vira uma ação de “Recarregar favoritos”.
+
+A política de disponibilidade afeta todo pedido, com ou sem favorito: o banco
+recusa inserir um chamado para um mecânico indisponível. Não há consulta extra
+antes do envio; somente um insert recusado por RLS consulta a lista para exibir
+um aviso de indisponibilidade. Os demais erros mantêm a mensagem normal.
+
+Para validar as regras de isolamento e disponibilidade do banco, execute
+[mecanicos-favoritos.sql](supabase/tests/mecanicos-favoritos.sql) em um banco de teste
+com as migrations aplicadas; o script usa uma transação e desfaz os dados no final:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/mecanicos-favoritos.sql
+```
+
+Use somente um banco de teste com o schema de Auth do Supabase e os papéis
+`authenticated`/`anon`. Este teste deve ser executado antes de liberar a migration;
+não o rode no banco de produção.
 
 ## Cadastro
 

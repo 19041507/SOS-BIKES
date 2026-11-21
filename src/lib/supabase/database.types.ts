@@ -13,6 +13,15 @@ export type Database = {
         Update: { chamado_id?: string; nota?: number; comentario?: string | null; criado_em?: string };
         Relationships: [{ foreignKeyName: "avaliacoes_ciclistas_chamado_id_fkey"; columns: ["chamado_id"]; isOneToOne: true; referencedRelation: "chamados"; referencedColumns: ["id"] }];
       };
+      mecanicos_favoritos: {
+        Row: { ciclista_id: string; mecanico_id: string; criado_em: string };
+        Insert: { ciclista_id: string; mecanico_id: string; criado_em?: string };
+        Update: { ciclista_id?: string; mecanico_id?: string; criado_em?: string };
+        Relationships: [
+          { foreignKeyName: "mecanicos_favoritos_ciclista_id_fkey"; columns: ["ciclista_id"]; isOneToOne: false; referencedRelation: "perfis"; referencedColumns: ["id"] },
+          { foreignKeyName: "mecanicos_favoritos_mecanico_id_fkey"; columns: ["mecanico_id"]; isOneToOne: false; referencedRelation: "perfis"; referencedColumns: ["id"] },
+        ];
+      };
       perfis: {
         Row: {
           id: string;
@@ -157,6 +166,10 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      meus_mecanicos_favoritos: {
+        Args: never;
+        Returns: { id: string; nome: string; oficina: string | null; disponivel: boolean; media: number | null; avaliacoes: number; atendimentos: number }[];
+      };
       mecanicos_disponiveis: {
         Args: never;
         Returns: {

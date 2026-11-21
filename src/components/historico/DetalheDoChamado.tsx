@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { SalvarMecanico } from "@/components/SalvarMecanico";
 import { StatusBadge, rotuloStatus } from "@/components/ui/StatusBadge";
 import { rotuloCategoria } from "@/lib/categorias";
 import type { ChamadoCompleto } from "@/lib/chamados";
@@ -112,6 +113,7 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
               </a>
             </div>
           )}
+          {visao === "ciclista" && chamado.mecanico && <SalvarMecanico mecanico={chamado.mecanico} />}
         </Card>
 
         {(chamado.estimativa !== null || valorFinal !== null) && (

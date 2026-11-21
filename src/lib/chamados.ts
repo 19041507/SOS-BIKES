@@ -104,6 +104,13 @@ export async function abrirChamado(dados: {
     })
     .select(COLUNAS)
     .single();
+  // A RLS é a autoridade; só consulta a lista para explicar um insert recusado.
+  if (error?.code === "42501") {
+    const { data: disponiveis, error: erroDaLista } = await supabase().rpc("mecanicos_disponiveis");
+    if (!erroDaLista && disponiveis && !disponiveis.some((mecanico) => mecanico.id === dados.mecanicoId)) {
+      throw new Error("Este mecânico ficou indisponível. Atualize a lista ou escolha outro mecânico.");
+    }
+  }
   return resultado(data, error) as ChamadoCompleto;
 }
 

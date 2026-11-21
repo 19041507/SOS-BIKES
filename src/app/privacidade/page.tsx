@@ -13,6 +13,7 @@ export default function PrivacidadePage() {
           <li>Oficina e disponibilidade do mecânico: apresentar profissionais para o ciclista escolher.</li>
           <li>Endereço ou referência digitada, defeito e detalhes do pedido: organizar e realizar o socorro. Não coletamos coordenadas por GPS nem acompanhamos sua posição em segundo plano. O mapa é ilustrativo.</li>
           <li>Histórico, estimativas, valores, gorjetas registradas e avaliações: acompanhar atendimentos e apresentar resumos. Não solicitamos dados de cartão.</li>
+          <li>Mecânicos favoritos: permitir encontrar e chamar novamente os profissionais salvos por você.</li>
         </ul>
       </section>
       <section>
