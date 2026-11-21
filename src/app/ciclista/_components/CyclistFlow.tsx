@@ -288,7 +288,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     chip = textoDoMapa(chamado, nomeDoMecanico, minutosRestantes);
   } else if (chamado === null) {
     pins = (disponiveis ?? []).flatMap((m) =>
-      m.latitude !== null && m.longitude !== null ? [{ id: m.id, initials: iniciais(m.nome), lat: m.latitude, lng: m.longitude }] : [],
+      m.latitude != null && m.longitude != null ? [{ id: m.id, initials: iniciais(m.nome), lat: m.latitude, lng: m.longitude }] : [],
     );
     chip =
       disponiveis === null

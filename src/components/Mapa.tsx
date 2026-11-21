@@ -23,10 +23,22 @@ const MapaReal = dynamic(() => import("./MapaReal"), {
   loading: () => <div className="size-full rounded-2xl bg-map motion-safe:animate-pulse" />,
 });
 
-export function Mapa({ className = "", ...props }: MapaProps) {
+function valida(p: Posicao | null | undefined): p is Posicao {
+  return Number.isFinite(p?.lat) && Number.isFinite(p?.lng);
+}
+
+// Ponto sem coordenada (ex.: banco sem a migration de localização) é ignorado: o Leaflet quebra com ele.
+export function Mapa({ className = "", ciclista, pins, rota, enquadrar, ...props }: MapaProps) {
   return (
     <div className={`flex ${className}`}>
-      <MapaReal {...props} className="flex-1" />
+      <MapaReal
+        {...props}
+        ciclista={valida(ciclista) ? ciclista : null}
+        pins={pins.filter(valida)}
+        rota={rota && valida(rota.de) && valida(rota.ate) ? rota : undefined}
+        enquadrar={enquadrar.filter(valida)}
+        className="flex-1"
+      />
     </div>
   );
 }

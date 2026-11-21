@@ -73,7 +73,7 @@ export function MechanicListStep({ mechanics, notice, error, requesting, onBack,
                 <p className="truncate font-semibold">{mechanic.nome}</p>
                 <p className="mt-0.5 text-[13px] text-subtle">
                   {mechanic.oficina ?? "Mecânico autônomo"}
-                  {mechanic.distancia_km !== null && ` · a ${formatarDistancia(mechanic.distancia_km)}`}
+                  {mechanic.distancia_km != null && ` · a ${formatarDistancia(mechanic.distancia_km)}`}
                 </p>
                 <p className="text-[13px] text-subtle">
                   <Avaliacao mechanic={mechanic} />

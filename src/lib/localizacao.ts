@@ -83,5 +83,5 @@ export function linkDaRota({ lat, lng }: Posicao) {
 }
 
 export function posicaoDoChamado(chamado: { latitude: number | null; longitude: number | null }): Posicao | null {
-  return chamado.latitude !== null && chamado.longitude !== null ? { lat: chamado.latitude, lng: chamado.longitude } : null;
+  return chamado.latitude != null && chamado.longitude != null ? { lat: chamado.latitude, lng: chamado.longitude } : null;
 }
