@@ -4,6 +4,7 @@ import { supabaseConfigurado, supabaseCredenciais } from "./config";
 import type { Database } from "./database.types";
 
 const AREAS_PROTEGIDAS = ["/ciclista", "/mecanico"];
+const PAGINAS_DE_ENTRADA = ["/", "/cadastro"];
 
 /**
  * Renova a sessão do Supabase a cada requisição e manda para o login quem tenta abrir
@@ -31,17 +32,26 @@ export async function atualizarSessao(request: NextRequest) {
 
   // getClaims valida o token; não colocar código entre a criação do cliente e esta chamada.
   const { data } = await supabase.auth.getClaims();
-  const logado = Boolean(data?.claims);
+  const claims = data?.claims;
+  const logado = Boolean(claims);
   const caminho = request.nextUrl.pathname;
   const areaProtegida = AREAS_PROTEGIDAS.some((area) => caminho === area || caminho.startsWith(`${area}/`));
 
-  if (!logado && areaProtegida) {
-    const login = request.nextUrl.clone();
-    login.pathname = "/";
-    login.search = "";
-    const redirecionamento = NextResponse.redirect(login);
+  function redirecionar(destino: string) {
+    const url = request.nextUrl.clone();
+    url.pathname = destino;
+    url.search = "";
+    const redirecionamento = NextResponse.redirect(url);
     response.cookies.getAll().forEach((cookie) => redirecionamento.cookies.set(cookie));
     return redirecionamento;
+  }
+
+  if (!logado && areaProtegida) return redirecionar("/");
+
+  // Quem já está logado vai direto para a própria área em vez de ver o login ou o cadastro.
+  if (claims && PAGINAS_DE_ENTRADA.includes(caminho)) {
+    const { data: perfil } = await supabase.from("perfis").select("tipo").eq("id", claims.sub).maybeSingle();
+    if (perfil) return redirecionar(`/${perfil.tipo}`);
   }
 
   return response;
