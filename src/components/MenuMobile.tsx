@@ -1,9 +1,26 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 export function MenuMobile({ children }: { children: ReactNode }) {
   const menu = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    function fecharAoSair(event: Event) {
+      const elemento = menu.current;
+      if (elemento?.open && event.target instanceof Node && !elemento.contains(event.target)) {
+        elemento.open = false;
+      }
+    }
+
+    // O toque fora não depende de summary/links receberem foco no Safari.
+    document.addEventListener("pointerdown", fecharAoSair, true);
+    document.addEventListener("focusin", fecharAoSair);
+    return () => {
+      document.removeEventListener("pointerdown", fecharAoSair, true);
+      document.removeEventListener("focusin", fecharAoSair);
+    };
+  }, []);
 
   return (
     <details
@@ -18,11 +35,6 @@ export function MenuMobile({ children }: { children: ReactNode }) {
       onClick={(event) => {
         if (event.target instanceof Element && event.target.closest("a") && menu.current) {
           menu.current.open = false;
-        }
-      }}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          event.currentTarget.open = false;
         }
       }}
     >
