@@ -1,8 +1,6 @@
-import Link from "next/link";
-
 export function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2 text-brand">
+    <span className="flex items-center gap-2 text-brand">
       <svg
         width="28"
         height="28"
@@ -23,6 +21,6 @@ export function Logo() {
       <span className="font-display text-xl font-extrabold tracking-wide">
         SOS <span className="text-ok">BIKES</span>
       </span>
-    </Link>
+    </span>
   );
 }
