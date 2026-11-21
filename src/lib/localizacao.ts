@@ -19,7 +19,8 @@ export function obterPosicao(): Promise<Posicao> {
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => resolve({ lat: coords.latitude, lng: coords.longitude }),
       (erro) => reject(new Error(ERROS_DO_GPS[erro.code] ?? ERROS_DO_GPS[2])),
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+      // No computador (sem GPS) a primeira leitura pode passar de 20 s.
+      { enableHighAccuracy: true, timeout: 30_000, maximumAge: 5 * 60_000 },
     );
   });
 }
@@ -64,8 +65,10 @@ export function distanciaKm(a: Posicao, b: Posicao) {
   return 6371 * 2 * Math.asin(Math.sqrt(h));
 }
 
+/** A distância do banco vem arredondada em 0,1 km; abaixo disso, "menos de 100 m". */
 export function formatarDistancia(km: number) {
-  return km < 1 ? `${Math.max(10, Math.round((km * 1000) / 10) * 10)} m` : `${km.toFixed(1).replace(".", ",")} km`;
+  if (km < 0.1) return "menos de 100 m";
+  return km < 1 ? `${Math.round(km * 10) * 100} m` : `${km.toFixed(1).replace(".", ",")} km`;
 }
 
 /** Tempo sugerido para chegar, a ~15 km/h no trânsito da cidade, com no mínimo 5 min. */
