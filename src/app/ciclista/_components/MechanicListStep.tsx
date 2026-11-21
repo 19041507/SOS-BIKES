@@ -2,6 +2,7 @@ import type { MecanicoDisponivel } from "@/lib/chamados";
 import { iniciais } from "@/lib/pessoas";
 import { StepHeader } from "./StepHeader";
 import { Button } from "@/components/ui/Button";
+import { SalvarMecanico } from "@/components/SalvarMecanico";
 
 type MechanicListStepProps = {
   mechanics: MecanicoDisponivel[] | null;
@@ -75,6 +76,7 @@ export function MechanicListStep({ mechanics, notice, error, requesting, onBack,
                   {mechanic.atendimentos > 0 && ` · ${mechanic.atendimentos} ${mechanic.atendimentos === 1 ? "atendimento" : "atendimentos"}`}
                 </p>
               </div>
+              <SalvarMecanico mecanico={{ ...mechanic, disponivel: true }} />
               <button
                 type="button"
                 disabled={requesting !== null}

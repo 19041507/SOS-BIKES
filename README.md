@@ -49,6 +49,103 @@ O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "
 
 Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
 
+## Avaliação do ciclista pelo mecânico
+
+Após concluir, o mecânico pode dar de 1 a 5 estrelas ao ciclista e deixar um
+comentário opcional. Também pode avaliar pelos detalhes do histórico. Cada
+atendimento aceita uma avaliação de cada lado, de forma independente. Nos
+detalhes, os dois participantes veem a nota e o comentário; outras contas não
+têm acesso. A avaliação não impede a conclusão do serviço nem depende da nota
+enviada pelo ciclista.
+
+Aplique a migration
+[avaliacoes_ciclistas.sql](supabase/migrations/20261120010000_avaliacoes_ciclistas.sql)
+no Supabase **antes do merge e do deploy desta funcionalidade**. Todas as consultas
+de chamados passam a incluir essa relação; sem a tabela, o PostgREST retorna erro
+e afeta também o pedido de socorro, o painel e o histórico. Confirme a aplicação
+no ambiente de destino antes de integrar o código.
+
+Em um banco de teste isolado com as migrations aplicadas, valide as permissões:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/avaliacoes-ciclistas.sql
+```
+
+O teste cobre nota sem comentário, avaliação única, bloqueio antes da conclusão,
+leitura pelos participantes e bloqueio de terceiros. Os dados de teste são
+descartados por `rollback`.
+
+## Termos, privacidade e local do atendimento
+
+As páginas públicas [Termos de Uso](http://localhost:3000/termos) e
+[Política de Privacidade](http://localhost:3000/privacidade) estão acessíveis no
+login, cadastro e rodapé das áreas internas. O cadastro exige aceite dos termos
+no formulário e na action do servidor. A versão aceita e a data gerada no servidor
+são enviadas aos metadados de cadastro do Supabase Auth; isso não constitui um
+registro de auditoria imutável.
+
+Antes de renderizar o campo de endereço, a etapa de localização apresenta a
+finalidade e solicita uma autorização específica. Recusar volta à etapa anterior;
+retirar a autorização apaga o endereço do pedido ainda não enviado. O app não
+solicita GPS nem acompanha deslocamentos. O endereço só é transmitido ao banco
+ao solicitar um mecânico.
+
+A escolha fica no `CyclistFlow`, junto com o endereço, durante o pedido: voltar
+da lista de mecânicos não pede autorização novamente. Recomeçar o pedido ou
+retirar a autorização limpa essa escolha e o endereço. Não há persistência da
+autorização de localização entre sessões.
+
+Os documentos identificam diretamente o SOS Bikes como projeto acadêmico de
+estudantes de Administração da FICR, sem serviço comercial nem canal de
+atendimento. Não dependem de variáveis de ambiente para essa identificação e não
+descrevem ferramentas locais de desenvolvimento.
+O aceite permanece apenas nos metadados do Auth (`termos_versao` e
+`termos_aceitos_em`), não em `perfis`, e os links legais permanecem no rodapé de
+todas as telas de `AreaLogada`; confirmar essas decisões com o grupo antes da
+integração.
+
+O caráter acadêmico não certifica conformidade integral com a LGPD. Antes de uma
+eventual operação real, ainda seria necessário definir canal de privacidade e
+validar bases legais, retenção, atendimento aos titulares e condições dos
+fornecedores.
+
+## Mecânicos favoritos
+
+O ciclista pode salvar ou remover mecânicos na lista de escolha, na tela de
+avaliação e nos detalhes de um chamado. A lista **Favoritos**, no menu e no início
+da área do ciclista, mantém os mecânicos salvos por conta, inclusive os que estão
+indisponíveis. **Chamar novamente** inicia um novo pedido para o mecânico escolhido:
+defeito → endereço → confirmar a solicitação. O aceite, a nova estimativa e a
+confirmação do ciclista continuam obrigatórios.
+
+Para habilitar a persistência, aplique a nova migration
+[mecanicos_favoritos.sql](supabase/migrations/20261120000000_mecanicos_favoritos.sql)
+no Supabase depois das anteriores. Ela cria a tabela e a consulta de favoritos,
+isola os registros por ciclista e bloqueia novos pedidos para mecânicos
+indisponíveis. Sem essa migration, o sistema mostra o erro ao carregar favoritos.
+
+Esta funcionalidade depende da aprovação do grupo para entrar na versão.
+A migration deve ser aplicada no Supabase **antes do merge/deploy**. Sem ela,
+somente os controles de favoritos ficam indisponíveis; o pedido normal continua
+funcionando e não vira uma ação de “Recarregar favoritos”.
+
+A política de disponibilidade afeta todo pedido, com ou sem favorito: o banco
+recusa inserir um chamado para um mecânico indisponível. Não há consulta extra
+antes do envio; somente um insert recusado por RLS consulta a lista para exibir
+um aviso de indisponibilidade. Os demais erros mantêm a mensagem normal.
+
+Para validar as regras de isolamento e disponibilidade do banco, execute
+[mecanicos-favoritos.sql](supabase/tests/mecanicos-favoritos.sql) em um banco de teste
+com as migrations aplicadas; o script usa uma transação e desfaz os dados no final:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/mecanicos-favoritos.sql
+```
+
+Use somente um banco de teste com o schema de Auth do Supabase e os papéis
+`authenticated`/`anon`. Este teste deve ser executado antes de liberar a migration;
+não o rode no banco de produção.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.

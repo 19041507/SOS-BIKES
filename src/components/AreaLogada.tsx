@@ -8,6 +8,8 @@ import { AppHeader } from "./AppHeader";
 import type { LinkDeNavegacao } from "./NavPrincipal";
 import { Logo } from "./Logo";
 import { PerfilProvider } from "./PerfilProvider";
+import { FavoritosProvider } from "./FavoritosProvider";
+import { LegalLinks } from "./LegalLinks";
 import { Toaster } from "./ui/Toaster";
 
 type AreaLogadaProps = {
@@ -47,7 +49,12 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
         </div>
       )}
       <PerfilProvider perfil={perfil}>
-        <Toaster>{children}</Toaster>
+        <Toaster>
+          <FavoritosProvider>{children}</FavoritosProvider>
+          <footer className="border-t border-line bg-white px-4 py-2">
+            <LegalLinks />
+          </footer>
+        </Toaster>
       </PerfilProvider>
     </>
   );

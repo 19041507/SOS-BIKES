@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { MapView, POSICAO_DO_CICLISTA, posicaoNoMapa } from "@/components/MapView";
 import { usePerfil } from "@/components/PerfilProvider";
 import { useToast } from "@/components/ui/Toaster";
@@ -28,6 +29,7 @@ import { WaitingStep } from "./WaitingStep";
 import { ProposalStep } from "./ProposalStep";
 import { TrackingStep } from "./TrackingStep";
 import { FinishedStep } from "./FinishedStep";
+import { Button } from "@/components/ui/Button";
 
 /** Etapas antes de existir um chamado; depois, a tela segue o status do chamado no banco. */
 type Draft = "home" | "category" | "location" | "mechanics";
@@ -54,7 +56,8 @@ function mensagem(erro: unknown) {
   return erro instanceof Error ? erro.message : "Algo deu errado. Tente de novo.";
 }
 
-export function CyclistFlow() {
+export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: string } = {}) {
+  const router = useRouter();
   const perfil = usePerfil();
   const avisar = useToast();
   const agora = useAgora();
@@ -63,10 +66,13 @@ export function CyclistFlow() {
   const ultimo = useRef<ChamadoCompleto | null>(null);
   // undefined = carregando o chamado atual
   const [chamado, setChamado] = useState<ChamadoCompleto | null | undefined>(undefined);
-  const [draft, setDraft] = useState<Draft>("home");
+  const [draft, setDraft] = useState<Draft>(mecanicoFavoritoId ? "category" : "home");
+  const [preferidoId, setPreferidoId] = useState(mecanicoFavoritoId ?? null);
+  const [favoritoDaUrl, setFavoritoDaUrl] = useState(mecanicoFavoritoId);
   const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [detalhes, setDetalhes] = useState("");
   const [endereco, setEndereco] = useState("");
+  const [autorizouLocal, setAutorizouLocal] = useState(false);
   const [mecanicos, setMecanicos] = useState<MecanicoDisponivel[] | null>(null);
   const [recusaram, setRecusaram] = useState<string[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -74,6 +80,21 @@ export function CyclistFlow() {
   const [erro, setErro] = useState<string | null>(null);
   const [solicitando, setSolicitando] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+
+  // A navegação pode preservar esta tela. Um novo favorito inicia outro rascunho;
+  // remover o parâmetro não remonta o fluxo nem perde o defeito/endereço escolhidos.
+  if (favoritoDaUrl !== mecanicoFavoritoId) {
+    setFavoritoDaUrl(mecanicoFavoritoId);
+    if (mecanicoFavoritoId) {
+      setPreferidoId(mecanicoFavoritoId);
+      setDraft("category");
+      setCategoria(null);
+      setDetalhes("");
+      setEndereco("");
+      setAviso(null);
+      setErro(null);
+    }
+  }
 
   const carregarMecanicos = useCallback(async () => {
     setMecanicos(null);
@@ -184,11 +205,14 @@ export function CyclistFlow() {
   }
 
   function recomecar(avisoParaInicio?: string) {
+    router.replace("/ciclista", { scroll: false });
+    setPreferidoId(null);
     setChamado(null);
     setDraft("home");
     setCategoria(null);
     setDetalhes("");
     setEndereco("");
+    setAutorizouLocal(false);
     setRecusaram([]);
     setAviso(null);
     setErro(null);
@@ -219,7 +243,7 @@ export function CyclistFlow() {
     }
   }
 
-  const disponiveis = mecanicos?.filter((m) => !recusaram.includes(m.id)) ?? null;
+  const disponiveis = mecanicos?.filter((m) => !recusaram.includes(m.id) && (!preferidoId || m.id === preferidoId)) ?? null;
   const nomeDoMecanico = primeiroNome(chamado?.mecanico?.nome ?? "O mecânico");
 
   let chip = "Carregando…";
@@ -273,6 +297,11 @@ export function CyclistFlow() {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-wrap items-stretch gap-4 p-3 sm:p-4">
       <section className="flex w-full min-w-0 flex-col gap-4 rounded-2xl border border-line bg-white p-5 sm:p-6 lg:w-auto lg:max-w-[480px] lg:flex-[1_1_400px]">
+        {preferidoId && chamado === null && (draft === "category" || draft === "location") && (
+          <p className="rounded-xl bg-brand-soft px-3.5 py-3 text-sm text-brand-dark">
+            Novo pedido para seu mecânico favorito. Informe o defeito e o endereço; a disponibilidade será conferida antes do envio.
+          </p>
+        )}
         {chamado === undefined && (
           <div className="flex flex-col gap-3" aria-busy="true" aria-label="Carregando">
             <div className="h-6 w-2/3 rounded bg-slate-100 motion-safe:animate-pulse" />
@@ -295,6 +324,11 @@ export function CyclistFlow() {
           <LocationStep
             categoryLabel={categoria ? rotuloCategoria(categoria) : ""}
             address={endereco}
+            authorized={autorizouLocal}
+            onAuthorizationChange={(autorizado) => {
+              setAutorizouLocal(autorizado);
+              if (!autorizado) setEndereco("");
+            }}
             onAddressChange={setEndereco}
             onBack={() => setDraft("category")}
             onNext={() => {
@@ -306,13 +340,28 @@ export function CyclistFlow() {
         {chamado === null && draft === "mechanics" && (
           <MechanicListStep
             mechanics={disponiveis}
-            notice={aviso}
+            notice={aviso ?? (preferidoId ? disponiveis === null ? "Verificando a disponibilidade do seu mecânico favorito…" : disponiveis.length ? "Seu mecânico favorito está selecionado. Confirme em “Solicitar” para enviar o pedido." : "Seu mecânico favorito não está disponível agora. Você pode atualizar a lista ou escolher outro mecânico." : null)}
             error={erro}
             requesting={solicitando}
             onBack={() => setDraft("location")}
             onRefresh={carregarMecanicos}
             onChoose={solicitar}
           />
+        )}
+
+        {chamado === null && draft === "mechanics" && preferidoId && (
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setPreferidoId(null);
+              setAviso(null);
+              setErro(null);
+              router.replace("/ciclista", { scroll: false });
+              void carregarMecanicos();
+            }}
+          >
+            Ver outros mecânicos
+          </Button>
         )}
 
         {chamado?.status === "aguardando" && (

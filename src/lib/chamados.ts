@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Avaliacao, Chamado, Database, Perfil, StatusChamado } from "@/lib/supabase/database.types";
+import type { Avaliacao, AvaliacaoCiclista, Chamado, Database, Perfil, StatusChamado } from "@/lib/supabase/database.types";
 import type { Categoria } from "@/lib/categorias";
 
 /** Prazo para o mecânico responder um chamado, em segundos (contado a partir da criação). */
@@ -16,10 +16,11 @@ export type ChamadoCompleto = Chamado & {
   ciclista: Pick<Perfil, "id" | "nome" | "telefone"> | null;
   mecanico: Pick<Perfil, "id" | "nome" | "telefone" | "oficina"> | null;
   avaliacao: Avaliacao | null;
+  avaliacao_ciclista: AvaliacaoCiclista | null;
 };
 
 const COLUNAS =
-  "*, ciclista:perfis!chamados_ciclista_id_fkey(id, nome, telefone), mecanico:perfis!chamados_mecanico_id_fkey(id, nome, telefone, oficina), avaliacao:avaliacoes(*)";
+  "*, ciclista:perfis!chamados_ciclista_id_fkey(id, nome, telefone), mecanico:perfis!chamados_mecanico_id_fkey(id, nome, telefone, oficina), avaliacao:avaliacoes(*), avaliacao_ciclista:avaliacoes_ciclistas(*)";
 
 function supabase() {
   return createClient();
@@ -103,6 +104,13 @@ export async function abrirChamado(dados: {
     })
     .select(COLUNAS)
     .single();
+  // A RLS é a autoridade; só consulta a lista para explicar um insert recusado.
+  if (error?.code === "42501") {
+    const { data: disponiveis, error: erroDaLista } = await supabase().rpc("mecanicos_disponiveis");
+    if (!erroDaLista && disponiveis && !disponiveis.some((mecanico) => mecanico.id === dados.mecanicoId)) {
+      throw new Error("Este mecânico ficou indisponível. Atualize a lista ou escolha outro mecânico.");
+    }
+  }
   return resultado(data, error) as ChamadoCompleto;
 }
 
@@ -130,6 +138,17 @@ export async function avaliarChamado(dados: { chamadoId: string; nota: number; c
 export async function definirDisponibilidade(perfilId: string, disponivel: boolean) {
   const { error } = await supabase().from("perfis").update({ disponivel }).eq("id", perfilId);
   if (error) throw new Error(mensagemDeErro(error));
+}
+
+export async function avaliarCiclista(dados: { chamadoId: string; nota: number; comentario: string }): Promise<AvaliacaoCiclista> {
+  const { data, error } = await supabase().from("avaliacoes_ciclistas").insert({
+    chamado_id: dados.chamadoId,
+    nota: dados.nota,
+    comentario: dados.comentario.trim() || null,
+  }).select("*").single();
+  if (error?.code === "23505") throw new Error("Este ciclista já foi avaliado neste atendimento. Reabra os detalhes para ver a avaliação.");
+  if (error || !data) throw new Error("Não foi possível enviar a avaliação. Tente novamente.");
+  return data;
 }
 
 /**
