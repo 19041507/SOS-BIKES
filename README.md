@@ -49,6 +49,32 @@ O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "
 
 Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
 
+## Avaliação do ciclista pelo mecânico
+
+Após concluir, o mecânico pode dar de 1 a 5 estrelas ao ciclista e deixar um
+comentário opcional. Também pode avaliar pelos detalhes do histórico. Cada
+atendimento aceita uma avaliação de cada lado, de forma independente. Nos
+detalhes, os dois participantes veem a nota e o comentário; outras contas não
+têm acesso. A avaliação não impede a conclusão do serviço nem depende da nota
+enviada pelo ciclista.
+
+Aplique a migration
+[avaliacoes_ciclistas.sql](supabase/migrations/20261120010000_avaliacoes_ciclistas.sql)
+no Supabase **antes do merge e do deploy desta funcionalidade**. Todas as consultas
+de chamados passam a incluir essa relação; sem a tabela, o PostgREST retorna erro
+e afeta também o pedido de socorro, o painel e o histórico. Confirme a aplicação
+no ambiente de destino antes de integrar o código.
+
+Em um banco de teste isolado com as migrations aplicadas, valide as permissões:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/avaliacoes-ciclistas.sql
+```
+
+O teste cobre nota sem comentário, avaliação única, bloqueio antes da conclusão,
+leitura pelos participantes e bloqueio de terceiros. Os dados de teste são
+descartados por `rollback`.
+
 ## Termos, privacidade e local do atendimento
 
 As páginas públicas [Termos de Uso](http://localhost:3000/termos) e
@@ -72,7 +98,7 @@ autorização de localização entre sessões.
 Os documentos identificam diretamente o SOS Bikes como projeto acadêmico de
 estudantes de Administração da FICR, sem serviço comercial nem canal de
 atendimento. Não dependem de variáveis de ambiente para essa identificação e não
-descrevem favoritos, avaliação do ciclista ou ferramentas locais de desenvolvimento.
+descrevem favoritos nem ferramentas locais de desenvolvimento.
 O aceite permanece apenas nos metadados do Auth (`termos_versao` e
 `termos_aceitos_em`), não em `perfis`, e os links legais permanecem no rodapé de
 todas as telas de `AreaLogada`; confirmar essas decisões com o grupo antes da

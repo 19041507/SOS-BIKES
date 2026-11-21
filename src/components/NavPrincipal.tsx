@@ -10,11 +10,11 @@ export type LinkDeNavegacao = {
   exato?: boolean;
 };
 
-export function NavPrincipal({ links }: { links: LinkDeNavegacao[] }) {
+export function NavPrincipal({ links, className = "flex-auto flex-wrap gap-1" }: { links: LinkDeNavegacao[]; className?: string }) {
   const caminho = usePathname();
 
   return (
-    <nav aria-label="Principal" className="flex flex-auto flex-wrap gap-1">
+    <nav aria-label="Principal" className={`flex ${className}`}>
       {links.map((link) => {
         const ativo = link.exato ? caminho === link.href : caminho === link.href || caminho.startsWith(`${link.href}/`);
         return (

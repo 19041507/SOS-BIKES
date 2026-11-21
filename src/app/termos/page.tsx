@@ -25,7 +25,7 @@ export default function TermosPage() {
       </section>
       <section>
         <h2>5. Conduta e avaliações</h2>
-        <p>Trate os participantes com respeito. Não publique informações falsas, ofensivas, discriminatórias ou dados pessoais desnecessários. O ciclista pode avaliar o atendimento após sua conclusão. Utilize telefone e endereço recebidos somente para tratar do atendimento.</p>
+        <p>Trate os participantes com respeito. Não publique informações falsas, ofensivas, discriminatórias ou dados pessoais desnecessários. Ciclista e mecânico podem avaliar um ao outro após um atendimento concluído. Utilize telefone e endereço recebidos somente para tratar do atendimento.</p>
       </section>
       <section>
         <h2>6. Dados pessoais e alterações</h2>
