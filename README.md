@@ -60,9 +60,20 @@ enviada pelo ciclista.
 
 Aplique a migration
 [avaliacoes_ciclistas.sql](supabase/migrations/20261120010000_avaliacoes_ciclistas.sql)
-para habilitar a persistência. Na [prévia do encerramento](http://localhost:3000/previa#mecanico-resumo),
-é possível enviar a nota e conferir o resultado alternando para os detalhes do
-ciclista, sem gravar no banco.
+no Supabase **antes do merge e do deploy desta funcionalidade**. Todas as consultas
+de chamados passam a incluir essa relação; sem a tabela, o PostgREST retorna erro
+e afeta também o pedido de socorro, o painel e o histórico. Confirme a aplicação
+no ambiente de destino antes de integrar o código.
+
+Em um banco de teste isolado com as migrations aplicadas, valide as permissões:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/avaliacoes-ciclistas.sql
+```
+
+O teste cobre nota sem comentário, avaliação única, bloqueio antes da conclusão,
+leitura pelos participantes e bloqueio de terceiros. Os dados de teste são
+descartados por `rollback`.
 
 ## Cadastro
 
