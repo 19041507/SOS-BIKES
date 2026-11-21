@@ -48,7 +48,12 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
         </div>
       )}
       <PerfilProvider perfil={perfil}>
-        <Toaster>{children}<footer className="border-t border-line bg-white px-4 py-2"><LegalLinks /></footer></Toaster>
+        <Toaster>
+          {children}
+          <footer className="border-t border-line bg-white px-4 py-2">
+            <LegalLinks />
+          </footer>
+        </Toaster>
       </PerfilProvider>
     </>
   );

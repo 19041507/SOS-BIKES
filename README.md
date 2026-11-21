@@ -64,14 +64,24 @@ retirar a autorização apaga o endereço do pedido ainda não enviado. O app n�
 solicita GPS nem acompanha deslocamentos. O endereço só é transmitido ao banco
 ao solicitar um mecânico.
 
-Configure `SOS_BIKES_CONTROLLER_NAME` e `SOS_BIKES_PRIVACY_EMAIL` no ambiente e
-reinicie o servidor (ou gere um novo build) para identificar o responsável e o
-canal real de privacidade. Enquanto faltarem, os documentos mostram que estão em
-revisão. Ainda é preciso validar as bases legais, prazos de retenção, procedimento
-de atendimento aos titulares e regiões/transferências dos fornecedores antes da
-operação com dados reais. Os documentos descrevem as permissões atuais, inclusive
-a consulta a perfis de mecânicos por pessoas autenticadas; não certificam a
-conformidade integral com a LGPD.
+A escolha fica no `CyclistFlow`, junto com o endereço, durante o pedido: voltar
+da lista de mecânicos não pede autorização novamente. Recomeçar o pedido ou
+retirar a autorização limpa essa escolha e o endereço. Não há persistência da
+autorização de localização entre sessões.
+
+Os documentos identificam diretamente o SOS Bikes como projeto acadêmico de
+estudantes de Administração da FICR, sem serviço comercial nem canal de
+atendimento. Não dependem de variáveis de ambiente para essa identificação e não
+descrevem favoritos, avaliação do ciclista ou ferramentas locais de desenvolvimento.
+O aceite permanece apenas nos metadados do Auth (`termos_versao` e
+`termos_aceitos_em`), não em `perfis`, e os links legais permanecem no rodapé de
+todas as telas de `AreaLogada`; confirmar essas decisões com o grupo antes da
+integração.
+
+O caráter acadêmico não certifica conformidade integral com a LGPD. Antes de uma
+eventual operação real, ainda seria necessário definir canal de privacidade e
+validar bases legais, retenção, atendimento aos titulares e condições dos
+fornecedores.
 
 ## Cadastro
 

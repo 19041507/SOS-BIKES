@@ -17,7 +17,7 @@ const PROFILES: { id: Profile; label: string }[] = [
 const inputClass =
   "h-12 w-full rounded-xl border border-field bg-white px-3.5 text-[15px] outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger";
 
-export function SignupForm({ onSignup = cadastrar }: { onSignup?: typeof cadastrar } = {}) {
+export function SignupForm() {
   const [profile, setProfile] = useState<Profile>("ciclista");
   const [valores, setValores] = useState<Record<Campo, string>>({
     nome: "",
@@ -55,7 +55,7 @@ export function SignupForm({ onSignup = cadastrar }: { onSignup?: typeof cadastr
     if (Object.keys(novos).length > 0) return;
     startTransition(async () => {
       // Se a conta já entra direto, a action redireciona para a área do perfil.
-      const resultado: ResultadoDoCadastro = await onSignup({ perfil: profile, ...valores, aceitouTermos });
+      const resultado: ResultadoDoCadastro = await cadastrar({ perfil: profile, ...valores, aceitouTermos });
       if ("confirmarEmail" in resultado) setConfirmarEmail(resultado.confirmarEmail);
       else setErros(resultado.erros);
     });
