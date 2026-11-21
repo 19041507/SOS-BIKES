@@ -49,6 +49,32 @@ O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "
 
 Para testar, use as contas de demonstração criadas em **Banco de dados → Configurar o banco**.
 
+## Avaliação do ciclista pelo mecânico
+
+Após concluir, o mecânico pode dar de 1 a 5 estrelas ao ciclista e deixar um
+comentário opcional. Também pode avaliar pelos detalhes do histórico. Cada
+atendimento aceita uma avaliação de cada lado, de forma independente. Nos
+detalhes, os dois participantes veem a nota e o comentário; outras contas não
+têm acesso. A avaliação não impede a conclusão do serviço nem depende da nota
+enviada pelo ciclista.
+
+Aplique a migration
+[avaliacoes_ciclistas.sql](supabase/migrations/20261120010000_avaliacoes_ciclistas.sql)
+no Supabase **antes do merge e do deploy desta funcionalidade**. Todas as consultas
+de chamados passam a incluir essa relação; sem a tabela, o PostgREST retorna erro
+e afeta também o pedido de socorro, o painel e o histórico. Confirme a aplicação
+no ambiente de destino antes de integrar o código.
+
+Em um banco de teste isolado com as migrations aplicadas, valide as permissões:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/avaliacoes-ciclistas.sql
+```
+
+O teste cobre nota sem comentário, avaliação única, bloqueio antes da conclusão,
+leitura pelos participantes e bloqueio de terceiros. Os dados de teste são
+descartados por `rollback`.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
