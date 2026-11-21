@@ -154,11 +154,12 @@ export async function pedirNovaSenha(email: string): Promise<{ erro: string } | 
   if (!emailValido(limpo)) return { erro: "Informe um e-mail válido." };
   if (!supabaseConfigurado) return { erro: "A recuperação de senha não está configurada neste ambiente." };
 
-  // Usado pelo template padrão do Supabase; o template do projeto aponta para a Site URL.
+  // Usado pelo template padrão do Supabase (link com `code`); o `type` diz à rota que é
+  // recuperação. O template do projeto já manda `type=recovery` para a Site URL.
   const origem = (await headers()).get("origin");
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(limpo, {
-    redirectTo: origem ? `${origem}/auth/confirmar` : undefined,
+    redirectTo: origem ? `${origem}/auth/confirmar?type=recovery` : undefined,
   });
 
   if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit") {
