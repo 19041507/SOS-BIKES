@@ -15,6 +15,7 @@ export default function PrivacidadePage() {
           <li>Mecânicos: a localização é salva ao ficar disponível e usada para mostrar a distância aos ciclistas, de forma aproximada (cerca de 100 m).</li>
           <li>Histórico, estimativas, valores, gorjetas registradas e avaliações: acompanhar atendimentos e apresentar resumos. Não solicitamos dados de cartão.</li>
           <li>Mensagens do chat do chamado: comunicação entre o ciclista e o mecânico durante o atendimento. Só os dois participantes leem a conversa, que fica no histórico do chamado.</li>
+          <li>Notificações: se você ativar, guardamos o endereço que o seu navegador gera para receber avisos. Ele é usado só para avisos do atendimento (chamados, respostas e mensagens) e apagado quando você desativa.</li>
           <li>Mecânicos favoritos: permitir encontrar e chamar novamente os profissionais salvos por você.</li>
         </ul>
       </section>

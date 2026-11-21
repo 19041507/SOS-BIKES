@@ -178,6 +178,29 @@ Depois de uma tentativa com e-mail ou senha incorretos, o login mostra **"Esquec
 
 Sem esse template, o e-mail padrão do Supabase não leva à tela de senha nova.
 
+## Notificações (Web Push)
+
+Com o app fechado, o mecânico é avisado de chamado novo e de cancelamento; o ciclista, de chamado aceito e de quando o mecânico chega; e os dois, de mensagens no chat. A pergunta para ativar aparece ao ligar "Disponível" (mecânico) e depois do primeiro pedido (ciclista). No iPhone só funciona com o app instalado na tela inicial (iOS 16.4+).
+
+Como funciona: o Supabase chama `/api/notificacoes` (Database Webhooks) quando um chamado é criado ou muda e quando chega mensagem; a rota busca as inscrições de quem deve receber (`inscricoes_push`) e envia com `web-push`. O `public/sw.js` mostra o aviso (não mostra se o app estiver aberto na tela) e abre o app ao tocar.
+
+### Configurar (uma vez)
+
+1. **Chaves VAPID**: rodar `npx web-push generate-vapid-keys` e guardar as duas.
+2. **Vercel → Settings → Environment Variables** (Production, Preview e Development):
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`: a chave pública
+   - `VAPID_PRIVATE_KEY`: a chave privada
+   - `SUPABASE_SERVICE_ROLE_KEY`: Supabase → Project Settings → API Keys → `service_role` (secreta: ignora o RLS)
+   - `NOTIFICACOES_SEGREDO`: um texto aleatório longo (ex.: `openssl rand -hex 32`)
+   - Depois, refazer o deploy.
+3. **Supabase → Database → Webhooks → Create a new hook** (dois hooks):
+   - `chamados`: tabela `chamados`, eventos **Insert** e **Update**
+   - `mensagens`: tabela `mensagens`, evento **Insert**
+   - Nos dois: tipo **HTTP Request**, método **POST**, URL `https://sos-bikes.vercel.app/api/notificacoes`, cabeçalho `Authorization` = `Bearer <NOTIFICACOES_SEGREDO>`.
+4. Aplicar a migration `supabase/migrations/20261125000000_notificacoes.sql`.
+
+O webhook aponta para uma URL só (produção): como o banco é o mesmo para `dev`, previews e produção, os avisos são enviados pela produção. Para testar antes do release, trocar a URL do webhook pela da `dev` por um tempo.
+
 ## Banco de dados (Supabase)
 
 | Tabela | Conteúdo |
