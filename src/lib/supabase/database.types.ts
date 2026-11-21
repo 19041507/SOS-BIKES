@@ -22,6 +22,15 @@ export type Database = {
           { foreignKeyName: "mecanicos_favoritos_mecanico_id_fkey"; columns: ["mecanico_id"]; isOneToOne: false; referencedRelation: "perfis"; referencedColumns: ["id"] },
         ];
       };
+      mensagens: {
+        Row: { id: string; chamado_id: string; autor_id: string; texto: string; criado_em: string; lida_em: string | null };
+        Insert: { id?: string; chamado_id: string; autor_id?: string; texto: string; criado_em?: string; lida_em?: string | null };
+        Update: { id?: string; chamado_id?: string; autor_id?: string; texto?: string; criado_em?: string; lida_em?: string | null };
+        Relationships: [
+          { foreignKeyName: "mensagens_chamado_id_fkey"; columns: ["chamado_id"]; isOneToOne: false; referencedRelation: "chamados"; referencedColumns: ["id"] },
+          { foreignKeyName: "mensagens_autor_id_fkey"; columns: ["autor_id"]; isOneToOne: false; referencedRelation: "perfis"; referencedColumns: ["id"] },
+        ];
+      };
       perfis: {
         Row: {
           id: string;
@@ -60,6 +69,8 @@ export type Database = {
           categoria: Database["public"]["Enums"]["categoria_defeito"];
           detalhes: string | null;
           endereco: string;
+          latitude: number | null;
+          longitude: number | null;
           status: Database["public"]["Enums"]["status_chamado"];
           estimativa: number | null;
           tempo_chegada_min: number | null;
@@ -81,6 +92,8 @@ export type Database = {
           categoria: Database["public"]["Enums"]["categoria_defeito"];
           detalhes?: string | null;
           endereco: string;
+          latitude?: number | null;
+          longitude?: number | null;
           status?: Database["public"]["Enums"]["status_chamado"];
           estimativa?: number | null;
           tempo_chegada_min?: number | null;
@@ -101,6 +114,8 @@ export type Database = {
           categoria?: Database["public"]["Enums"]["categoria_defeito"];
           detalhes?: string | null;
           endereco?: string;
+          latitude?: number | null;
+          longitude?: number | null;
           status?: Database["public"]["Enums"]["status_chamado"];
           estimativa?: number | null;
           tempo_chegada_min?: number | null;
@@ -171,7 +186,7 @@ export type Database = {
         Returns: { id: string; nome: string; oficina: string | null; disponivel: boolean; media: number | null; avaliacoes: number; atendimentos: number }[];
       };
       mecanicos_disponiveis: {
-        Args: never;
+        Args: { lat?: number; lng?: number };
         Returns: {
           id: string;
           nome: string;
@@ -180,7 +195,22 @@ export type Database = {
           media: number | null;
           avaliacoes: number;
           atendimentos: number;
+          latitude: number | null;
+          longitude: number | null;
+          distancia_km: number | null;
         }[];
+      };
+      marcar_mensagens_lidas: {
+        Args: { chamado: string };
+        Returns: undefined;
+      };
+      atualizar_minha_localizacao: {
+        Args: { lat: number; lng: number };
+        Returns: undefined;
+      };
+      localizacao_do_mecanico_do_chamado: {
+        Args: { chamado: string };
+        Returns: { latitude: number; longitude: number }[];
       };
     };
     Enums: {
@@ -210,3 +240,4 @@ export type Chamado = Tabela<"chamados">;
 export type Avaliacao = Tabela<"avaliacoes">;
 export type AvaliacaoCiclista = Tabela<"avaliacoes_ciclistas">;
 export type StatusChamado = Enum<"status_chamado">;
+export type Mensagem = Tabela<"mensagens">;

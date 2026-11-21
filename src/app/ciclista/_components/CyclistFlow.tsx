@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapView, POSICAO_DO_CICLISTA, posicaoNoMapa } from "@/components/MapView";
+import { Mapa, type PinDoMapa } from "@/components/Mapa";
 import { usePerfil } from "@/components/PerfilProvider";
 import { useToast } from "@/components/ui/Toaster";
 import { rotuloCategoria, type Categoria } from "@/lib/categorias";
@@ -13,14 +13,25 @@ import {
   buscarChamado,
   chamadoAtualDoCiclista,
   listarMecanicosDisponiveis,
+  localizacaoDoMecanico,
   mudarChamado,
   useMudancasEmChamados,
   type ChamadoCompleto,
   type MecanicoDisponivel,
 } from "@/lib/chamados";
+import {
+  enderecoDaPosicao,
+  estadoDaPermissao,
+  formatarDistancia,
+  obterPosicao,
+  pontoNoCaminho,
+  posicaoDoChamado,
+  type Posicao,
+} from "@/lib/localizacao";
 import { formatBRL } from "@/lib/money";
 import { progressoDaChegada, useAgora, useMenosMovimento } from "@/lib/movimento";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
+import { AtivarLocalizacao } from "./AtivarLocalizacao";
 import { CyclistDashboard } from "./CyclistDashboard";
 import { CategoryStep } from "./CategoryStep";
 import { LocationStep } from "./LocationStep";
@@ -33,6 +44,23 @@ import { Button } from "@/components/ui/Button";
 
 /** Etapas antes de existir um chamado; depois, a tela segue o status do chamado no banco. */
 type Draft = "home" | "category" | "location" | "mechanics";
+
+/** Marca, neste aparelho, que a tela de ativar a localização já foi mostrada. */
+const LOCALIZACAO_PERGUNTADA = "sos-bikes:localizacao-perguntada";
+
+function jaPerguntou() {
+  try {
+    return localStorage.getItem(LOCALIZACAO_PERGUNTADA) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function marcarPerguntado() {
+  try {
+    localStorage.setItem(LOCALIZACAO_PERGUNTADA, "1");
+  } catch {}
+}
 
 /** No caminho, o pin para em 85% do trajeto para não cobrir o ciclista. */
 const PERCURSO_MAXIMO = 0.85;
@@ -72,7 +100,13 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [detalhes, setDetalhes] = useState("");
   const [endereco, setEndereco] = useState("");
-  const [autorizouLocal, setAutorizouLocal] = useState(false);
+  const [posicao, setPosicao] = useState<Posicao | null>(null);
+  /** Endereço achado pelo GPS, para preencher de novo ao recomeçar um pedido. */
+  const [enderecoDoGps, setEnderecoDoGps] = useState("");
+  const [perguntarLocalizacao, setPerguntarLocalizacao] = useState(false);
+  /** A lista de mecânicos usa a posição mais recente sem recriar `carregarMecanicos`. */
+  const posicaoAtual = useRef<Posicao | null>(null);
+  const [origemDoMecanico, setOrigemDoMecanico] = useState<Posicao | null>(null);
   const [mecanicos, setMecanicos] = useState<MecanicoDisponivel[] | null>(null);
   const [recusaram, setRecusaram] = useState<string[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -90,7 +124,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
       setDraft("category");
       setCategoria(null);
       setDetalhes("");
-      setEndereco("");
+      setEndereco(enderecoDoGps);
       setAviso(null);
       setErro(null);
     }
@@ -99,7 +133,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   const carregarMecanicos = useCallback(async () => {
     setMecanicos(null);
     try {
-      setMecanicos(await listarMecanicosDisponiveis());
+      setMecanicos(await listarMecanicosDisponiveis(posicaoAtual.current));
     } catch (e) {
       setMecanicos([]);
       setErro(mensagem(e));
@@ -152,12 +186,32 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     [carregarMecanicos, avisar],
   );
 
+  /**
+   * Guarda a posição, reordena a lista pela distância e preenche o endereço
+   * (só se estiver vazio, a menos que `sobrescrever`). Devolve se achou o endereço.
+   */
+  const usarPosicao = useCallback(async (nova: Posicao, sobrescrever = false) => {
+    posicaoAtual.current = nova;
+    setPosicao(nova);
+    listarMecanicosDisponiveis(nova).then(setMecanicos).catch(() => {});
+    const endereco = await enderecoDaPosicao(nova);
+    if (!endereco) return false;
+    setEnderecoDoGps(endereco);
+    setEndereco((atual) => (sobrescrever ? endereco : atual || endereco));
+    return true;
+  }, []);
+
   // A tela inicial já mostra quem está disponível (a lista começa como null = carregando).
+  // Com a localização liberada, lê a posição sozinho; na primeira vez, explica antes de pedir.
   useEffect(() => {
     listarMecanicosDisponiveis()
       .then(setMecanicos)
       .catch(() => setMecanicos([]));
-  }, []);
+    estadoDaPermissao().then((estado) => {
+      if (estado === "granted") obterPosicao().then(usarPosicao).catch(() => {});
+      else if (estado === "prompt" && !jaPerguntou()) setPerguntarLocalizacao(true);
+    });
+  }, [usarPosicao]);
 
   useEffect(() => {
     chamadoAtualDoCiclista(perfil.id)
@@ -178,6 +232,18 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   useMudancasEmChamados(`ciclista_id=eq.${perfil.id}`, () => {
     if (chamado) buscarChamado(chamado.id).then(aplicar).catch(() => {});
   });
+
+  // Depois do aceite, o mapa mostra o mecânico saindo da posição dele (aproximada).
+  const chamadoId = chamado?.id;
+  const comMecanico = chamado?.status === "aceito" || chamado?.status === "a_caminho" || chamado?.status === "em_atendimento";
+  useEffect(() => {
+    if (!chamadoId || !comMecanico) return;
+    let ativo = true;
+    localizacaoDoMecanico(chamadoId)
+      .then((origem) => { if (ativo) setOrigemDoMecanico(origem); })
+      .catch(() => {});
+    return () => { ativo = false; };
+  }, [chamadoId, comMecanico]);
 
   // Sem resposta no prazo (contado desde a criação), o chamado expira e o ciclista volta para a lista.
   useEffect(() => {
@@ -211,8 +277,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     setDraft("home");
     setCategoria(null);
     setDetalhes("");
-    setEndereco("");
-    setAutorizouLocal(false);
+    setEndereco(enderecoDoGps);
     setRecusaram([]);
     setAviso(null);
     setErro(null);
@@ -235,7 +300,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     setAviso(null);
     setErro(null);
     try {
-      aplicar(await abrirChamado({ ciclistaId: perfil.id, mecanicoId: mecanico.id, categoria, detalhes, endereco }));
+      aplicar(await abrirChamado({ ciclistaId: perfil.id, mecanicoId: mecanico.id, categoria, detalhes, endereco, posicao }));
     } catch (e) {
       setErro(mensagem(e));
     } finally {
@@ -247,23 +312,43 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   const nomeDoMecanico = primeiroNome(chamado?.mecanico?.nome ?? "O mecânico");
 
   let chip = "Carregando…";
-  let pins: { id: string; initials: string; x: number; y: number }[] = [];
-  let rota: { x: number; y: number } | undefined;
+  let pins: PinDoMapa[] = [];
+  let pontoDoCiclista: Posicao | null = posicao;
+  let rota: { de: Posicao; ate: Posicao } | undefined;
+  /** De onde o mecânico sai: fixa, para o mapa não reenquadrar a cada passo. */
+  let origem: Posicao | null = null;
   if (chamado) {
-    const origem = posicaoNoMapa(chamado.mecanico_id);
+    pontoDoCiclista = posicaoDoChamado(chamado);
     const { progresso, minutosRestantes } = progressoDaChegada(chamado.confirmado_em, chamado.tempo_chegada_min, agora);
-    // A caminho, o pin avança em direção ao ciclista conforme o tempo estimado passa.
-    const noLocal = chamado.status === "em_atendimento" || chamado.status === "concluido";
-    const avanco = noLocal ? PERCURSO_MAXIMO : chamado.status === "a_caminho" && !menosMovimento ? progresso * PERCURSO_MAXIMO : 0;
-    const posicao = {
-      x: origem.x + (POSICAO_DO_CICLISTA.x - origem.x) * avanco,
-      y: origem.y + (POSICAO_DO_CICLISTA.y - origem.y) * avanco,
-    };
-    pins = [{ id: chamado.mecanico_id, initials: iniciais(chamado.mecanico?.nome ?? "?"), ...posicao }];
+    // Aguardando a resposta, a posição vem da lista em que o ciclista escolheu o mecânico.
+    const daLista = mecanicos?.find((m) => m.id === chamado.mecanico_id);
+    origem =
+      origemDoMecanico && comMecanico
+        ? origemDoMecanico
+        : chamado.status === "aguardando" && daLista?.latitude != null && daLista.longitude != null
+          ? { lat: daLista.latitude, lng: daLista.longitude }
+          : null;
+    if (origem && pontoDoCiclista) {
+      // A caminho, o pin avança em direção ao ciclista conforme o tempo estimado passa.
+      const noLocal = chamado.status === "em_atendimento";
+      const avanco = noLocal ? PERCURSO_MAXIMO : chamado.status === "a_caminho" && !menosMovimento ? progresso * PERCURSO_MAXIMO : 0;
+      const ponto = pontoNoCaminho(origem, pontoDoCiclista, avanco);
+      pins = [{ id: chamado.mecanico_id, initials: iniciais(chamado.mecanico?.nome ?? "?"), rotulo: chamado.mecanico?.nome, ...ponto }];
+      if (chamado.status === "a_caminho") rota = { de: ponto, ate: pontoDoCiclista };
+    }
     chip = textoDoMapa(chamado, nomeDoMecanico, minutosRestantes);
-    if (chamado.status === "a_caminho" || chamado.status === "em_atendimento") rota = posicao;
   } else if (chamado === null) {
-    pins = (disponiveis ?? []).map((m) => ({ id: m.id, initials: iniciais(m.nome), ...posicaoNoMapa(m.id) }));
+    pins = (disponiveis ?? []).flatMap((m) =>
+      m.latitude != null && m.longitude != null
+        ? [{
+            id: m.id,
+            initials: iniciais(m.nome),
+            rotulo: m.distancia_km != null ? `${m.nome} · a ${formatarDistancia(m.distancia_km)}` : m.nome,
+            lat: m.latitude,
+            lng: m.longitude,
+          }]
+        : [],
+    );
     chip =
       disponiveis === null
         ? "Carregando mecânicos…"
@@ -271,28 +356,52 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
           ? "Nenhum mecânico disponível agora"
           : `${disponiveis.length} ${disponiveis.length === 1 ? "mecânico disponível" : "mecânicos disponíveis"} agora`;
   }
+  const enquadrar = [
+    ...(pontoDoCiclista ? [pontoDoCiclista] : []),
+    ...(chamado ? (origem ? [origem] : []) : pins),
+  ];
 
   if (chamado === null && draft === "home") {
     return (
-      <CyclistDashboard
-        perfil={perfil}
-        mechanics={disponiveis}
-        notice={avisoInicio}
-        onStart={(atalho) => {
-          setAvisoInicio(null);
-          if (atalho) {
-            setCategoria(atalho);
-            setDraft("location");
-          } else {
-            setDraft("category");
-          }
-        }}
-      />
+      <>
+        {perguntarLocalizacao && (
+          <AtivarLocalizacao
+            onAtivar={async () => {
+              marcarPerguntado();
+              try {
+                await usarPosicao(await obterPosicao());
+              } catch (e) {
+                setAvisoInicio(mensagem(e));
+              }
+              setPerguntarLocalizacao(false);
+            }}
+            onAgoraNao={() => {
+              marcarPerguntado();
+              setPerguntarLocalizacao(false);
+            }}
+          />
+        )}
+        <CyclistDashboard
+          position={posicao}
+          perfil={perfil}
+          mechanics={disponiveis}
+          notice={avisoInicio}
+          onStart={(atalho) => {
+            setAvisoInicio(null);
+            if (atalho) {
+              setCategoria(atalho);
+              setDraft("location");
+            } else {
+              setDraft("category");
+            }
+          }}
+        />
+      </>
     );
   }
 
   // No celular, o mapa só aparece quando mostra algo útil (a escolha do mecânico ou o chamado).
-  const mapaNoCelular = chamado || draft === "mechanics" ? "" : "hidden lg:block";
+  const mapaNoCelular = chamado || draft === "mechanics" ? "" : "hidden lg:flex";
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-wrap items-stretch gap-4 p-3 sm:p-4">
@@ -324,10 +433,11 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
           <LocationStep
             categoryLabel={categoria ? rotuloCategoria(categoria) : ""}
             address={endereco}
-            authorized={autorizouLocal}
-            onAuthorizationChange={(autorizado) => {
-              setAutorizouLocal(autorizado);
-              if (!autorizado) setEndereco("");
+            hasPosition={posicao !== null}
+            onLocate={async () => {
+              if (!(await usarPosicao(await obterPosicao(), true))) {
+                throw new Error("Achamos sua localização, mas não o nome da rua. Digite o endereço ou uma referência.");
+              }
             }}
             onAddressChange={setEndereco}
             onBack={() => setDraft("category")}
@@ -429,11 +539,13 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
         )}
       </section>
 
-      <MapView
+      <Mapa
         className={`min-h-[260px] w-full min-w-0 sm:min-h-[360px] lg:min-h-[420px] lg:w-auto lg:flex-[999_1_480px] ${mapaNoCelular}`}
+        ciclista={pontoDoCiclista}
         pins={pins}
+        rota={rota}
         chip={chip}
-        routeTo={rota}
+        enquadrar={enquadrar}
       />
     </main>
   );

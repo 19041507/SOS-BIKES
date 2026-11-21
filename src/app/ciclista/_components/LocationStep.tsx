@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { StepHeader } from "./StepHeader";
 import { Button } from "@/components/ui/Button";
-import Link from "next/link";
 
 type LocationStepProps = {
   categoryLabel: string;
   address: string;
-  authorized: boolean;
-  onAuthorizationChange: (value: boolean) => void;
+  hasPosition: boolean;
+  /** Lê o GPS e preenche o endereço; lança o erro para mostrar no campo. */
+  onLocate: () => Promise<void>;
   onAddressChange: (value: string) => void;
   onBack: () => void;
   onNext: () => void;
@@ -16,27 +16,26 @@ type LocationStepProps = {
 export function LocationStep({
   categoryLabel,
   address,
-  authorized,
-  onAuthorizationChange,
+  hasPosition,
+  onLocate,
   onAddressChange,
   onBack,
   onNext,
 }: LocationStepProps) {
   const [error, setError] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
 
-  if (!authorized) return (
-    <div className="flex flex-col gap-4">
-      <StepHeader eyebrow="Etapa 2 de 3" title="Antes de informar o local" onBack={onBack} />
-      <div className="rounded-2xl border border-brand/20 bg-brand-soft p-4 text-sm leading-relaxed text-brand-dark">
-        <p className="font-semibold">Seu endereço ajuda o mecânico a chegar até você.</p>
-        <p className="mt-2">Você digita o endereço ou uma referência manualmente. Não acessamos seu GPS nem rastreamos seus deslocamentos.</p>
-        <p className="mt-2">O local informado será compartilhado com o mecânico escolhido quando você enviar o pedido. Você pode voltar sem informar, mas o atendimento precisa de um endereço.</p>
-      </div>
-      <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center text-sm font-semibold text-brand underline">Ler a política de privacidade (nova aba)</Link>
-      <Button size="lg" onClick={() => onAuthorizationChange(true)}>Concordo em informar o local</Button>
-      <Button variant="secondary" onClick={onBack}>Agora não</Button>
-    </div>
-  );
+  async function locate() {
+    setLocating(true);
+    setError(null);
+    try {
+      await onLocate();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível obter sua localização. Digite o endereço.");
+    } finally {
+      setLocating(false);
+    }
+  }
 
   function confirm() {
     if (address.trim().length < 5) {
@@ -49,6 +48,9 @@ export function LocationStep({
   return (
     <div className="flex flex-col gap-4">
       <StepHeader eyebrow="Etapa 2 de 3" title="Onde você está?" onBack={onBack} />
+      <Button variant="secondary" loading={locating} loadingText="Localizando…" onClick={() => void locate()}>
+        {hasPosition ? "Atualizar minha localização" : "Usar minha localização"}
+      </Button>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="address" className="text-sm font-semibold">Endereço ou ponto de referência</label>
         <div className="relative">
@@ -79,16 +81,6 @@ export function LocationStep({
       <p className="text-sm text-muted">
         Problema informado: <strong className="text-brand">{categoryLabel}</strong>
       </p>
-      <button
-        type="button"
-        onClick={() => {
-          setError(null);
-          onAuthorizationChange(false);
-        }}
-        className="min-h-11 rounded-lg text-left text-sm font-semibold text-brand underline"
-      >
-        Retirar autorização e apagar endereço
-      </button>
       <Button
         size="lg"
         onClick={confirm}

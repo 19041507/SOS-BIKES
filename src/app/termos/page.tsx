@@ -9,7 +9,7 @@ export default function TermosPage() {
     <DocumentoLegal titulo="Termos de uso">
       <section>
         <h2>1. Sobre o SOS Bikes</h2>
-        <p>O SOS Bikes é um projeto acadêmico desenvolvido por estudantes do curso de Administração da FICR. Não é um serviço comercial e não há canal de atendimento. O aplicativo demonstra um fluxo de socorro entre ciclistas e mecânicos. Os mapas são ilustrativos e não oferecem navegação ou rastreamento por GPS.</p>
+        <p>O SOS Bikes é um projeto acadêmico desenvolvido por estudantes do curso de Administração da FICR. Não é um serviço comercial e não há canal de atendimento. O aplicativo demonstra um fluxo de socorro entre ciclistas e mecânicos. Os mapas usam o OpenStreetMap. A distância é em linha reta e o tempo de chegada é estimado; não há rastreamento ao vivo.</p>
       </section>
       <section>
         <h2>2. Conta e informações</h2>
@@ -25,11 +25,11 @@ export default function TermosPage() {
       </section>
       <section>
         <h2>5. Conduta e avaliações</h2>
-        <p>Trate os participantes com respeito. Não publique informações falsas, ofensivas, discriminatórias ou dados pessoais desnecessários. Ciclista e mecânico podem avaliar um ao outro após um atendimento concluído. Utilize telefone e endereço recebidos somente para tratar do atendimento.</p>
+        <p>Trate os participantes com respeito, inclusive no chat do chamado. Não publique informações falsas, ofensivas, discriminatórias ou dados pessoais desnecessários. Ciclista e mecânico podem avaliar um ao outro após um atendimento concluído. Utilize telefone e endereço recebidos somente para tratar do atendimento.</p>
       </section>
       <section>
         <h2>6. Dados pessoais e alterações</h2>
-        <p>Leia a <Link href="/privacidade">Política de Privacidade</Link> para conhecer os dados utilizados e seus direitos. O compartilhamento do local é apresentado antes do campo de endereço. Atualizações destes termos serão identificadas pela data da versão. Estes termos não afastam direitos previstos na legislação aplicável.</p>
+        <p>Leia a <Link href="/privacidade">Política de Privacidade</Link> para conhecer os dados utilizados e seus direitos. A localização é explicada antes do pedido de permissão do navegador. Atualizações destes termos serão identificadas pela data da versão. Estes termos não afastam direitos previstos na legislação aplicável.</p>
       </section>
     </DocumentoLegal>
   );

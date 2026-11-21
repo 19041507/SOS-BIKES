@@ -11,19 +11,21 @@ export default function PrivacidadePage() {
         <ul>
           <li>Nome, e-mail, senha, perfil e telefone: criar a conta, autenticar e permitir comunicação sobre o atendimento. A autenticação é realizada pelo Supabase Auth.</li>
           <li>Oficina e disponibilidade do mecânico: apresentar profissionais para o ciclista escolher.</li>
-          <li>Endereço ou referência digitada, defeito e detalhes do pedido: organizar e realizar o socorro. Não coletamos coordenadas por GPS nem acompanhamos sua posição em segundo plano. O mapa é ilustrativo.</li>
+          <li>Endereço ou referência digitada, defeito e detalhes do pedido: organizar e realizar o socorro. Se você usar a localização do celular, guardamos as coordenadas daquele momento junto com o chamado. Não acompanhamos sua posição em segundo plano. Mapas: OpenStreetMap.</li>
+          <li>Mecânicos: a localização é salva ao ficar disponível e usada para mostrar a distância aos ciclistas, de forma aproximada (cerca de 100 m).</li>
           <li>Histórico, estimativas, valores, gorjetas registradas e avaliações: acompanhar atendimentos e apresentar resumos. Não solicitamos dados de cartão.</li>
+          <li>Mensagens do chat do chamado: comunicação entre o ciclista e o mecânico durante o atendimento. Só os dois participantes leem a conversa, que fica no histórico do chamado.</li>
           <li>Mecânicos favoritos: permitir encontrar e chamar novamente os profissionais salvos por você.</li>
         </ul>
       </section>
       <section>
         <h2>2. Local do atendimento e sua escolha</h2>
-        <p>Antes de abrir o campo de endereço, explicamos a finalidade e pedimos sua autorização para informar o local. Você pode recusar e voltar. Sem endereço não é possível enviar o pedido de socorro. Antes de enviar, você pode retirar a autorização e apagar o endereço pelo próprio formulário. O local é enviado no pedido, não ao apenas digitar ou buscar mecânicos.</p>
+        <p>Depois do login, explicamos para que serve a localização e você escolhe se quer ativá-la. Se ativar, o app lê a posição do aparelho ao abrir a área do ciclista, para mostrar os mecânicos mais próximos e preencher o endereço do pedido; não acompanhamos sua posição em segundo plano. Se não ativar, você digita o endereço. Sem endereço não é possível enviar o pedido de socorro. As coordenadas são usadas para calcular a distância dos mecânicos e só ficam guardadas quando você envia o pedido. Você pode retirar a permissão nas configurações do navegador.</p>
       </section>
       <section>
         <h2>3. Quem pode acessar</h2>
         <p>Os participantes do chamado podem consultar o endereço, o histórico desse atendimento e os dados de contato necessários à comunicação. As avaliações são visíveis aos dois participantes; os resumos de notas de mecânicos ajudam na escolha. Na implementação atual, perfis de mecânicos, inclusive telefone, podem ser consultados por usuários autenticados; dados de ciclistas são acessíveis ao próprio titular e a participantes dos seus chamados.</p>
-        <p className="mt-2">O Supabase fornece autenticação e banco de dados; a hospedagem do projeto usa a Vercel. Regiões de armazenamento, condições de transferência internacional e eventuais fornecedores adicionais precisam ser confirmados pelo responsável antes da operação com dados reais. Ao abrir WhatsApp ou fazer uma ligação, aplicam-se também as regras do serviço de comunicação escolhido.</p>
+        <p className="mt-2">O Supabase fornece autenticação e banco de dados; a hospedagem do projeto usa a Vercel. O OpenStreetMap (Nominatim) recebe as coordenadas para devolver o endereço escrito. Regiões de armazenamento, condições de transferência internacional e eventuais fornecedores adicionais precisam ser confirmados pelo responsável antes da operação com dados reais. Ao abrir WhatsApp ou fazer uma ligação, aplicam-se também as regras do serviço de comunicação escolhido.</p>
       </section>
       <section>
         <h2>4. Fundamentos e escolhas</h2>
