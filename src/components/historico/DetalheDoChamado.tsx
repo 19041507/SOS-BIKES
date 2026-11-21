@@ -3,6 +3,7 @@ import { SalvarMecanico } from "@/components/SalvarMecanico";
 import { StatusBadge, rotuloStatus } from "@/components/ui/StatusBadge";
 import { rotuloCategoria } from "@/lib/categorias";
 import type { ChamadoCompleto } from "@/lib/chamados";
+import { AvaliarCiclista } from "@/components/AvaliarCiclista";
 import { formatBRL } from "@/lib/money";
 import { iniciais, linksDeContato } from "@/lib/pessoas";
 import { dataEHora, hora } from "./datas";
@@ -152,7 +153,7 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
 
         {chamado.status === "concluido" && (
           <Card className="flex flex-col gap-2">
-            <h2 className="font-display text-lg font-bold">Avaliação</h2>
+            <h2 className="font-display text-lg font-bold">{visao === "mecanico" ? "Avaliação recebida do ciclista" : "Sua avaliação do mecânico"}</h2>
             {chamado.avaliacao ? (
               <>
                 <p className="text-xl text-star" aria-label={`${chamado.avaliacao.nota} de 5 estrelas`}>
@@ -166,6 +167,30 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
               </>
             ) : (
               <p className="text-[15px] text-muted">Sem avaliação.</p>
+            )}
+          </Card>
+        )}
+        {chamado.status === "concluido" && (
+          <Card className="flex flex-col gap-2">
+            {visao === "mecanico" ? (
+              <AvaliarCiclista key={chamado.id} chamado={chamado} />
+            ) : (
+              <>
+                <h2 className="font-display text-lg font-bold">Avaliação recebida do mecânico</h2>
+                {chamado.avaliacao_ciclista ? (
+                  <>
+                    <p className="text-xl text-star" aria-label={`${chamado.avaliacao_ciclista.nota} de 5 estrelas`}>
+                      {"★".repeat(chamado.avaliacao_ciclista.nota)}
+                      <span className="text-line">{"★".repeat(5 - chamado.avaliacao_ciclista.nota)}</span>
+                    </p>
+                    {chamado.avaliacao_ciclista.comentario && (
+                      <p className="break-words text-[15px]">{chamado.avaliacao_ciclista.comentario}</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted">O mecânico ainda não avaliou este atendimento.</p>
+                )}
+              </>
             )}
           </Card>
         )}

@@ -72,6 +72,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [detalhes, setDetalhes] = useState("");
   const [endereco, setEndereco] = useState("");
+  const [autorizouLocal, setAutorizouLocal] = useState(false);
   const [mecanicos, setMecanicos] = useState<MecanicoDisponivel[] | null>(null);
   const [recusaram, setRecusaram] = useState<string[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -211,6 +212,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     setCategoria(null);
     setDetalhes("");
     setEndereco("");
+    setAutorizouLocal(false);
     setRecusaram([]);
     setAviso(null);
     setErro(null);
@@ -322,6 +324,11 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
           <LocationStep
             categoryLabel={categoria ? rotuloCategoria(categoria) : ""}
             address={endereco}
+            authorized={autorizouLocal}
+            onAuthorizationChange={(autorizado) => {
+              setAutorizouLocal(autorizado);
+              if (!autorizado) setEndereco("");
+            }}
             onAddressChange={setEndereco}
             onBack={() => setDraft("category")}
             onNext={() => {

@@ -1,4 +1,5 @@
 import type { ChamadoCompleto } from "@/lib/chamados";
+import { AvaliarCiclista } from "@/components/AvaliarCiclista";
 import { formatBRL } from "@/lib/money";
 import { Button } from "@/components/ui/Button";
 
@@ -41,6 +42,9 @@ export function JobSummary({ chamado, onBack }: JobSummaryProps) {
         </div>
       </dl>
       <p className="text-center text-sm text-muted">O pagamento e a gorjeta, se houver, são feitos diretamente pelo ciclista.</p>
+      <div className="rounded-2xl border border-line p-4">
+        <AvaliarCiclista key={chamado.id} chamado={chamado} />
+      </div>
       <Button size="lg" onClick={onBack}>
         Voltar aos chamados
       </Button>

@@ -69,7 +69,11 @@ export function LoginForm() {
           autoComplete="email"
           placeholder="voce@email.com"
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setErrors((current) => ({ ...current, email: undefined }));
+            setLoginError(null);
+          }}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "email-error" : undefined}
           className="h-12 rounded-xl border border-field bg-white px-3.5 text-[15px] outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger"
@@ -85,7 +89,11 @@ export function LoginForm() {
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setErrors((current) => ({ ...current, password: undefined }));
+              setLoginError(null);
+            }}
             aria-invalid={!!errors.password}
             aria-describedby={errors.password ? "password-error" : undefined}
             className="h-12 w-full rounded-xl border border-field bg-white pr-12 pl-3.5 text-[15px] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger"

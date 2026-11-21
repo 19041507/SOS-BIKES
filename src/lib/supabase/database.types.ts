@@ -7,6 +7,12 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      avaliacoes_ciclistas: {
+        Row: { chamado_id: string; nota: number; comentario: string | null; criado_em: string };
+        Insert: { chamado_id: string; nota: number; comentario?: string | null; criado_em?: string };
+        Update: { chamado_id?: string; nota?: number; comentario?: string | null; criado_em?: string };
+        Relationships: [{ foreignKeyName: "avaliacoes_ciclistas_chamado_id_fkey"; columns: ["chamado_id"]; isOneToOne: true; referencedRelation: "chamados"; referencedColumns: ["id"] }];
+      };
       mecanicos_favoritos: {
         Row: { ciclista_id: string; mecanico_id: string; criado_em: string };
         Insert: { ciclista_id: string; mecanico_id: string; criado_em?: string };
@@ -202,4 +208,5 @@ export type Enum<Nome extends keyof PublicSchema["Enums"]> = PublicSchema["Enums
 export type Perfil = Tabela<"perfis">;
 export type Chamado = Tabela<"chamados">;
 export type Avaliacao = Tabela<"avaliacoes">;
+export type AvaliacaoCiclista = Tabela<"avaliacoes_ciclistas">;
 export type StatusChamado = Enum<"status_chamado">;
