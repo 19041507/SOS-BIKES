@@ -1,3 +1,4 @@
+import { Conversa } from "@/components/chat/Conversa";
 import { Mapa } from "@/components/Mapa";
 import { rotuloCategoria } from "@/lib/categorias";
 import type { ChamadoCompleto } from "@/lib/chamados";
@@ -48,6 +49,7 @@ export function ActiveJob({ chamado, mechanicName, mechanicPosition, busy, onNex
       <p className="text-[15px] text-slate-700">
         {nome} · {rotuloCategoria(chamado.categoria)} · estimativa {formatBRL(chamado.estimativa ?? 0)}
       </p>
+      <Conversa chamado={chamado} outraPessoa={nome} />
       {contato ? (
         <div className="grid grid-cols-2 gap-2.5">
           <a
@@ -56,7 +58,7 @@ export function ActiveJob({ chamado, mechanicName, mechanicPosition, busy, onNex
             rel="noreferrer"
             className="flex h-12 items-center justify-center rounded-xl border border-field text-[15px] font-semibold hover:bg-surface"
           >
-            Enviar mensagem
+            WhatsApp
           </a>
           <a href={contato.ligacao} className="flex h-12 items-center justify-center rounded-xl border border-field text-[15px] font-semibold hover:bg-surface">
             Ligar

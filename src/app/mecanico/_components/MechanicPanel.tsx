@@ -23,6 +23,7 @@ import { EmptyState } from "./EmptyState";
 import { MechanicDashboard } from "./MechanicDashboard";
 import { IncomingCall } from "./IncomingCall";
 import { ActiveJob } from "./ActiveJob";
+import { Conversa } from "@/components/chat/Conversa";
 import { CloseJob } from "./CloseJob";
 import { JobSummary } from "./JobSummary";
 
@@ -266,10 +267,13 @@ export function MechanicPanel() {
         )}
 
         {!concluido && atual?.status === "aceito" && (
-          <EmptyState
-            title="Estimativa enviada"
-            description={`${formatBRL(estimativaAtual)} · chegada em ${atual.tempo_chegada_min} min. Aguardando ${primeiroNome(atual.ciclista?.nome ?? "o ciclista")} confirmar o atendimento.`}
-          />
+          <>
+            <EmptyState
+              title="Estimativa enviada"
+              description={`${formatBRL(estimativaAtual)} · chegada em ${atual.tempo_chegada_min} min. Aguardando ${primeiroNome(atual.ciclista?.nome ?? "o ciclista")} confirmar o atendimento.`}
+            />
+            <Conversa chamado={atual} outraPessoa={atual.ciclista?.nome ?? "Ciclista"} />
+          </>
         )}
 
         {!concluido && !fechando && (atual?.status === "a_caminho" || atual?.status === "em_atendimento") && (

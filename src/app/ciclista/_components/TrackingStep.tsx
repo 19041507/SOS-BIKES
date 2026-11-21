@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Conversa } from "@/components/chat/Conversa";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { formatBRL } from "@/lib/money";
 import { progressoDaChegada, useAgora } from "@/lib/movimento";
@@ -72,15 +73,16 @@ export function TrackingStep({ chamado, busy, onCancel }: TrackingStepProps) {
         </div>
       </div>
 
+      <Conversa chamado={chamado} outraPessoa={nome} />
       {contato ? (
         <div className="grid grid-cols-2 gap-2.5">
           <a
             href={contato.whatsapp}
             target="_blank"
             rel="noreferrer"
-            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-ok text-[15px] font-semibold text-white hover:bg-ok-dark"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl border border-field text-[15px] font-semibold hover:bg-surface"
           >
-            Enviar mensagem
+            WhatsApp
           </a>
           <a
             href={contato.ligacao}
