@@ -361,43 +361,42 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     ...(chamado ? (origem ? [origem] : []) : pins),
   ];
 
-  if (chamado === null && draft === "home" && perguntarLocalizacao) {
-    return (
-      <AtivarLocalizacao
-        onAtivar={async () => {
-          marcarPerguntado();
-          try {
-            await usarPosicao(await obterPosicao());
-          } catch (e) {
-            setAvisoInicio(mensagem(e));
-          }
-          setPerguntarLocalizacao(false);
-        }}
-        onAgoraNao={() => {
-          marcarPerguntado();
-          setPerguntarLocalizacao(false);
-        }}
-      />
-    );
-  }
-
   if (chamado === null && draft === "home") {
     return (
-      <CyclistDashboard
-        position={posicao}
-        perfil={perfil}
-        mechanics={disponiveis}
-        notice={avisoInicio}
-        onStart={(atalho) => {
-          setAvisoInicio(null);
-          if (atalho) {
-            setCategoria(atalho);
-            setDraft("location");
-          } else {
-            setDraft("category");
-          }
-        }}
-      />
+      <>
+        {perguntarLocalizacao && (
+          <AtivarLocalizacao
+            onAtivar={async () => {
+              marcarPerguntado();
+              try {
+                await usarPosicao(await obterPosicao());
+              } catch (e) {
+                setAvisoInicio(mensagem(e));
+              }
+              setPerguntarLocalizacao(false);
+            }}
+            onAgoraNao={() => {
+              marcarPerguntado();
+              setPerguntarLocalizacao(false);
+            }}
+          />
+        )}
+        <CyclistDashboard
+          position={posicao}
+          perfil={perfil}
+          mechanics={disponiveis}
+          notice={avisoInicio}
+          onStart={(atalho) => {
+            setAvisoInicio(null);
+            if (atalho) {
+              setCategoria(atalho);
+              setDraft("location");
+            } else {
+              setDraft("category");
+            }
+          }}
+        />
+      </>
     );
   }
 
