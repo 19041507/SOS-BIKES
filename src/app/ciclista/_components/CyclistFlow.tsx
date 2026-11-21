@@ -104,6 +104,9 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   /** Endereço achado pelo GPS, para preencher de novo ao recomeçar um pedido. */
   const [enderecoDoGps, setEnderecoDoGps] = useState("");
   const [perguntarLocalizacao, setPerguntarLocalizacao] = useState(false);
+  /** Onde o mapa fica centrado na etapa do endereço (muda com o GPS ou "Marcar no mapa", não ao arrastar). */
+  const [centroDoAjuste, setCentroDoAjuste] = useState<Posicao | null>(null);
+  const esperaDoArrasto = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** A lista de mecânicos usa a posição mais recente sem recriar `carregarMecanicos`. */
   const posicaoAtual = useRef<Posicao | null>(null);
   const [origemDoMecanico, setOrigemDoMecanico] = useState<Posicao | null>(null);
@@ -190,9 +193,11 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
    * Guarda a posição, reordena a lista pela distância e preenche o endereço
    * (só se estiver vazio, a menos que `sobrescrever`). Devolve se achou o endereço.
    */
-  const usarPosicao = useCallback(async (nova: Posicao, sobrescrever = false) => {
+  const usarPosicao = useCallback(async (nova: Posicao, sobrescrever = false, arrastada = false) => {
     posicaoAtual.current = nova;
     setPosicao(nova);
+    // Arrastando, o mapa não recentraliza a cada movimento.
+    if (!arrastada) setCentroDoAjuste(nova);
     listarMecanicosDisponiveis(nova).then(setMecanicos).catch(() => {});
     const endereco = await enderecoDaPosicao(nova);
     if (!endereco) return false;
@@ -200,6 +205,24 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     setEndereco((atual) => (sobrescrever ? endereco : atual || endereco));
     return true;
   }, []);
+
+  /**
+   * Ponto arrastado ou tocado no mapa: move na hora e, ~800 ms depois do último movimento,
+   * busca o endereço e as distâncias (o Nominatim aceita 1 consulta por segundo).
+   */
+  function moverNoMapa(nova: Posicao) {
+    posicaoAtual.current = nova;
+    setPosicao(nova);
+    if (esperaDoArrasto.current) clearTimeout(esperaDoArrasto.current);
+    esperaDoArrasto.current = setTimeout(() => void usarPosicao(nova, true, true), 800);
+  }
+
+  useEffect(
+    () => () => {
+      if (esperaDoArrasto.current) clearTimeout(esperaDoArrasto.current);
+    },
+    [],
+  );
 
   // A tela inicial já mostra quem está disponível (a lista começa como null = carregando).
   // Com a localização liberada, lê a posição sozinho; na primeira vez, explica antes de pedir.
@@ -356,10 +379,12 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
           ? "Nenhum mecânico disponível agora"
           : `${disponiveis.length} ${disponiveis.length === 1 ? "mecânico disponível" : "mecânicos disponíveis"} agora`;
   }
-  const enquadrar = [
-    ...(pontoDoCiclista ? [pontoDoCiclista] : []),
-    ...(chamado ? (origem ? [origem] : []) : pins),
-  ];
+  const ajustando = chamado === null && draft === "location";
+  const enquadrar = ajustando
+    ? centroDoAjuste
+      ? [centroDoAjuste]
+      : []
+    : [...(pontoDoCiclista ? [pontoDoCiclista] : []), ...(chamado ? (origem ? [origem] : []) : pins)];
 
   if (chamado === null && draft === "home") {
     return (
@@ -401,7 +426,8 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   }
 
   // No celular, o mapa só aparece quando mostra algo útil (a escolha do mecânico ou o chamado).
-  const mapaNoCelular = chamado || draft === "mechanics" ? "" : "hidden lg:flex";
+  // Na etapa do endereço, o mapa aparece no celular para ajustar o ponto.
+  const mapaNoCelular = chamado || draft === "mechanics" || draft === "location" ? "" : "hidden lg:flex";
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-wrap items-stretch gap-4 p-3 sm:p-4">
@@ -544,8 +570,9 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
         ciclista={pontoDoCiclista}
         pins={pins}
         rota={rota}
-        chip={chip}
+        chip={ajustando ? (posicao ? "Arraste o ponto ou toque no mapa" : "Toque no mapa para marcar onde você está") : chip}
         enquadrar={enquadrar}
+        onMoverCiclista={ajustando ? moverNoMapa : undefined}
       />
     </main>
   );

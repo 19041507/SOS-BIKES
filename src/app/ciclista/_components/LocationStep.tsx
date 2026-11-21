@@ -51,6 +51,11 @@ export function LocationStep({
       <Button variant="secondary" loading={locating} loadingText="Localizando…" onClick={() => void locate()}>
         {hasPosition ? "Atualizar minha localização" : "Usar minha localização"}
       </Button>
+      <p className="-mt-2 text-[13px] text-subtle">
+        {hasPosition
+          ? "O ponto está errado? Arraste o ponto azul no mapa ou toque onde você está."
+          : "Sem localização? Toque no mapa onde você está para marcar o ponto."}
+      </p>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="address" className="text-sm font-semibold">Endereço ou ponto de referência</label>
         <div className="relative">
