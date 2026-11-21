@@ -9,7 +9,7 @@ export default function TermosPage() {
     <DocumentoLegal titulo="Termos de uso">
       <section>
         <h2>1. Sobre o SOS Bikes</h2>
-        <p>O SOS Bikes é um projeto acadêmico desenvolvido por estudantes do curso de Administração da FICR. Não é um serviço comercial e não há canal de atendimento. O aplicativo demonstra um fluxo de socorro entre ciclistas e mecânicos. Os mapas são ilustrativos e não oferecem navegação ou rastreamento por GPS.</p>
+        <p>O SOS Bikes é um projeto acadêmico desenvolvido por estudantes do curso de Administração da FICR. Não é um serviço comercial e não há canal de atendimento. O aplicativo demonstra um fluxo de socorro entre ciclistas e mecânicos. Os mapas usam o OpenStreetMap. A distância é em linha reta e o tempo de chegada é estimado; não há rastreamento ao vivo.</p>
       </section>
       <section>
         <h2>2. Conta e informações</h2>

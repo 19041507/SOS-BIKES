@@ -11,7 +11,8 @@ export default function PrivacidadePage() {
         <ul>
           <li>Nome, e-mail, senha, perfil e telefone: criar a conta, autenticar e permitir comunicação sobre o atendimento. A autenticação é realizada pelo Supabase Auth.</li>
           <li>Oficina e disponibilidade do mecânico: apresentar profissionais para o ciclista escolher.</li>
-          <li>Endereço ou referência digitada, defeito e detalhes do pedido: organizar e realizar o socorro. Não coletamos coordenadas por GPS nem acompanhamos sua posição em segundo plano. O mapa é ilustrativo.</li>
+          <li>Endereço ou referência digitada, defeito e detalhes do pedido: organizar e realizar o socorro. Se você usar a localização do celular, guardamos as coordenadas daquele momento junto com o chamado. Não acompanhamos sua posição em segundo plano. Mapas: OpenStreetMap.</li>
+          <li>Mecânicos: a localização é salva ao ficar disponível e usada para mostrar a distância aos ciclistas, de forma aproximada (cerca de 100 m).</li>
           <li>Histórico, estimativas, valores, gorjetas registradas e avaliações: acompanhar atendimentos e apresentar resumos. Não solicitamos dados de cartão.</li>
           <li>Mecânicos favoritos: permitir encontrar e chamar novamente os profissionais salvos por você.</li>
         </ul>
@@ -23,7 +24,7 @@ export default function PrivacidadePage() {
       <section>
         <h2>3. Quem pode acessar</h2>
         <p>Os participantes do chamado podem consultar o endereço, o histórico desse atendimento e os dados de contato necessários à comunicação. As avaliações são visíveis aos dois participantes; os resumos de notas de mecânicos ajudam na escolha. Na implementação atual, perfis de mecânicos, inclusive telefone, podem ser consultados por usuários autenticados; dados de ciclistas são acessíveis ao próprio titular e a participantes dos seus chamados.</p>
-        <p className="mt-2">O Supabase fornece autenticação e banco de dados; a hospedagem do projeto usa a Vercel. Regiões de armazenamento, condições de transferência internacional e eventuais fornecedores adicionais precisam ser confirmados pelo responsável antes da operação com dados reais. Ao abrir WhatsApp ou fazer uma ligação, aplicam-se também as regras do serviço de comunicação escolhido.</p>
+        <p className="mt-2">O Supabase fornece autenticação e banco de dados; a hospedagem do projeto usa a Vercel. O OpenStreetMap (Nominatim) recebe as coordenadas para devolver o endereço escrito. Regiões de armazenamento, condições de transferência internacional e eventuais fornecedores adicionais precisam ser confirmados pelo responsável antes da operação com dados reais. Ao abrir WhatsApp ou fazer uma ligação, aplicam-se também as regras do serviço de comunicação escolhido.</p>
       </section>
       <section>
         <h2>4. Fundamentos e escolhas</h2>
