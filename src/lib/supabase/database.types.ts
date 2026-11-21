@@ -22,6 +22,14 @@ export type Database = {
           { foreignKeyName: "mecanicos_favoritos_mecanico_id_fkey"; columns: ["mecanico_id"]; isOneToOne: false; referencedRelation: "perfis"; referencedColumns: ["id"] },
         ];
       };
+      inscricoes_push: {
+        Row: { id: string; perfil_id: string; endpoint: string; p256dh: string; auth: string; criado_em: string };
+        Insert: { id?: string; perfil_id: string; endpoint: string; p256dh: string; auth: string; criado_em?: string };
+        Update: { id?: string; perfil_id?: string; endpoint?: string; p256dh?: string; auth?: string; criado_em?: string };
+        Relationships: [
+          { foreignKeyName: "inscricoes_push_perfil_id_fkey"; columns: ["perfil_id"]; isOneToOne: false; referencedRelation: "perfis"; referencedColumns: ["id"] },
+        ];
+      };
       mensagens: {
         Row: { id: string; chamado_id: string; autor_id: string; texto: string; criado_em: string; lida_em: string | null };
         Insert: { id?: string; chamado_id: string; autor_id?: string; texto: string; criado_em?: string; lida_em?: string | null };
@@ -199,6 +207,10 @@ export type Database = {
           longitude: number | null;
           distancia_km: number | null;
         }[];
+      };
+      salvar_inscricao_push: {
+        Args: { endereco: string; chave_p256dh: string; chave_auth: string };
+        Returns: undefined;
       };
       marcar_mensagens_lidas: {
         Args: { chamado: string };
