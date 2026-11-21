@@ -30,15 +30,43 @@ body {
   color: var(--color-ink);
 }
 
+.route-animated {
+  animation: route-dash 1.2s linear infinite;
+}
+
+.pulse-ring {
+  transform-origin: center;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* Mesmo percurso da rota em BrandPanel (ROUTE) */
+.mechanic-move {
+  left: 78%;
+  top: 18%;
+  animation: mechanic-move 8s ease-in-out infinite;
+}
+
 /* Painel compartilhado por login e cadastro: alturas e ajustes responsivos. */
 .brand-panel {
   height: 15rem;
 }
 
+.brand-call {
+  position: absolute;
+  top: 28%;
+  left: 6%;
+  display: none;
+  width: min(15rem, 46%);
+}
+
 .brand-arrival {
+  position: absolute;
   top: 55%;
   right: 5%;
+  display: flex;
   width: 12rem;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 @media (width < 400px) {
@@ -68,6 +96,10 @@ body {
     align-self: stretch;
     height: auto;
     min-height: 100dvh;
+  }
+
+  .brand-call {
+    display: block;
   }
 
   .brand-arrival {
@@ -120,22 +152,6 @@ body {
     align-items: center;
     gap: 0.75rem;
   }
-}
-
-.route-animated {
-  animation: route-dash 1.2s linear infinite;
-}
-
-.pulse-ring {
-  transform-origin: center;
-  animation: pulse-ring 2s ease-out infinite;
-}
-
-/* Mesmo percurso da rota em BrandPanel (ROUTE) */
-.mechanic-move {
-  left: 78%;
-  top: 18%;
-  animation: mechanic-move 8s ease-in-out infinite;
 }
 
 @keyframes mechanic-move {

@@ -72,13 +72,13 @@ export function BrandPanel() {
           <Logo />
         </div>
 
-        <div className="brand-call absolute top-[28%] left-[6%] hidden w-[min(15rem,46%)] rounded-2xl bg-white p-4 text-ink shadow-xl lg:block">
+        <div className="brand-call rounded-2xl bg-white p-4 text-ink shadow-xl">
           <p className="text-xs font-semibold text-warn">Novo chamado</p>
           <p className="mt-1 font-semibold">Pneu furado</p>
           <p className="text-sm text-subtle">R. da Aurora · a 800 m</p>
         </div>
 
-        <div className="brand-arrival absolute flex items-center gap-2 rounded-2xl bg-white p-3 text-ink shadow-xl lg:p-4">
+        <div className="brand-arrival rounded-2xl bg-white p-3 text-ink shadow-xl lg:p-4">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-ok text-xs font-bold text-white lg:size-10 lg:text-sm">
             LF
           </span>
