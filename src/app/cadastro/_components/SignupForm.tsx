@@ -7,7 +7,7 @@ import { SENHA_MINIMA, emailValido, formatarTelefone, normalizarTelefone } from 
 
 type Profile = "ciclista" | "mecanico";
 type Campo = "nome" | "telefone" | "oficina" | "email" | "senha";
-type Erros = Partial<Record<Campo | "geral", string>>;
+type Erros = Partial<Record<Campo | "geral" | "aceitouTermos", string>>;
 
 const PROFILES: { id: Profile; label: string }[] = [
   { id: "ciclista", label: "Sou ciclista" },
@@ -30,6 +30,7 @@ export function SignupForm() {
   const [erros, setErros] = useState<Erros>({});
   const [confirmarEmail, setConfirmarEmail] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [aceitouTermos, setAceitouTermos] = useState(false);
 
   function alterar(campo: Campo, valor: string) {
     setValores((atual) => ({ ...atual, [campo]: campo === "telefone" ? formatarTelefone(valor) : valor }));
@@ -43,6 +44,7 @@ export function SignupForm() {
     if (!normalizarTelefone(valores.telefone)) novos.telefone = "Informe o WhatsApp com DDD.";
     if (!emailValido(valores.email)) novos.email = "Informe um e-mail válido.";
     if (valores.senha.length < SENHA_MINIMA) novos.senha = `A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`;
+    if (!aceitouTermos) novos.aceitouTermos = "Aceite os termos de uso para criar sua conta.";
     return novos;
   }
 
@@ -53,7 +55,7 @@ export function SignupForm() {
     if (Object.keys(novos).length > 0) return;
     startTransition(async () => {
       // Se a conta já entra direto, a action redireciona para a área do perfil.
-      const resultado: ResultadoDoCadastro = await cadastrar({ perfil: profile, ...valores });
+      const resultado: ResultadoDoCadastro = await cadastrar({ perfil: profile, ...valores, aceitouTermos });
       if ("confirmarEmail" in resultado) setConfirmarEmail(resultado.confirmarEmail);
       else setErros(resultado.erros);
     });
@@ -178,6 +180,14 @@ export function SignupForm() {
           </button>
         </div>
         {erros.senha ? mensagem("senha") : <p className="text-[13px] text-subtle">Mínimo de {SENHA_MINIMA} caracteres.</p>}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-line p-3 text-sm leading-relaxed">
+          <input type="checkbox" checked={aceitouTermos} onChange={event => { setAceitouTermos(event.target.checked); setErros(atuais => ({ ...atuais, aceitouTermos: undefined })); }} aria-invalid={Boolean(erros.aceitouTermos)} aria-describedby={erros.aceitouTermos ? "termos-erro" : undefined} className="mt-1 size-4 shrink-0 accent-brand" />
+          <span>Aceito os <Link href="/termos" target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline">Termos de Uso</Link> e estou ciente da <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline">Política de Privacidade</Link>.</span>
+        </label>
+        {erros.aceitouTermos && <p id="termos-erro" className="text-[13px] text-danger">{erros.aceitouTermos}</p>}
       </div>
 
       {erros.geral && (

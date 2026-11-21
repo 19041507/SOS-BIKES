@@ -75,6 +75,40 @@ O teste cobre nota sem comentário, avaliação única, bloqueio antes da conclu
 leitura pelos participantes e bloqueio de terceiros. Os dados de teste são
 descartados por `rollback`.
 
+## Termos, privacidade e local do atendimento
+
+As páginas públicas [Termos de Uso](http://localhost:3000/termos) e
+[Política de Privacidade](http://localhost:3000/privacidade) estão acessíveis no
+login, cadastro e rodapé das áreas internas. O cadastro exige aceite dos termos
+no formulário e na action do servidor. A versão aceita e a data gerada no servidor
+são enviadas aos metadados de cadastro do Supabase Auth; isso não constitui um
+registro de auditoria imutável.
+
+Antes de renderizar o campo de endereço, a etapa de localização apresenta a
+finalidade e solicita uma autorização específica. Recusar volta à etapa anterior;
+retirar a autorização apaga o endereço do pedido ainda não enviado. O app não
+solicita GPS nem acompanha deslocamentos. O endereço só é transmitido ao banco
+ao solicitar um mecânico.
+
+A escolha fica no `CyclistFlow`, junto com o endereço, durante o pedido: voltar
+da lista de mecânicos não pede autorização novamente. Recomeçar o pedido ou
+retirar a autorização limpa essa escolha e o endereço. Não há persistência da
+autorização de localização entre sessões.
+
+Os documentos identificam diretamente o SOS Bikes como projeto acadêmico de
+estudantes de Administração da FICR, sem serviço comercial nem canal de
+atendimento. Não dependem de variáveis de ambiente para essa identificação e não
+descrevem favoritos nem ferramentas locais de desenvolvimento.
+O aceite permanece apenas nos metadados do Auth (`termos_versao` e
+`termos_aceitos_em`), não em `perfis`, e os links legais permanecem no rodapé de
+todas as telas de `AreaLogada`; confirmar essas decisões com o grupo antes da
+integração.
+
+O caráter acadêmico não certifica conformidade integral com a LGPD. Antes de uma
+eventual operação real, ainda seria necessário definir canal de privacidade e
+validar bases legais, retenção, atendimento aos titulares e condições dos
+fornecedores.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.

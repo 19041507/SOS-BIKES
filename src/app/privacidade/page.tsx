@@ -1,0 +1,45 @@
+import type { Metadata } from "next";
+import { DocumentoLegal } from "@/components/DocumentoLegal";
+
+export const metadata: Metadata = { title: "Política de privacidade · SOS Bikes" };
+
+export default function PrivacidadePage() {
+  return (
+    <DocumentoLegal titulo="Política de privacidade">
+      <section>
+        <h2>1. Dados utilizados e finalidades</h2>
+        <ul>
+          <li>Nome, e-mail, senha, perfil e telefone: criar a conta, autenticar e permitir comunicação sobre o atendimento. A autenticação é realizada pelo Supabase Auth.</li>
+          <li>Oficina e disponibilidade do mecânico: apresentar profissionais para o ciclista escolher.</li>
+          <li>Endereço ou referência digitada, defeito e detalhes do pedido: organizar e realizar o socorro. Não coletamos coordenadas por GPS nem acompanhamos sua posição em segundo plano. O mapa é ilustrativo.</li>
+          <li>Histórico, estimativas, valores, gorjetas registradas e avaliações: acompanhar atendimentos e apresentar resumos. Não solicitamos dados de cartão.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>2. Local do atendimento e sua escolha</h2>
+        <p>Antes de abrir o campo de endereço, explicamos a finalidade e pedimos sua autorização para informar o local. Você pode recusar e voltar. Sem endereço não é possível enviar o pedido de socorro. Antes de enviar, você pode retirar a autorização e apagar o endereço pelo próprio formulário. O local é enviado no pedido, não ao apenas digitar ou buscar mecânicos.</p>
+      </section>
+      <section>
+        <h2>3. Quem pode acessar</h2>
+        <p>Os participantes do chamado podem consultar o endereço, o histórico desse atendimento e os dados de contato necessários à comunicação. As avaliações são visíveis aos dois participantes; os resumos de notas de mecânicos ajudam na escolha. Na implementação atual, perfis de mecânicos, inclusive telefone, podem ser consultados por usuários autenticados; dados de ciclistas são acessíveis ao próprio titular e a participantes dos seus chamados.</p>
+        <p className="mt-2">O Supabase fornece autenticação e banco de dados; a hospedagem do projeto usa a Vercel. Regiões de armazenamento, condições de transferência internacional e eventuais fornecedores adicionais precisam ser confirmados pelo responsável antes da operação com dados reais. Ao abrir WhatsApp ou fazer uma ligação, aplicam-se também as regras do serviço de comunicação escolhido.</p>
+      </section>
+      <section>
+        <h2>4. Fundamentos e escolhas</h2>
+        <p>Dados necessários ao pedido de atendimento podem ser tratados para executar o serviço solicitado, conforme a LGPD. Quando um tratamento depender de consentimento, sua finalidade deve ser específica e a escolha pode ser revogada. O aceite dos termos não autoriza usos genéricos, publicidade ou venda de dados. O SOS Bikes é um projeto acadêmico, não um serviço comercial.</p>
+      </section>
+      <section>
+        <h2>5. Armazenamento e segurança</h2>
+        <p>A sessão utiliza cookies de autenticação. O app utiliza controle de acesso por conta no banco. Na versão atual, os dados permanecem na conta e no histórico, e não há exclusão automática por prazo. Os prazos de retenção e o procedimento de exclusão precisam ser definidos pelo responsável, considerando a finalidade e as hipóteses legais de conservação. Não inclua dados sensíveis em endereços, comentários ou descrições.</p>
+      </section>
+      <section>
+        <h2>6. Seus direitos</h2>
+        <p>Você pode solicitar confirmação e acesso aos dados, correção, informações de compartilhamento, anonimização, bloqueio ou exclusão quando cabíveis e portabilidade nos termos da regulamentação. Também pode revogar consentimentos e questionar tratamentos. O projeto não possui canal de atendimento; não há, nesta versão acadêmica, um fluxo de solicitações de privacidade implementado. Alguns registros podem precisar ser conservados por obrigação legal ou exercício de direitos.</p>
+      </section>
+      <section>
+        <h2>7. Referências</h2>
+        <p>Este documento considera a <a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm" target="_blank" rel="noopener noreferrer">Lei Geral de Proteção de Dados Pessoais — Lei nº 13.709/2018</a> e as <a href="https://www.gov.br/anpd/pt-br/assuntos/titular-de-dados/direito-dos-titulares" target="_blank" rel="noopener noreferrer">orientações da ANPD sobre direitos dos titulares</a>. Sua publicação, isoladamente, não certifica a conformidade do serviço.</p>
+      </section>
+    </DocumentoLegal>
+  );
+}
