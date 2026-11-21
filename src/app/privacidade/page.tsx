@@ -14,6 +14,7 @@ export default function PrivacidadePage() {
           <li>Endereço ou referência digitada, defeito e detalhes do pedido: organizar e realizar o socorro. Se você usar a localização do celular, guardamos as coordenadas daquele momento junto com o chamado. Não acompanhamos sua posição em segundo plano. Mapas: OpenStreetMap.</li>
           <li>Mecânicos: a localização é salva ao ficar disponível e usada para mostrar a distância aos ciclistas, de forma aproximada (cerca de 100 m).</li>
           <li>Histórico, estimativas, valores, gorjetas registradas e avaliações: acompanhar atendimentos e apresentar resumos. Não solicitamos dados de cartão.</li>
+          <li>Mensagens do chat do chamado: comunicação entre o ciclista e o mecânico durante o atendimento. Só os dois participantes leem a conversa, que fica no histórico do chamado.</li>
           <li>Mecânicos favoritos: permitir encontrar e chamar novamente os profissionais salvos por você.</li>
         </ul>
       </section>

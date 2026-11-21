@@ -2,6 +2,7 @@ import type { ChamadoCompleto } from "@/lib/chamados";
 import { formatBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
 import { Button } from "@/components/ui/Button";
+import { Conversa } from "@/components/chat/Conversa";
 
 type ProposalStepProps = {
   chamado: ChamadoCompleto;
@@ -33,6 +34,7 @@ export function ProposalStep({ chamado, busy, onConfirm, onChooseAnother }: Prop
         O valor final pode variar conforme o serviço realizado. Se mudar, o mecânico informa o novo valor ao concluir o atendimento.
       </p>
       <p className="text-sm text-muted">O pagamento é feito diretamente ao mecânico.</p>
+      <Conversa chamado={chamado} outraPessoa={chamado.mecanico?.nome ?? "Mecânico"} />
       <Button
         size="lg"
         disabled={busy}

@@ -22,6 +22,15 @@ export type Database = {
           { foreignKeyName: "mecanicos_favoritos_mecanico_id_fkey"; columns: ["mecanico_id"]; isOneToOne: false; referencedRelation: "perfis"; referencedColumns: ["id"] },
         ];
       };
+      mensagens: {
+        Row: { id: string; chamado_id: string; autor_id: string; texto: string; criado_em: string; lida_em: string | null };
+        Insert: { id?: string; chamado_id: string; autor_id?: string; texto: string; criado_em?: string; lida_em?: string | null };
+        Update: { id?: string; chamado_id?: string; autor_id?: string; texto?: string; criado_em?: string; lida_em?: string | null };
+        Relationships: [
+          { foreignKeyName: "mensagens_chamado_id_fkey"; columns: ["chamado_id"]; isOneToOne: false; referencedRelation: "chamados"; referencedColumns: ["id"] },
+          { foreignKeyName: "mensagens_autor_id_fkey"; columns: ["autor_id"]; isOneToOne: false; referencedRelation: "perfis"; referencedColumns: ["id"] },
+        ];
+      };
       perfis: {
         Row: {
           id: string;
@@ -191,6 +200,10 @@ export type Database = {
           distancia_km: number | null;
         }[];
       };
+      marcar_mensagens_lidas: {
+        Args: { chamado: string };
+        Returns: undefined;
+      };
       atualizar_minha_localizacao: {
         Args: { lat: number; lng: number };
         Returns: undefined;
@@ -227,3 +240,4 @@ export type Chamado = Tabela<"chamados">;
 export type Avaliacao = Tabela<"avaliacoes">;
 export type AvaliacaoCiclista = Tabela<"avaliacoes_ciclistas">;
 export type StatusChamado = Enum<"status_chamado">;
+export type Mensagem = Tabela<"mensagens">;

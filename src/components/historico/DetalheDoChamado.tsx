@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { Conversa } from "@/components/chat/Conversa";
 import { SalvarMecanico } from "@/components/SalvarMecanico";
 import { StatusBadge, rotuloStatus } from "@/components/ui/StatusBadge";
 import { rotuloCategoria } from "@/lib/categorias";
@@ -113,6 +114,7 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
               </a>
             </div>
           )}
+          <Conversa chamado={chamado} outraPessoa={nomeDaOutra} />
           {visao === "ciclista" && chamado.mecanico && <SalvarMecanico mecanico={chamado.mecanico} />}
         </Card>
 
