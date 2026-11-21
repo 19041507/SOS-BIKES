@@ -166,6 +166,18 @@ O envio padrão do Supabase permite poucos e-mails por hora. Para a apresentaç�
 
 As contas de demonstração usam e-mails que não existem; crie-as em **Authentication → Users → Add user** com **Auto Confirm User** marcado (ver **Banco de dados → Configurar o banco**).
 
+## Recuperação de senha
+
+No login, **"Esqueci minha senha"** leva a `/recuperar-senha`, que envia um link por e-mail. A resposta é a mesma com ou sem conta, para não revelar quais e-mails estão cadastrados. O link abre `/auth/confirmar?type=recovery`, que cria a sessão e leva a `/nova-senha`. Ao salvar, a pessoa sai da conta e volta ao login com o aviso "Senha alterada". Link vencido ou já usado volta para `/recuperar-senha` com um aviso. `/nova-senha` sem a sessão do link também volta para lá.
+
+### Configurar o e-mail de redefinição (uma vez, no painel do Supabase)
+
+**Authentication → Emails → Reset password**:
+- **Subject**: `Redefina sua senha do SOS Bikes`
+- **Body**: colar o conteúdo de `supabase/templates/redefinir-senha.html`
+
+Sem esse template, o e-mail padrão do Supabase não leva à tela de senha nova.
+
 ## Banco de dados (Supabase)
 
 | Tabela | Conteúdo |
