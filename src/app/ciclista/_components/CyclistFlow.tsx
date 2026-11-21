@@ -19,10 +19,19 @@ import {
   type ChamadoCompleto,
   type MecanicoDisponivel,
 } from "@/lib/chamados";
-import { formatarDistancia, pontoNoCaminho, posicaoDoChamado, type Posicao } from "@/lib/localizacao";
+import {
+  enderecoDaPosicao,
+  estadoDaPermissao,
+  formatarDistancia,
+  obterPosicao,
+  pontoNoCaminho,
+  posicaoDoChamado,
+  type Posicao,
+} from "@/lib/localizacao";
 import { formatBRL } from "@/lib/money";
 import { progressoDaChegada, useAgora, useMenosMovimento } from "@/lib/movimento";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
+import { AtivarLocalizacao } from "./AtivarLocalizacao";
 import { CyclistDashboard } from "./CyclistDashboard";
 import { CategoryStep } from "./CategoryStep";
 import { LocationStep } from "./LocationStep";
@@ -35,6 +44,23 @@ import { Button } from "@/components/ui/Button";
 
 /** Etapas antes de existir um chamado; depois, a tela segue o status do chamado no banco. */
 type Draft = "home" | "category" | "location" | "mechanics";
+
+/** Marca, neste aparelho, que a tela de ativar a localização já foi mostrada. */
+const LOCALIZACAO_PERGUNTADA = "sos-bikes:localizacao-perguntada";
+
+function jaPerguntou() {
+  try {
+    return localStorage.getItem(LOCALIZACAO_PERGUNTADA) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function marcarPerguntado() {
+  try {
+    localStorage.setItem(LOCALIZACAO_PERGUNTADA, "1");
+  } catch {}
+}
 
 /** No caminho, o pin para em 85% do trajeto para não cobrir o ciclista. */
 const PERCURSO_MAXIMO = 0.85;
@@ -74,8 +100,10 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [detalhes, setDetalhes] = useState("");
   const [endereco, setEndereco] = useState("");
-  const [autorizouLocal, setAutorizouLocal] = useState(false);
   const [posicao, setPosicao] = useState<Posicao | null>(null);
+  /** Endereço achado pelo GPS, para preencher de novo ao recomeçar um pedido. */
+  const [enderecoDoGps, setEnderecoDoGps] = useState("");
+  const [perguntarLocalizacao, setPerguntarLocalizacao] = useState(false);
   /** A lista de mecânicos usa a posição mais recente sem recriar `carregarMecanicos`. */
   const posicaoAtual = useRef<Posicao | null>(null);
   const [origemDoMecanico, setOrigemDoMecanico] = useState<Posicao | null>(null);
@@ -96,8 +124,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
       setDraft("category");
       setCategoria(null);
       setDetalhes("");
-      setEndereco("");
-      setPosicao(null);
+      setEndereco(enderecoDoGps);
       setAviso(null);
       setErro(null);
     }
@@ -159,12 +186,32 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     [carregarMecanicos, avisar],
   );
 
+  /**
+   * Guarda a posição, reordena a lista pela distância e preenche o endereço
+   * (só se estiver vazio, a menos que `sobrescrever`). Devolve se achou o endereço.
+   */
+  const usarPosicao = useCallback(async (nova: Posicao, sobrescrever = false) => {
+    posicaoAtual.current = nova;
+    setPosicao(nova);
+    listarMecanicosDisponiveis(nova).then(setMecanicos).catch(() => {});
+    const endereco = await enderecoDaPosicao(nova);
+    if (!endereco) return false;
+    setEnderecoDoGps(endereco);
+    setEndereco((atual) => (sobrescrever ? endereco : atual || endereco));
+    return true;
+  }, []);
+
   // A tela inicial já mostra quem está disponível (a lista começa como null = carregando).
+  // Com a localização liberada, lê a posição sozinho; na primeira vez, explica antes de pedir.
   useEffect(() => {
     listarMecanicosDisponiveis()
       .then(setMecanicos)
       .catch(() => setMecanicos([]));
-  }, []);
+    estadoDaPermissao().then((estado) => {
+      if (estado === "granted") obterPosicao().then(usarPosicao).catch(() => {});
+      else if (estado === "prompt" && !jaPerguntou()) setPerguntarLocalizacao(true);
+    });
+  }, [usarPosicao]);
 
   useEffect(() => {
     chamadoAtualDoCiclista(perfil.id)
@@ -185,10 +232,6 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
   useMudancasEmChamados(`ciclista_id=eq.${perfil.id}`, () => {
     if (chamado) buscarChamado(chamado.id).then(aplicar).catch(() => {});
   });
-
-  useEffect(() => {
-    posicaoAtual.current = posicao;
-  }, [posicao]);
 
   // Depois do aceite, o mapa mostra o mecânico saindo da posição dele (aproximada).
   const chamadoId = chamado?.id;
@@ -234,9 +277,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     setDraft("home");
     setCategoria(null);
     setDetalhes("");
-    setEndereco("");
-    setPosicao(null);
-    setAutorizouLocal(false);
+    setEndereco(enderecoDoGps);
     setRecusaram([]);
     setAviso(null);
     setErro(null);
@@ -320,9 +361,30 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
     ...(chamado ? (origem ? [origem] : []) : pins),
   ];
 
+  if (chamado === null && draft === "home" && perguntarLocalizacao) {
+    return (
+      <AtivarLocalizacao
+        onAtivar={async () => {
+          marcarPerguntado();
+          try {
+            await usarPosicao(await obterPosicao());
+          } catch (e) {
+            setAvisoInicio(mensagem(e));
+          }
+          setPerguntarLocalizacao(false);
+        }}
+        onAgoraNao={() => {
+          marcarPerguntado();
+          setPerguntarLocalizacao(false);
+        }}
+      />
+    );
+  }
+
   if (chamado === null && draft === "home") {
     return (
       <CyclistDashboard
+        position={posicao}
         perfil={perfil}
         mechanics={disponiveis}
         notice={avisoInicio}
@@ -372,14 +434,10 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
           <LocationStep
             categoryLabel={categoria ? rotuloCategoria(categoria) : ""}
             address={endereco}
-            position={posicao}
-            onPositionChange={setPosicao}
-            authorized={autorizouLocal}
-            onAuthorizationChange={(autorizado) => {
-              setAutorizouLocal(autorizado);
-              if (!autorizado) {
-                setEndereco("");
-                setPosicao(null);
+            hasPosition={posicao !== null}
+            onLocate={async () => {
+              if (!(await usarPosicao(await obterPosicao(), true))) {
+                throw new Error("Achamos sua localização, mas não o nome da rua. Digite o endereço ou uma referência.");
               }
             }}
             onAddressChange={setEndereco}

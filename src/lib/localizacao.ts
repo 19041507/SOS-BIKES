@@ -88,3 +88,12 @@ export function linkDaRota({ lat, lng }: Posicao) {
 export function posicaoDoChamado(chamado: { latitude: number | null; longitude: number | null }): Posicao | null {
   return chamado.latitude != null && chamado.longitude != null ? { lat: chamado.latitude, lng: chamado.longitude } : null;
 }
+
+/** Estado da permissão sem abrir o pedido do navegador ("indisponivel" quando o navegador não informa). */
+export async function estadoDaPermissao(): Promise<PermissionState | "indisponivel"> {
+  try {
+    return (await navigator.permissions.query({ name: "geolocation" })).state;
+  } catch {
+    return "indisponivel";
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Mapa } from "@/components/Mapa";
+import { formatarDistancia, type Posicao } from "@/lib/localizacao";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -13,6 +14,8 @@ type Resumo = Awaited<ReturnType<typeof resumoDoCiclista>>;
 
 type CyclistDashboardProps = {
   perfil: { id: string; nome: string };
+  /** Posição do ciclista, se a localização estiver ativada. */
+  position: Posicao | null;
   mechanics: MecanicoDisponivel[] | null;
   notice: string | null;
   onStart: (categoria?: Categoria) => void;
@@ -29,7 +32,7 @@ function Estrelas({ nota }: { nota: number }) {
   );
 }
 
-export function CyclistDashboard({ perfil, mechanics, notice, onStart }: CyclistDashboardProps) {
+export function CyclistDashboard({ perfil, position, mechanics, notice, onStart }: CyclistDashboardProps) {
   const [resumo, setResumo] = useState<Resumo | null>(null);
   const [erroResumo, setErroResumo] = useState(false);
 
@@ -42,7 +45,13 @@ export function CyclistDashboard({ perfil, mechanics, notice, onStart }: Cyclist
   const destaques = mechanics?.slice(0, 3) ?? [];
   const pins = (mechanics ?? []).flatMap((m) =>
     m.latitude != null && m.longitude != null
-      ? [{ id: m.id, initials: iniciais(m.nome), rotulo: m.nome, lat: m.latitude, lng: m.longitude }]
+      ? [{
+          id: m.id,
+          initials: iniciais(m.nome),
+          rotulo: m.distancia_km != null ? `${m.nome} · a ${formatarDistancia(m.distancia_km)}` : m.nome,
+          lat: m.latitude,
+          lng: m.longitude,
+        }]
       : [],
   );
   const total = mechanics?.length ?? 0;
@@ -138,8 +147,9 @@ export function CyclistDashboard({ perfil, mechanics, notice, onStart }: Cyclist
 
       <Mapa
         className="min-h-[240px] sm:min-h-[320px] lg:col-span-2"
+        ciclista={position}
         pins={pins}
-        enquadrar={pins}
+        enquadrar={position ? [position, ...pins] : pins}
         chip={mechanics === null ? "Carregando…" : total === 0 ? "Nenhum mecânico disponível agora" : `${total} ${total === 1 ? "mecânico disponível" : "mecânicos disponíveis"} agora`}
       />
 
