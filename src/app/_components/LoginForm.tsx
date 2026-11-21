@@ -10,7 +10,7 @@ const PROFILES: { id: Profile; label: string }[] = [
   { id: "mecanico", label: "Sou mecânico" },
 ];
 
-export function LoginForm({ onLogin = entrar }: { onLogin?: typeof entrar } = {}) {
+export function LoginForm() {
   const [profile, setProfile] = useState<Profile>("ciclista");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +29,7 @@ export function LoginForm({ onLogin = entrar }: { onLogin?: typeof entrar } = {}
     if (Object.keys(nextErrors).length > 0) return;
     startTransition(async () => {
       // Em caso de sucesso, a action redireciona para a área do perfil.
-      const result = await onLogin({ email, senha: password, perfil: profile });
+      const result = await entrar({ email, senha: password, perfil: profile });
       setLoginError(result.erro);
     });
   }
