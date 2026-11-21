@@ -43,6 +43,19 @@ function Enquadrar({ pontos }: { pontos: Posicao[] }) {
   return null;
 }
 
+/** O Leaflet não percebe quando a caixa do mapa muda de tamanho (ex.: a coluna ao lado cresce). */
+function AcompanharTamanho() {
+  const mapa = useMap();
+
+  useEffect(() => {
+    const observador = new ResizeObserver(() => mapa.invalidateSize());
+    observador.observe(mapa.getContainer());
+    return () => observador.disconnect();
+  }, [mapa]);
+
+  return null;
+}
+
 export default function MapaReal({ ciclista, pins, rota, chip, enquadrar, className = "" }: MapaProps) {
   return (
     <section aria-label="Mapa" className={`relative isolate overflow-hidden rounded-2xl border border-line bg-map ${className}`}>
@@ -60,6 +73,7 @@ export default function MapaReal({ ciclista, pins, rota, chip, enquadrar, classN
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Enquadrar pontos={enquadrar} />
+        <AcompanharTamanho />
         {rota && (
           <Polyline
             positions={[rota.de, rota.ate]}
