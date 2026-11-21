@@ -168,7 +168,7 @@ As contas de demonstração usam e-mails que não existem; crie-as em **Authenti
 
 ## Recuperação de senha
 
-No login, **"Esqueci minha senha"** leva a `/recuperar-senha`, que envia um link por e-mail. A resposta é a mesma com ou sem conta, para não revelar quais e-mails estão cadastrados. O link abre `/auth/confirmar?type=recovery`, que cria a sessão e leva a `/nova-senha`. Ao salvar, a pessoa sai da conta e volta ao login com o aviso "Senha alterada". Link vencido ou já usado volta para `/recuperar-senha` com um aviso. `/nova-senha` sem a sessão do link também volta para lá.
+Depois de uma tentativa com e-mail ou senha incorretos, o login mostra **"Esqueci minha senha"**, que leva a `/recuperar-senha`, que envia um link por e-mail. A resposta é a mesma com ou sem conta, para não revelar quais e-mails estão cadastrados. O link abre `/auth/confirmar?type=recovery`, que cria a sessão e leva a `/nova-senha`. Ao salvar, a pessoa sai da conta e volta ao login com o aviso "Senha alterada". Link vencido ou já usado volta para `/recuperar-senha` com um aviso. `/nova-senha` sem a sessão do link também volta para lá.
 
 ### Configurar o e-mail de redefinição (uma vez, no painel do Supabase)
 

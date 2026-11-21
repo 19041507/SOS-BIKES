@@ -24,8 +24,11 @@ const OPCAO_DO_PERFIL: Record<Enum<"tipo_perfil">, string> = {
   mecanico: "Sou mecânico",
 };
 
-/** Retorna a mensagem de erro; em caso de sucesso, redireciona para a área do perfil. */
-export async function entrar({ email, senha, perfil }: DadosDeEntrada): Promise<{ erro: string }> {
+/**
+ * Retorna a mensagem de erro (e se foi senha incorreta, para o login oferecer "Esqueci minha senha");
+ * em caso de sucesso, redireciona para a área do perfil.
+ */
+export async function entrar({ email, senha, perfil }: DadosDeEntrada): Promise<{ erro: string; senhaIncorreta?: boolean }> {
   if (!supabaseConfigurado) {
     return { erro: "O login não está configurado neste ambiente." };
   }
@@ -34,12 +37,8 @@ export async function entrar({ email, senha, perfil }: DadosDeEntrada): Promise<
   const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
 
   if (error || !data.user) {
-    return {
-      erro:
-        error?.code === "email_not_confirmed"
-          ? "Confirme seu e-mail antes de entrar."
-          : "E-mail ou senha incorretos.",
-    };
+    if (error?.code === "email_not_confirmed") return { erro: "Confirme seu e-mail antes de entrar." };
+    return { erro: "E-mail ou senha incorretos.", senhaIncorreta: true };
   }
 
   const { data: conta } = await supabase.from("perfis").select("tipo").eq("id", data.user.id).single();
