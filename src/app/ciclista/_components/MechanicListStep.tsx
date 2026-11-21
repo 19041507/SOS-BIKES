@@ -1,4 +1,5 @@
 import type { MecanicoDisponivel } from "@/lib/chamados";
+import { formatarDistancia } from "@/lib/localizacao";
 import { iniciais } from "@/lib/pessoas";
 import { StepHeader } from "./StepHeader";
 import { Button } from "@/components/ui/Button";
@@ -70,7 +71,10 @@ export function MechanicListStep({ mechanics, notice, error, requesting, onBack,
               </span>
               <div className="min-w-0 flex-[1_1_150px]">
                 <p className="truncate font-semibold">{mechanic.nome}</p>
-                <p className="mt-0.5 text-[13px] text-subtle">{mechanic.oficina ?? "Mecânico autônomo"}</p>
+                <p className="mt-0.5 text-[13px] text-subtle">
+                  {mechanic.oficina ?? "Mecânico autônomo"}
+                  {mechanic.distancia_km !== null && ` · a ${formatarDistancia(mechanic.distancia_km)}`}
+                </p>
                 <p className="text-[13px] text-subtle">
                   <Avaliacao mechanic={mechanic} />
                   {mechanic.atendimentos > 0 && ` · ${mechanic.atendimentos} ${mechanic.atendimentos === 1 ? "atendimento" : "atendimentos"}`}

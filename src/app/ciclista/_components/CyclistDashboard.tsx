@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapView, posicaoNoMapa } from "@/components/MapView";
+import { Mapa } from "@/components/Mapa";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -40,7 +40,9 @@ export function CyclistDashboard({ perfil, mechanics, notice, onStart }: Cyclist
   }, [perfil.id]);
 
   const destaques = mechanics?.slice(0, 3) ?? [];
-  const pins = (mechanics ?? []).map((m) => ({ id: m.id, initials: iniciais(m.nome), ...posicaoNoMapa(m.id) }));
+  const pins = (mechanics ?? []).flatMap((m) =>
+    m.latitude !== null && m.longitude !== null ? [{ id: m.id, initials: iniciais(m.nome), lat: m.latitude, lng: m.longitude }] : [],
+  );
   const total = mechanics?.length ?? 0;
 
   return (
@@ -132,9 +134,10 @@ export function CyclistDashboard({ perfil, mechanics, notice, onStart }: Cyclist
         )}
       </Card>
 
-      <MapView
+      <Mapa
         className="min-h-[240px] sm:min-h-[320px] lg:col-span-2"
         pins={pins}
+        enquadrar={pins}
         chip={mechanics === null ? "Carregando…" : total === 0 ? "Nenhum mecânico disponível agora" : `${total} ${total === 1 ? "mecânico disponível" : "mecânicos disponíveis"} agora`}
       />
 
