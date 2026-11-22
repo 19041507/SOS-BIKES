@@ -5,6 +5,7 @@ import { usePerfil } from "@/components/PerfilProvider";
 import { useToast } from "@/components/ui/Toaster";
 import { hora } from "@/components/historico/datas";
 import { STATUS_COM_CHAT, TAMANHO_MAXIMO, enviarMensagem, marcarComoLidas, useMensagens } from "@/lib/mensagens";
+import { conterTabNoDialogo } from "@/lib/foco";
 import { useTituloDeAlerta } from "@/lib/movimento";
 import { tocarAviso } from "@/lib/som";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
@@ -29,8 +30,18 @@ export function Conversa({ chamado, outraPessoa }: ConversaProps) {
   const avisar = useToast();
   const [aberta, setAberta] = useState(false);
   const abertaAgora = useRef(aberta);
+  const botaoAbrir = useRef<HTMLButtonElement>(null);
+  const restaurarFoco = useRef(false);
+
   useEffect(() => {
     abertaAgora.current = aberta;
+  }, [aberta]);
+
+  useEffect(() => {
+    if (!aberta && restaurarFoco.current) {
+      botaoAbrir.current?.focus();
+      restaurarFoco.current = false;
+    }
   }, [aberta]);
 
   const { mensagens, erro, carregar, adicionar } = useMensagens(chamado.id, (mensagem) => {
@@ -54,6 +65,7 @@ export function Conversa({ chamado, outraPessoa }: ConversaProps) {
   return (
     <>
       <button
+        ref={botaoAbrir}
         type="button"
         onClick={() => setAberta(true)}
         className="relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-[15px] font-semibold text-white hover:bg-brand-dark"
@@ -78,7 +90,10 @@ export function Conversa({ chamado, outraPessoa }: ConversaProps) {
           erro={erro}
           onRecarregar={carregar}
           onEnviada={adicionar}
-          onFechar={() => setAberta(false)}
+          onFechar={() => {
+            restaurarFoco.current = true;
+            setAberta(false);
+          }}
         />
       )}
     </>
@@ -99,6 +114,7 @@ function PainelDaConversa({ chamado, outraPessoa, mensagens, erro, onRecarregar,
   const [pendentes, setPendentes] = useState<Pendente[]>([]);
   const fim = useRef<HTMLDivElement>(null);
   const campo = useRef<HTMLTextAreaElement>(null);
+  const dialogo = useRef<HTMLElement>(null);
   const aberto = STATUS_COM_CHAT.includes(chamado.status);
   const total = (mensagens?.length ?? 0) + pendentes.length;
 
@@ -139,12 +155,15 @@ function PainelDaConversa({ chamado, outraPessoa, mensagens, erro, onRecarregar,
       }}
       onKeyDown={(event) => {
         if (event.key === "Escape") onFechar();
+        conterTabNoDialogo(event, dialogo.current);
       }}
     >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="conversa-titulo"
+        ref={dialogo}
+        tabIndex={-1}
         className="flex h-[85dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:h-full sm:max-w-md sm:rounded-none motion-safe:animate-[toast-entrada_200ms_ease-out]"
       >
         <header className="flex items-center gap-3 border-b border-line px-4 py-3">
