@@ -4,9 +4,17 @@
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
+type Privada<Row> = { Row: Row; Insert: Partial<Row>; Update: Partial<Row>; Relationships: [] };
+
 export type Database = {
   public: {
     Tables: {
+      perfil_privado: Privada<{ usuario_id: string; cpf: string | null; idade: number | null; foto_caminho: string | null; texto_ampliado: boolean; alto_contraste: boolean; reduzir_movimentos: boolean }>;
+      oficina_privada: Privada<{ usuario_id: string; vinculado: boolean; cnpj: string | null; endereco: string | null; foto_caminho: string | null }>;
+      bicicletas_perfil: Privada<{ id: string; usuario_id: string; modelo: string; apelido: string | null; cor: string | null; foto_caminho: string | null; criado_em: string }>;
+      locais_perfil: Privada<{ id: string; usuario_id: string; nome: string; endereco: string; criado_em: string }>;
+      clientes_favoritos: Privada<{ usuario_id: string; cliente_id: string; criado_em: string }>;
+      atividade_perfil: Privada<{ id: string; usuario_id: string; tipo: string; criado_em: string }>;
       avaliacoes_ciclistas: {
         Row: { chamado_id: string; nota: number; comentario: string | null; criado_em: string };
         Insert: { chamado_id: string; nota: number; comentario?: string | null; criado_em?: string };
@@ -189,6 +197,9 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      salvar_perfil_completo: { Args: { operacao: string; dados: Json }; Returns: undefined };
+      trocar_foto_perfil: { Args: { destino: string; item_id: string | null; antiga: string | null; nova: string | null }; Returns: boolean };
+      listar_secao_perfil: { Args: { secao: string; antes?: string; antes_id?: string }; Returns: Json };
       meus_mecanicos_favoritos: {
         Args: never;
         Returns: { id: string; nome: string; oficina: string | null; disponivel: boolean; media: number | null; avaliacoes: number; atendimentos: number }[];
