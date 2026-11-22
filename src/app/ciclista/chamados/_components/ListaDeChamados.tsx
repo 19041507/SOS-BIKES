@@ -39,7 +39,7 @@ export function ListaDeChamados() {
         <ButtonLink href="/ciclista">Pedir socorro</ButtonLink>
       </div>
 
-      <div role="tablist" aria-label="Filtrar chamados" className="flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
+      <div role="group" aria-label="Filtrar chamados" className="flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
         {ABAS.map((a) => {
           const quantidade = chamados?.filter((c) => !a.status || a.status.includes(c.status)).length;
           const ativa = aba === a.id;
@@ -47,8 +47,7 @@ export function ListaDeChamados() {
             <button
               key={a.id}
               type="button"
-              role="tab"
-              aria-selected={ativa}
+              aria-pressed={ativa}
               onClick={() => setAba(a.id)}
               className={`flex h-10 shrink-0 items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold whitespace-nowrap transition-colors ${
                 ativa ? "bg-white text-brand shadow-sm" : "text-subtle hover:text-ink"
