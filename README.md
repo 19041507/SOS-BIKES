@@ -42,6 +42,7 @@ Os dois valores ficam no painel do Supabase, no botão **Connect** da página in
 ## Testes automatizados
 
 Os testes unitários e de componentes usam Vitest e Testing Library; os fluxos de login, cadastro e pedido de socorro usam Playwright com um Supabase local isolado. Os testes E2E nunca usam o banco remoto.
+Para executar os testes E2E, use Node.js 22 ou superior; o SDK do Supabase usado na preparação dos testes requer o WebSocket nativo disponível nessa versão.
 
 ```bash
 npm test
