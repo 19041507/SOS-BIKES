@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { definirNovaSenha } from "../../_actions/auth";
 import { SENHA_MINIMA } from "@/lib/cadastro";
+import { useFocoNoPrimeiroCampoInvalido } from "@/lib/foco";
 
 type Erros = { senha?: string; confirmacao?: string; geral?: string };
 
@@ -15,6 +16,7 @@ export function FormularioDeNovaSenha() {
   const [mostrar, setMostrar] = useState(false);
   const [erros, setErros] = useState<Erros>({});
   const [pending, startTransition] = useTransition();
+  const { formRef, prepararFoco } = useFocoNoPrimeiroCampoInvalido();
 
   function salvar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,7 +24,10 @@ export function FormularioDeNovaSenha() {
     if (senha.length < SENHA_MINIMA) novos.senha = `A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`;
     else if (confirmacao !== senha) novos.confirmacao = "As senhas não são iguais.";
     setErros(novos);
-    if (Object.keys(novos).length > 0) return;
+    if (Object.keys(novos).length > 0) {
+      prepararFoco();
+      return;
+    }
     startTransition(async () => {
       // Em caso de sucesso, a action sai da conta e volta para o login.
       const resultado = await definirNovaSenha(senha);
@@ -31,7 +36,7 @@ export function FormularioDeNovaSenha() {
   }
 
   return (
-    <form onSubmit={salvar} noValidate className="flex flex-col gap-5">
+    <form ref={formRef} onSubmit={salvar} noValidate className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="senha" className="text-sm font-semibold">Nova senha</label>
         <div className="relative">

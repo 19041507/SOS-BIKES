@@ -1,4 +1,6 @@
-import type { KeyboardEvent } from "react";
+"use client";
+
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 const ELEMENTOS_FOCAVEIS = [
   "a[href]",
@@ -29,4 +31,22 @@ export function conterTabNoDialogo(event: KeyboardEvent<HTMLElement>, dialogo: H
     event.preventDefault();
     primeiro.focus();
   }
+}
+
+export function useFocoNoPrimeiroCampoInvalido() {
+  const formRef = useRef<HTMLFormElement>(null);
+  const focoPendente = useRef(false);
+  const [solicitacoesDeFoco, setSolicitacoesDeFoco] = useState(0);
+  const prepararFoco = useCallback(() => {
+    focoPendente.current = true;
+    setSolicitacoesDeFoco((atual) => atual + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!focoPendente.current) return;
+    focoPendente.current = false;
+    formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [solicitacoesDeFoco]);
+
+  return { formRef, prepararFoco };
 }
