@@ -2,7 +2,7 @@ import { rotuloCategoria } from "@/lib/categorias";
 import { formatBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
 import { enviarAviso, type Aviso } from "@/lib/push-servidor";
-import { clienteDeServico } from "@/lib/supabase/servico";
+import { clienteDeServico, resumoDaChave, variavel } from "@/lib/supabase/servico";
 import type { Chamado, Mensagem } from "@/lib/supabase/database.types";
 
 /**
@@ -77,7 +77,9 @@ async function avisoDaMensagem(mensagem: Mensagem): Promise<Aviso | null> {
     .eq("id", mensagem.chamado_id)
     .single();
   // Erro aqui costuma ser a SUPABASE_SERVICE_ROLE_KEY errada: precisa aparecer no log do webhook.
-  if (error || !chamado) throw new Error(`Não foi possível ler o chamado da mensagem: ${error?.message ?? "não encontrado"}`);
+  if (error || !chamado) {
+    throw new Error(`Não foi possível ler o chamado da mensagem: ${error?.message ?? "não encontrado"} (chave usada: ${resumoDaChave()})`);
+  }
   const para = mensagem.autor_id === chamado.ciclista_id ? chamado.mecanico_id : chamado.ciclista_id;
   const pessoas = await nomes([mensagem.autor_id, para]);
   const autor = primeiroNome(pessoas.get(mensagem.autor_id)?.nome ?? "Nova mensagem");
@@ -86,9 +88,16 @@ async function avisoDaMensagem(mensagem: Mensagem): Promise<Aviso | null> {
 }
 
 export async function POST(request: Request) {
-  const segredo = process.env.NOTIFICACOES_SEGREDO;
-  if (!segredo || request.headers.get("authorization") !== `Bearer ${segredo}`) {
-    return new Response("Não autorizado", { status: 401 });
+  const segredo = variavel("NOTIFICACOES_SEGREDO");
+  const cabecalho = request.headers.get("authorization")?.trim() ?? "";
+  if (!segredo || cabecalho !== `Bearer ${segredo}`) {
+    // Só formato e tamanhos (nada do segredo), para descobrir a diferença pelo log do webhook.
+    const enviado = cabecalho.startsWith("Bearer ") ? cabecalho.slice(7).trim() : cabecalho;
+    return new Response(
+      `Não autorizado. Cabeçalho começa com "Bearer ": ${cabecalho.startsWith("Bearer ") ? "sim" : "não"}. ` +
+        `Segredo recebido: ${enviado.length} caracteres. Segredo na Vercel: ${segredo ? `${segredo.length} caracteres` : "não definido"}.`,
+      { status: 401 },
+    );
   }
   const evento = (await request.json()) as Webhook;
   // Resumo do que chegou, para o log do webhook (net._http_response) explicar cada decisão.

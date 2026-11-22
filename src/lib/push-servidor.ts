@@ -1,6 +1,6 @@
 import "server-only";
 import webpush from "web-push";
-import { clienteDeServico } from "@/lib/supabase/servico";
+import { clienteDeServico, resumoDaChave, variavel } from "@/lib/supabase/servico";
 
 export type Aviso = {
   para: string;
@@ -25,8 +25,8 @@ export type ResultadoDoEnvio = {
  */
 export async function enviarAviso(aviso: Aviso): Promise<ResultadoDoEnvio> {
   const resultado: ResultadoDoEnvio = { para: aviso.para, inscricoes: 0, enviados: 0, erros: [] };
-  const publica = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privada = process.env.VAPID_PRIVATE_KEY;
+  const publica = variavel("NEXT_PUBLIC_VAPID_PUBLIC_KEY");
+  const privada = variavel("VAPID_PRIVATE_KEY");
   if (!publica || !privada) {
     resultado.erros.push({ status: null, mensagem: "Chaves VAPID não configuradas no servidor." });
     return resultado;
@@ -38,7 +38,7 @@ export async function enviarAviso(aviso: Aviso): Promise<ResultadoDoEnvio> {
     .select("id, endpoint, p256dh, auth")
     .eq("perfil_id", aviso.para);
   if (error) {
-    resultado.erros.push({ status: null, mensagem: `Erro ao ler inscrições: ${error.message}` });
+    resultado.erros.push({ status: null, mensagem: `Erro ao ler inscrições: ${error.message} (chave usada: ${resumoDaChave()})` });
     return resultado;
   }
   resultado.inscricoes = inscricoes?.length ?? 0;
