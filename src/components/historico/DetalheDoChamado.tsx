@@ -5,6 +5,7 @@ import { StatusBadge, rotuloStatus } from "@/components/ui/StatusBadge";
 import { rotuloCategoria } from "@/lib/categorias";
 import type { ChamadoCompleto } from "@/lib/chamados";
 import { AvaliarCiclista } from "@/components/AvaliarCiclista";
+import { OcultarComentarioPublico } from "@/components/OcultarComentarioPublico";
 import { formatBRL } from "@/lib/money";
 import { iniciais, linksDeContato } from "@/lib/pessoas";
 import { dataEHora, hora } from "./datas";
@@ -163,6 +164,9 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
                   <span className="text-line">{"★".repeat(5 - chamado.avaliacao.nota)}</span>
                 </p>
                 {chamado.avaliacao.comentario && <p className="text-[15px]">“{chamado.avaliacao.comentario}”</p>}
+                {visao === "ciclista" && chamado.avaliacao.comentario_publico && (
+                  <OcultarComentarioPublico chamadoId={chamado.id} />
+                )}
                 {chamado.avaliacao.gorjeta ? (
                   <p className="text-sm text-muted">Gorjeta registrada: {formatBRL(chamado.avaliacao.gorjeta)}</p>
                 ) : null}
