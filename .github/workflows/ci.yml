@@ -12,9 +12,9 @@ concurrency:
 
 jobs:
   verificar:
-    name: Tipos, lint e build
+    name: Tipos, lint, build e testes
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -34,3 +34,28 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Testes unitários e de componentes
+        run: npm test
+
+      - name: Instalar navegador do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 3.2.0
+
+      - name: Iniciar Supabase local
+        run: supabase start
+
+      - name: Aplicar migrações no banco local
+        run: supabase db reset
+
+      - name: Disponibilizar credenciais locais aos testes
+        run: |
+          eval "$(supabase status --output env)"
+          echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$ANON_KEY" >> "$GITHUB_ENV"
+
+      - name: Testes ponta a ponta
+        run: npm run test:e2e
