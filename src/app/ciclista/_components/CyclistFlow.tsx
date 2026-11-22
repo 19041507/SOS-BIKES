@@ -441,7 +441,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
           </p>
         )}
         {chamado === undefined && (
-          <div className="flex flex-col gap-3" aria-busy="true" aria-label="Carregando">
+          <div className="flex flex-col gap-3" role="status" aria-busy="true" aria-label="Carregando chamado">
             <div className="h-6 w-2/3 rounded bg-slate-100 motion-safe:animate-pulse" />
             <div className="h-24 rounded-2xl bg-slate-100 motion-safe:animate-pulse" />
             <div className="h-14 rounded-xl bg-slate-100 motion-safe:animate-pulse" />

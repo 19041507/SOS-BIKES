@@ -41,6 +41,7 @@ export function ListaDeFavoritos() {
       {carregando && (
         <div
           className="h-28 rounded-2xl bg-slate-100 motion-safe:animate-pulse"
+          role="status"
           aria-label="Carregando favoritos"
         />
       )}

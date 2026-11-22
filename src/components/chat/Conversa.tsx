@@ -169,7 +169,7 @@ function PainelDaConversa({ chamado, outraPessoa, mensagens, erro, onRecarregar,
 
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto bg-surface px-4 py-4" aria-live="polite">
           {mensagens === null && !erro && (
-            <div className="flex flex-col gap-2" aria-label="Carregando conversa">
+            <div className="flex flex-col gap-2" role="status" aria-label="Carregando conversa">
               <div className="h-10 w-2/3 rounded-2xl bg-slate-200 motion-safe:animate-pulse" />
               <div className="h-10 w-1/2 self-end rounded-2xl bg-slate-200 motion-safe:animate-pulse" />
             </div>
