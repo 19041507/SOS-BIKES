@@ -42,6 +42,7 @@ import { TrackingStep } from "./TrackingStep";
 import { FinishedStep } from "./FinishedStep";
 import { Button } from "@/components/ui/Button";
 import { AtivarNotificacoes } from "@/components/AtivarNotificacoes";
+import { tocarAviso } from "@/lib/som";
 
 /** Etapas antes de existir um chamado; depois, a tela segue o status do chamado no banco. */
 type Draft = "home" | "category" | "location" | "mechanics";
@@ -155,6 +156,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
       const anterior = ultimo.current;
       ultimo.current = atual;
       if (anterior?.id === atual.id && anterior.status !== atual.status) {
+        if (["aceito", "em_atendimento", "concluido"].includes(atual.status)) tocarAviso();
         if (atual.status === "aceito") {
           avisar(`${nome} aceitou seu chamado: ${formatBRL(atual.estimativa ?? 0)} · chega em ${atual.tempo_chegada_min} min.`, "sucesso");
         } else if (atual.status === "em_atendimento") {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toaster";
 import { ativarNotificacoes, estadoDasNotificacoes, type EstadoDasNotificacoes } from "@/lib/notificacoes";
+import { enviarNotificacaoDeTeste } from "@/app/_actions/notificacoes";
 
 type AtivarNotificacoesProps = {
   /** Separa a pergunta do mecânico e a do ciclista no mesmo aparelho. */
@@ -12,7 +13,8 @@ type AtivarNotificacoesProps = {
   texto: string;
 };
 
-const chave = (perfil: string) => `sos-bikes:notificacoes-perguntadas:${perfil}`;
+// v2: pergunta de novo uma vez para refazer inscrições antigas e mandar o aviso de teste.
+const chave = (perfil: string) => `sos-bikes:notificacoes-perguntadas-v2:${perfil}`;
 
 function jaPerguntou(perfil: string) {
   try {
@@ -46,7 +48,7 @@ export function AtivarNotificacoes({ perfil, titulo, texto }: AtivarNotificacoes
     setEstado(null);
   }
 
-  if (estado !== "desativadas" && estado !== "instalar") return null;
+  if (estado !== "desativadas" && estado !== "ativadas" && estado !== "instalar") return null;
 
   return (
     <section
@@ -77,8 +79,13 @@ export function AtivarNotificacoes({ perfil, titulo, texto }: AtivarNotificacoes
               setAtivando(true);
               try {
                 const resultado = await ativarNotificacoes();
-                if (resultado === "ativadas") avisar("Notificações ativadas.", "sucesso");
-                else if (resultado === "bloqueadas") avisar("As notificações ficaram bloqueadas. Libere nas configurações do navegador.", "aviso");
+                if (resultado === "ativadas") {
+                  // Confirma o caminho inteiro (servidor → serviço de push → aparelho) na hora.
+                  const teste = await enviarNotificacaoDeTeste();
+                  if ("erro" in teste) avisar(teste.erro, "erro");
+                  else if (teste.enviados > 0) avisar("Notificações ativadas. Enviamos um aviso de teste.", "sucesso");
+                  else avisar(`O aviso de teste não foi enviado: ${teste.erros[0]?.mensagem ?? "nenhum aparelho inscrito"}`, "erro");
+                } else if (resultado === "bloqueadas") avisar("As notificações ficaram bloqueadas. Libere nas configurações do navegador.", "aviso");
               } catch (e) {
                 avisar(e instanceof Error ? e.message : "Não foi possível ativar as notificações.", "erro");
               } finally {
