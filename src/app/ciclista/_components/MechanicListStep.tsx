@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { MecanicoDisponivel } from "@/lib/chamados";
 import { formatarDistancia } from "@/lib/localizacao";
 import { iniciais } from "@/lib/pessoas";
@@ -79,6 +80,12 @@ export function MechanicListStep({ mechanics, notice, error, requesting, onBack,
                   <Avaliacao mechanic={mechanic} />
                   {mechanic.atendimentos > 0 && ` · ${mechanic.atendimentos} ${mechanic.atendimentos === 1 ? "atendimento" : "atendimentos"}`}
                 </p>
+                <Link
+                  href={`/mecanicos/${mechanic.id}`}
+                  className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
+                >
+                  Ver perfil
+                </Link>
               </div>
               <SalvarMecanico mecanico={{ ...mechanic, disponivel: true }} />
               <button

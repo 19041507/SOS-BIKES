@@ -85,6 +85,9 @@ export function ListaDeFavoritos() {
               </div>
               <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
                 <SalvarMecanico mecanico={mecanico} />
+                <ButtonLink href={`/mecanicos/${mecanico.id}`} variant="secondary">
+                  Ver perfil
+                </ButtonLink>
                 {mecanico.disponivel ? (
                   <ButtonLink
                     href={`/ciclista?mecanico=${encodeURIComponent(mecanico.id)}`}

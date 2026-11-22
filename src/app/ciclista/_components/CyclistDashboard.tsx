@@ -129,6 +129,12 @@ export function CyclistDashboard({ perfil, position, mechanics, notice, onStart 
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{m.nome}</p>
                   <p className="truncate text-[13px] text-subtle">{m.oficina ?? "Mecânico autônomo"}</p>
+                  <Link
+                    href={`/mecanicos/${m.id}`}
+                    className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
+                  >
+                    Ver perfil
+                  </Link>
                 </div>
                 <span className="text-sm font-semibold">
                   {m.media ? (
