@@ -54,9 +54,12 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
           <dd>{formatBRL(chamado.valor_final ?? 0)}</dd>
         </div>
         {priceChanged && chamado.motivo_variacao && (
-          <p className="mb-3 rounded-lg bg-warn-soft px-3 py-2.5 text-sm leading-snug text-warn">
-            Motivo informado pelo mecânico: {chamado.motivo_variacao}
-          </p>
+          <div>
+            <dt className="sr-only">Motivo da variação de preço</dt>
+            <dd className="mb-3 rounded-lg bg-warn-soft px-3 py-2.5 text-sm leading-snug text-warn">
+              Motivo informado pelo mecânico: {chamado.motivo_variacao}
+            </dd>
+          </div>
         )}
       </dl>
 
