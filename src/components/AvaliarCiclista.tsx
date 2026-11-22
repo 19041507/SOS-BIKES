@@ -21,9 +21,12 @@ export function AvaliarCiclista({ chamado }: Props) {
   if (enviada) return (
     <section className="flex flex-col gap-2" aria-label="Sua avaliação do ciclista">
       <h3 className="font-display text-lg font-bold">Sua avaliação do ciclista</h3>
-      <p className="text-xl text-star" aria-label={`${enviada.nota} de 5 estrelas`}>
-        {"★".repeat(enviada.nota)}
-        <span className="text-subtle">{"★".repeat(5 - enviada.nota)}</span>
+      <p className="text-xl text-star">
+        <span aria-hidden="true">
+          {"★".repeat(enviada.nota)}
+          <span className="text-subtle">{"★".repeat(5 - enviada.nota)}</span>
+        </span>
+        <span className="sr-only">{enviada.nota} de 5 estrelas</span>
       </p>
       {enviada.comentario && (
         <p className="break-words text-sm text-muted">{enviada.comentario}</p>
