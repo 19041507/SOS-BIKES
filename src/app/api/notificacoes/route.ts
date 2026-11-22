@@ -1,7 +1,7 @@
 import { rotuloCategoria } from "@/lib/categorias";
 import { formatBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
-import { enviarAviso, type Aviso } from "@/lib/push-servidor";
+import { buscarInscricoes, enviarAviso, type Aviso } from "@/lib/push-servidor";
 import { clienteDeServico, resumoDaChave, variavel } from "@/lib/supabase/servico";
 import type { Chamado, Mensagem } from "@/lib/supabase/database.types";
 
@@ -23,6 +23,16 @@ function resumir(texto: string) {
 async function nomes(ids: string[]) {
   const { data } = await clienteDeServico().from("perfis").select("id, nome, tipo").in("id", ids);
   return new Map((data ?? []).map((p) => [p.id, p]));
+}
+
+/** Quem recebe o aviso desta mudança de chamado (null = a mudança não notifica). */
+function destinatarioDoChamado(evento: Webhook & { table: "chamados" }) {
+  const chamado = evento.record;
+  if (evento.type === "UPDATE" && evento.old_record?.status === chamado.status) return null;
+  if (evento.type === "INSERT") return chamado.status === "aguardando" ? chamado.mecanico_id : null;
+  if (chamado.status === "aceito" || chamado.status === "em_atendimento") return chamado.ciclista_id;
+  if (chamado.status === "cancelado") return chamado.mecanico_id;
+  return null;
 }
 
 async function avisoDoChamado(evento: Webhook & { table: "chamados" }): Promise<Aviso | null> {
@@ -71,19 +81,22 @@ async function avisoDoChamado(evento: Webhook & { table: "chamados" }): Promise<
 }
 
 async function avisoDaMensagem(mensagem: Mensagem): Promise<Aviso | null> {
+  // Nomes e tipos já vêm junto (uma consulta só, em vez de duas).
   const { data: chamado, error } = await clienteDeServico()
     .from("chamados")
-    .select("ciclista_id, mecanico_id")
+    .select(
+      "ciclista_id, mecanico_id, ciclista:perfis!chamados_ciclista_id_fkey(nome, tipo), mecanico:perfis!chamados_mecanico_id_fkey(nome, tipo)",
+    )
     .eq("id", mensagem.chamado_id)
     .single();
   // Erro aqui costuma ser a SUPABASE_SERVICE_ROLE_KEY errada: precisa aparecer no log do webhook.
   if (error || !chamado) {
     throw new Error(`Não foi possível ler o chamado da mensagem: ${error?.message ?? "não encontrado"} (chave usada: ${resumoDaChave()})`);
   }
-  const para = mensagem.autor_id === chamado.ciclista_id ? chamado.mecanico_id : chamado.ciclista_id;
-  const pessoas = await nomes([mensagem.autor_id, para]);
-  const autor = primeiroNome(pessoas.get(mensagem.autor_id)?.nome ?? "Nova mensagem");
-  const tipo = pessoas.get(para)?.tipo ?? "ciclista";
+  const doCiclista = mensagem.autor_id === chamado.ciclista_id;
+  const para = doCiclista ? chamado.mecanico_id : chamado.ciclista_id;
+  const autor = primeiroNome((doCiclista ? chamado.ciclista : chamado.mecanico)?.nome ?? "Nova mensagem");
+  const tipo = (doCiclista ? chamado.mecanico : chamado.ciclista)?.tipo ?? "ciclista";
   return { para, titulo: autor, texto: resumir(mensagem.texto), url: `/${tipo}`, tag: `chat-${mensagem.chamado_id}` };
 }
 
@@ -99,7 +112,11 @@ export async function POST(request: Request) {
       { status: 401 },
     );
   }
+  const inicio = Date.now();
   const evento = (await request.json()) as Webhook;
+  // Para chamados já se sabe quem recebe: as inscrições são buscadas junto com os nomes.
+  const destinatario = evento.table === "chamados" ? destinatarioDoChamado(evento) : null;
+  const inscricoes = destinatario ? buscarInscricoes(destinatario) : undefined;
   // Resumo do que chegou, para o log do webhook (net._http_response) explicar cada decisão.
   const recebido = {
     tabela: evento.table,
@@ -115,6 +132,9 @@ export async function POST(request: Request) {
     return Response.json({ recebido, erro: erro instanceof Error ? erro.message : String(erro) });
   }
   if (!aviso) return Response.json({ recebido, aviso: null, motivo: "Esta mudança não gera notificação." });
-  // O resultado aparece em net._http_response no Supabase: ajuda a ver por que um aviso não chegou.
-  return Response.json({ recebido, ...(await enviarAviso(aviso)) });
+  const montado = Date.now();
+  const resultado = await enviarAviso(aviso, aviso.para === destinatario ? inscricoes : undefined);
+  // O resultado aparece em net._http_response no Supabase, com o tempo de cada etapa (ms).
+  const tempos = { montar: montado - inicio, enviar: Date.now() - montado, total: Date.now() - inicio };
+  return Response.json({ recebido, ...resultado, tempos });
 }
