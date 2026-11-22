@@ -123,7 +123,8 @@ export async function alterarFotoPerfil(form:FormData): Promise<Resultado<{limpe
     // Em erro de transporte o commit pode ter ocorrido: não apagar a nova foto.
     const troca=await ctx.db.rpc("trocar_foto_perfil",{destino:String(destino),item_id:destino==="bicicleta"?String(item):null,antiga,nova});
     if(troca.error || !troca.data) {
-      if(!troca.error && nova) await limparFoto(ctx,nova);
+      const rollbackConfirmado=troca.error&&/^(22|23|40|42|P0)[A-Z0-9]{3}$/.test(troca.error.code??"");
+      if(nova&&(!troca.error||rollbackConfirmado)) await limparFoto(ctx,nova);
       throw new ErroPerfil("Não foi possível confirmar a alteração. Atualize antes de tentar novamente.");
     }
     const limpa=await limparFoto(ctx,antiga);

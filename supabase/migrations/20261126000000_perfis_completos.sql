@@ -245,6 +245,20 @@ end $$;
 revoke all on function public.trocar_foto_perfil(text,uuid,text,text) from public,anon;
 grant execute on function public.trocar_foto_perfil(text,uuid,text,text) to authenticated;
 
+-- A política de DELETE pode ter sido avaliada antes de uma troca concorrente.
+-- Revalidar sob a mesma trava usada pelo RPC impede referências a objeto apagado.
+create function privado.proteger_foto_perfil_ativa() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+  if old.bucket_id<>'fotos-perfil' then return old; end if;
+  if split_part(old.name,'/',1) !~ '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' then return old; end if;
+  perform 1 from public.perfis where id=split_part(old.name,'/',1)::uuid for update;
+  if privado.foto_perfil_em_uso(old.name) then
+    raise check_violation using message='A foto ainda está em uso.';
+  end if;
+  return old;
+end $$;
+create trigger proteger_foto_perfil_ativa before delete on storage.objects for each row execute function privado.proteger_foto_perfil_ativa();
+
 -- Paginação por data/ID evita saltos quando chegam novos registros.
 create function public.listar_secao_perfil(secao text,antes timestamptz default null,antes_id uuid default null)
 returns jsonb language plpgsql stable security definer set search_path='' as $$

@@ -102,4 +102,25 @@ select pg_temp.exigir(not public.documento_perfil_valido('11111111111','cpf'),'C
 select pg_temp.exigir(public.documento_perfil_valido('12ABC34501DE35','cnpj'),'CNPJ alfanumerico valido');
 select pg_temp.exigir(not has_table_privilege('anon','public.perfil_privado','select'),'anonimo sem acesso');
 select pg_temp.exigir(not has_function_privilege('anon','public.salvar_perfil_completo(text,jsonb)','execute'),'anonimo sem RPC');
+insert into public.bicicletas_perfil(id,usuario_id,modelo)
+select ('50000000-0000-0000-0000-'||lpad(i::text,12,'0'))::uuid,'10000000-0000-0000-0000-000000000001','Bicicleta teste '||i from generate_series(1,60) i;
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
+set local role authenticated;
+select pg_temp.exigir(jsonb_array_length(public.listar_secao_perfil('bicicletas'))=51,'primeira pagina inclui sentinela');
+select pg_temp.exigir(jsonb_array_length(public.listar_secao_perfil('bicicletas',
+  (public.listar_secao_perfil('bicicletas')->49->>'criado_em')::timestamptz,
+  (public.listar_secao_perfil('bicicletas')->49->>'id')::uuid))=11,'segunda pagina sem perda em datas iguais');
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000002',true);
+do $$ begin
+  perform public.salvar_perfil_completo('remover_bicicleta','{"id":"50000000-0000-0000-0000-000000000001"}');
+  raise exception 'terceiro removeu bicicleta por ID';
+exception when insufficient_privilege then null; end $$;
+reset role;
+select pg_temp.exigir((select count(*)=1 from public.bicicletas_perfil where id='50000000-0000-0000-0000-000000000001'),'bicicleta alheia preservada');
+-- A trava de integridade precisa resistir a uma exclusão cuja avaliação inicial
+-- de RLS precedeu a gravação da referência (mesma condição de uma corrida).
+do $$ begin
+  delete from storage.objects where bucket_id='fotos-perfil' and name='10000000-0000-0000-0000-000000000001/avatar/00000000-0000-0000-0000-000000000001.png';
+  raise exception 'exclusao sem trava de integridade removeu foto ativa';
+exception when check_violation then null; end $$;
 rollback;
