@@ -7,6 +7,18 @@ import { supabaseConfigurado } from "@/lib/supabase/config";
 import { SENHA_MINIMA, emailValido, normalizarTelefone } from "@/lib/cadastro";
 import { VERSAO_TERMOS } from "@/lib/legal";
 import type { Enum } from "@/lib/supabase/database.types";
+import { trocarSenhaAutenticada, type ResultadoDaSenha } from "@/lib/trocar-senha";
+
+/** Troca a senha de quem está logado, sem sair da conta nem redirecionar. */
+export async function trocarSenha(dados: { atual: string; nova: string }): Promise<ResultadoDaSenha> {
+  if (!supabaseConfigurado) return { erro: "A troca de senha não está configurada neste ambiente." };
+  try {
+    const supabase = await createClient();
+    return await trocarSenhaAutenticada(supabase.auth, dados);
+  } catch {
+    return { erro: "Não foi possível alterar a senha. Tente de novo." };
+  }
+}
 
 type DadosDeEntrada = {
   email: string;
