@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/Toaster";
 import { formatarTelefone, normalizarTelefone } from "@/lib/cadastro";
 import { iniciais } from "@/lib/pessoas";
 import { TrocarSenha } from "./TrocarSenha";
+import { Notificacoes } from "./Notificacoes";
 
 type Campo = "nome" | "telefone" | "oficina";
 
@@ -127,6 +128,7 @@ export function FormularioDePerfil() {
         </form>
       </Card>
       <TrocarSenha />
+      <Notificacoes />
     </main>
   );
 }
