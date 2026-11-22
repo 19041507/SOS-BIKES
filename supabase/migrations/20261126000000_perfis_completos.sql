@@ -188,6 +188,7 @@ begin
     dono:=new.id;
   else dono:=case when tg_op='DELETE' then old.usuario_id else new.usuario_id end;
   end if;
+  if tg_op='DELETE' and not exists(select 1 from public.perfis where id=dono) then return old; end if;
   evento:=case tg_table_name when 'perfis' then 'Dados de contato atualizados' when 'perfil_privado' then 'Dados privados ou acessibilidade atualizados' when 'oficina_privada' then 'Oficina atualizada' when 'bicicletas_perfil' then 'Bicicleta ' when 'locais_perfil' then 'Local ' else 'Cliente favorito ' end;
   if tg_table_name in ('bicicletas_perfil','locais_perfil','clientes_favoritos') then evento:=evento||case tg_op when 'INSERT' then 'adicionado' when 'UPDATE' then 'atualizado' else 'removido' end; end if;
   insert into public.atividade_perfil(usuario_id,tipo) values(dono,evento);

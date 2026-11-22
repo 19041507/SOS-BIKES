@@ -4,6 +4,11 @@ import { normalizarTelefone } from "@/lib/cadastro";
 export function uuidValido(id: unknown): id is string {
   return typeof id === "string" && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id);
 }
+export function validarDataCursor(valor:unknown):string {
+  if(typeof valor!=="string"||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/.test(valor)||!Number.isFinite(Date.parse(valor))) throw new Error("Página inválida.");
+  // Não converter com Date: PostgreSQL preserva microssegundos, Date não.
+  return valor;
+}
 
 /** Receita Federal: módulo 11, caracteres do CNPJ convertidos por ASCII - 48. */
 export function validarDocumento(entrada: unknown, especie: "cpf" | "cnpj"): string | null | false {

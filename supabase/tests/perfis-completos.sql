@@ -124,3 +124,16 @@ do $$ begin
   raise exception 'exclusao sem trava de integridade removeu foto ativa';
 exception when check_violation then null; end $$;
 rollback;
+
+-- A ampliação não pode impedir a exclusão administrativa de conta sem chamados.
+begin;
+insert into auth.users(id,email,raw_user_meta_data) values('60000000-0000-0000-0000-000000000001','excluir@example.test','{"nome":"Conta para excluir","tipo":"ciclista"}');
+select set_config('request.jwt.claim.sub','60000000-0000-0000-0000-000000000001',true);
+set local role authenticated;
+select public.salvar_perfil_completo('bicicleta','{"modelo":"Teste de cascata"}');
+reset role;
+delete from auth.users where id='60000000-0000-0000-0000-000000000001';
+do $$ begin
+  if exists(select 1 from public.bicicletas_perfil where usuario_id='60000000-0000-0000-0000-000000000001') then raise exception 'cascata nao removeu bicicletas'; end if;
+end $$;
+rollback;

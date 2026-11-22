@@ -28,7 +28,7 @@ export default function PrivacidadePage() {
       <section>
         <h2>3. Quem pode acessar</h2>
         <p>Os participantes do chamado podem consultar o endereço, o histórico desse atendimento e os dados de contato necessários à comunicação. As avaliações são visíveis aos dois participantes; os resumos de notas de mecânicos ajudam na escolha. Na implementação atual, perfis de mecânicos, inclusive telefone, podem ser consultados por usuários autenticados; dados de ciclistas são acessíveis ao próprio titular e a participantes dos seus chamados.</p>
-        <p className="mt-2">Documentos privados, idade, preferências, bicicletas, locais salvos e fotos do Meu perfil não fazem parte dessas consultas compartilhadas. Fotos ficam em armazenamento privado com links temporários acessíveis ao titular; os metadados da imagem são removidos durante o envio.</p>
+        <p className="mt-2">Documentos privados, idade, preferências, bicicletas, locais salvos e fotos do Meu perfil não fazem parte dessas consultas compartilhadas. Fotos ficam em armazenamento privado com links temporários acessíveis ao titular; os metadados da imagem são removidos no fluxo de envio pelo aplicativo.</p>
         <p className="mt-2">O Supabase fornece autenticação e banco de dados; a hospedagem do projeto usa a Vercel. O OpenStreetMap (Nominatim) recebe as coordenadas para devolver o endereço escrito. Regiões de armazenamento, condições de transferência internacional e eventuais fornecedores adicionais precisam ser confirmados pelo responsável antes da operação com dados reais. Ao abrir WhatsApp ou fazer uma ligação, aplicam-se também as regras do serviço de comunicação escolhido.</p>
       </section>
       <section>

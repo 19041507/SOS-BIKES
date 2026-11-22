@@ -20,3 +20,13 @@ it.each(["ciclista","mecanico"] as const)("%s tem seções reais e senha abaixo 
   const titulos=screen.getAllByRole("heading",{level:2}).map(h=>h.textContent);
   expect(titulos.indexOf("Senha")).toBeGreaterThan(titulos.indexOf("Dados pessoais"));
 });
+it("troca de conta não mantém dados privados da conta anterior durante a recarga",async()=>{
+  const perfil:Perfil={id:"conta-a",nome:"Ana Silva",telefone:"81999990000",tipo:"ciclista",oficina:null,disponivel:false,criado_em:"2026-11-21"};
+  vi.mocked(carregarPerfilCompleto).mockResolvedValue({ok:true,dados:{perfil,privados:{usuario_id:perfil.id,cpf:"52998224725",idade:25,foto_caminho:null,texto_ampliado:false,alto_contraste:false,reduzir_movimentos:false},oficina:null,fotoUrl:null,fachadaUrl:null}});
+  const montar=(p:Perfil)=><PerfilProvider perfil={p}><Toaster><PerfilCompleto/></Toaster></PerfilProvider>;
+  const view=render(montar(perfil));
+  expect(await screen.findByDisplayValue("52998224725")).toBeTruthy();
+  vi.mocked(carregarPerfilCompleto).mockImplementation(()=>new Promise(()=>{}));
+  view.rerender(montar({...perfil,id:"conta-b",nome:"Outra Pessoa"}));
+  expect(screen.queryByDisplayValue("52998224725")).toBeNull();
+});

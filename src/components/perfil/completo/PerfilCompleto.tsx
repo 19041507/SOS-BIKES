@@ -35,7 +35,8 @@ export function PerfilCompleto() {
   const params=useSearchParams();
   const secoes=secoesDoPerfil(perfil.tipo);
   const selecionada=secoes.find(s=>s.id===params.get("secao"))??secoes[0];
-  const [base,setBase]=useState<BasePerfil|null>(null);
+  const [carregado,setBase]=useState<BasePerfil|null>(null);
+  const base=carregado?.perfil.id===perfil.id?carregado:null;
   const [erro,setErro]=useState("");
   const [carregando,setCarregando]=useState(false);
   const versao=useRef(0);

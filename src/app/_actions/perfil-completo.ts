@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { prepararFoto } from "@/lib/perfil-completo/imagens";
-import { validarOperacao, uuidValido } from "@/lib/perfil-completo/validacao";
+import { validarOperacao, validarDataCursor, uuidValido } from "@/lib/perfil-completo/validacao";
 import type { BasePerfil, ItemPerfil, PaginaPerfil, Resultado } from "@/lib/perfil-completo/types";
 import type { Mensagem } from "@/lib/supabase/database.types";
 
@@ -150,7 +150,7 @@ export async function carregarMensagensPerfil(chamado:string,cursor?:{data:strin
     if(permissao.error) throw new ErroPerfil("Conversa não encontrada ou sem permissão.");
     let query=ctx.db.from("mensagens").select("*").eq("chamado_id",chamado).order("criado_em",{ascending:false}).order("id",{ascending:false}).limit(51);
     if(cursor) {
-      const data=new Date(cursor.data).toISOString();
+      const data=validarDataCursor(cursor.data);
       query=query.or(`criado_em.lt.${data},and(criado_em.eq.${data},id.lt.${cursor.id})`);
     }
     const {data,error}=await query;

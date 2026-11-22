@@ -84,12 +84,12 @@ function ConversaPerfil({conversa}:{conversa:ItemPerfil}) {
       </li>)}
     </ul>
     {aberto?<form onSubmit={e=>{
-      e.preventDefault();if(ocupado.current||incerto||!texto.trim())return;
+      e.preventDefault();if(ocupado.current||incerto||mensagens===null||!texto.trim())return;
       ocupado.current=true;setPendente(true);setErro("");
       void enviarMensagem(conversa.id,texto).then(m=>{if(ativo.current){setMensagens(lista=>[m,...(lista??[])]);setTexto("");}}).catch(()=>{if(ativo.current){setIncerto(true);setErro("Não foi possível confirmar o envio. Atualize a conversa e confira antes de tentar novamente. Seu texto foi mantido.");}}).finally(()=>{ocupado.current=false;if(ativo.current)setPendente(false);});
     }} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1 text-sm font-semibold">Mensagem<textarea value={texto} onChange={e=>setTexto(e.target.value)} maxLength={TAMANHO_MAXIMO} rows={3} disabled={pendente} className={CAMPO_PERFIL}/></label>
-      <Button type="submit" disabled={pendente||incerto||!texto.trim()} className="self-start">Enviar mensagem</Button>
+      <Button type="submit" disabled={pendente||incerto||mensagens===null||!texto.trim()} className="self-start">Enviar mensagem</Button>
     </form>:<p className="text-sm text-muted">Atendimento encerrado ou ainda não aceito: somente leitura.</p>}
   </div>;
 }

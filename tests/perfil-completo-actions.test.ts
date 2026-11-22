@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
-import { salvarSecaoPerfil } from "@/app/_actions/perfil-completo";
+import { salvarSecaoPerfil,carregarMensagensPerfil } from "@/app/_actions/perfil-completo";
 import { createClient } from "@/lib/supabase/server";
 
 vi.mock("@/lib/supabase/server", () => ({createClient:vi.fn()}));
@@ -17,6 +17,18 @@ it("sem sessão não grava dados e informa expiração",async () => {
   expect(r.ok).toBe(false);
   if (!r.ok) expect(r.erro).toMatch(/sessão/i);
   expect(rpc).not.toHaveBeenCalled();
+});
+it("cursor das mensagens preserva microssegundos do banco no filtro",async()=>{
+  const filtro=vi.fn();
+  const query={data:[],error:null,select:vi.fn(),eq:vi.fn(),order:vi.fn(),limit:vi.fn(),or:filtro};
+  for(const metodo of [query.select,query.eq,query.order,query.limit,filtro]) metodo.mockReturnValue(query);
+  const db=cliente(true);
+  const fromPerfil=db.from;
+  db.from=vi.fn().mockImplementation((t:string)=>t==="mensagens"?query:fromPerfil());
+  vi.mocked(createClient).mockResolvedValue(db as unknown as Awaited<ReturnType<typeof createClient>>);
+  const r=await carregarMensagensPerfil("30000000-0000-0000-0000-000000000001",{data:"2026-11-21T12:00:00.123456+00:00",id:"40000000-0000-0000-0000-000000000001"});
+  expect(r.ok).toBe(true);
+  expect(filtro).toHaveBeenCalledWith("criado_em.lt.2026-11-21T12:00:00.123456+00:00,and(criado_em.eq.2026-11-21T12:00:00.123456+00:00,id.lt.40000000-0000-0000-0000-000000000001)");
 });
 it("normaliza no servidor, não envia dono do formulário e não simula sucesso em erro do banco",async () => {
   vi.mocked(createClient).mockResolvedValue(cliente(true) as unknown as Awaited<ReturnType<typeof createClient>>);

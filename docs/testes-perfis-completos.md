@@ -50,3 +50,22 @@ O harness SQL usa PostgreSQL isolado em memória (PGlite), com contas sintética
 - Mensagens e listas são atualizadas sob demanda. Não acrescentar segunda tabela de chat ou prometer atualização instantânea nesta caixa de entrada.
 - Falha de transporte após commit pode deixar uma imagem órfã para limpeza posterior. Não apagar imagem nova quando o resultado da transação é incerto.
 - O projeto é acadêmico, desenvolvido por estudantes de Administração da FICR, sem serviço comercial ou canal de atendimento.
+
+## Revisão independente e decisões
+
+Revisão textual independente do produto/testes, sem execução de ferramentas pelo revisor. A primeira tentativa ficou aguardando aprovação de ferramenta e não produziu parecer; foi substituída, não contou como revisão adicional. O parecer válido apontou precisão do cursor do chat, envio durante carga inicial e carregamento preso após recarga de lista. Os três foram reproduzidos por testes que falharam e passaram após as correções. O último foi reclassificado de menor para importante pelo efeito de bloquear a interface.
+
+Na revisão do executor também foram corrigidos, com regressões, a permanência de CPF de conta anterior durante troca de identidade, a exclusão de foto ainda referenciada, a limpeza de upload com rollback SQL confirmado e o conflito entre eventos de atividade e exclusão administrativa em cascata de uma conta sem chamados.
+
+Decisões tomadas e custos:
+
+- Chat mantém a regra existente: chamados encerrados são somente leitura; custo: favoritos não permitem reabrir envio em conversa encerrada.
+- Modelo privado compartilhado e consulta paginada substituem o rascunho de migration exclusivo do ciclista; custo: não aplicar as duas migrations concorrentes como se fossem a mesma entrega.
+- Uma action/RPC com operações explicitamente permitidas concentra validação e sessão; custo: operações futuras precisam atualizar a lista permitida.
+- Rascunhos ficam na memória da página por conta, não em armazenamento persistente do navegador; custo: recarregar descarta o que não foi salvo.
+- Auth, RLS anterior, envio e favoritos existentes foram preservados e exercitados pelas suítes locais, não certificados em ambiente remoto; custo: homologação com contas reais continua obrigatória.
+- Não foi acrescentada exclusão de conta à interface. Foi mantida a integridade da cascata para conta sem chamados; custo: o procedimento administrativo de exclusão continua sendo o existente do projeto.
+- Não foi afirmada validação visual em aparelho real nem de corrida entre conexões remotas do Storage; custo: permanecem no roteiro de homologação.
+- Links de fotos expiram em cinco minutos; recarregar a página renova os links. Renovação automática não faz parte desta entrega; custo: foto cujo link expirou pode exigir recarga.
+- O titular possui permissão de upload no seu bucket privado. Decodificação, remoção de metadados e limites adicionais são aplicados pelo fluxo do app, não são uma inspeção global de qualquer arquivo enviado diretamente à API do Storage. O acesso direto permanece limitado ao titular; custo: não afirmar que APIs externas passam pelo processador do aplicativo.
+- Ambiente remoto não identificado e sem credenciais configuradas; custo: nenhuma aplicação remota de migration, criação de contas ou confirmação de persistência/Storage/push em produção foi realizada. O PR não está aprovado para merge por este checklist.
