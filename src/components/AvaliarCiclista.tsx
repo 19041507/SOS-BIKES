@@ -23,7 +23,7 @@ export function AvaliarCiclista({ chamado }: Props) {
       <h3 className="font-display text-lg font-bold">Sua avaliação do ciclista</h3>
       <p className="text-xl text-star" aria-label={`${enviada.nota} de 5 estrelas`}>
         {"★".repeat(enviada.nota)}
-        <span className="text-line">{"★".repeat(5 - enviada.nota)}</span>
+        <span className="text-subtle">{"★".repeat(5 - enviada.nota)}</span>
       </p>
       {enviada.comentario && (
         <p className="break-words text-sm text-muted">{enviada.comentario}</p>
