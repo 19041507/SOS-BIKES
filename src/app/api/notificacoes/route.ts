@@ -71,12 +71,13 @@ async function avisoDoChamado(evento: Webhook & { table: "chamados" }): Promise<
 }
 
 async function avisoDaMensagem(mensagem: Mensagem): Promise<Aviso | null> {
-  const { data: chamado } = await clienteDeServico()
+  const { data: chamado, error } = await clienteDeServico()
     .from("chamados")
     .select("ciclista_id, mecanico_id")
     .eq("id", mensagem.chamado_id)
     .single();
-  if (!chamado) return null;
+  // Erro aqui costuma ser a SUPABASE_SERVICE_ROLE_KEY errada: precisa aparecer no log do webhook.
+  if (error || !chamado) throw new Error(`Não foi possível ler o chamado da mensagem: ${error?.message ?? "não encontrado"}`);
   const para = mensagem.autor_id === chamado.ciclista_id ? chamado.mecanico_id : chamado.ciclista_id;
   const pessoas = await nomes([mensagem.autor_id, para]);
   const autor = primeiroNome(pessoas.get(mensagem.autor_id)?.nome ?? "Nova mensagem");
@@ -90,9 +91,21 @@ export async function POST(request: Request) {
     return new Response("Não autorizado", { status: 401 });
   }
   const evento = (await request.json()) as Webhook;
-  const aviso =
-    evento.table === "chamados" ? await avisoDoChamado(evento) : evento.table === "mensagens" ? await avisoDaMensagem(evento.record) : null;
-  if (!aviso) return Response.json({ aviso: null });
+  // Resumo do que chegou, para o log do webhook (net._http_response) explicar cada decisão.
+  const recebido = {
+    tabela: evento.table,
+    tipo: evento.type,
+    status: evento.table === "chamados" ? evento.record.status : undefined,
+    anterior: evento.table === "chamados" ? evento.old_record?.status : undefined,
+  };
+  let aviso: Aviso | null;
+  try {
+    aviso =
+      evento.table === "chamados" ? await avisoDoChamado(evento) : evento.table === "mensagens" ? await avisoDaMensagem(evento.record) : null;
+  } catch (erro) {
+    return Response.json({ recebido, erro: erro instanceof Error ? erro.message : String(erro) });
+  }
+  if (!aviso) return Response.json({ recebido, aviso: null, motivo: "Esta mudança não gera notificação." });
   // O resultado aparece em net._http_response no Supabase: ajuda a ver por que um aviso não chegou.
-  return Response.json(await enviarAviso(aviso));
+  return Response.json({ recebido, ...(await enviarAviso(aviso)) });
 }
