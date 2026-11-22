@@ -1,7 +1,7 @@
-import webpush from "web-push";
 import { rotuloCategoria } from "@/lib/categorias";
 import { formatBRL } from "@/lib/money";
 import { primeiroNome } from "@/lib/pessoas";
+import { enviarAviso, type Aviso } from "@/lib/push-servidor";
 import { clienteDeServico } from "@/lib/supabase/servico";
 import type { Chamado, Mensagem } from "@/lib/supabase/database.types";
 
@@ -13,8 +13,6 @@ import type { Chamado, Mensagem } from "@/lib/supabase/database.types";
 type Webhook =
   | { type: "INSERT" | "UPDATE"; table: "chamados"; record: Chamado; old_record: Chamado | null }
   | { type: "INSERT"; table: "mensagens"; record: Mensagem; old_record: null };
-
-type Aviso = { para: string; titulo: string; texto: string; url: string; tag: string };
 
 const TAMANHO_DO_TEXTO = 120;
 
@@ -44,6 +42,7 @@ async function avisoDoChamado(evento: Webhook & { table: "chamados" }): Promise<
       texto: `${rotuloCategoria(chamado.categoria)} · ${ciclista} · responda em 1 min`,
       url: "/mecanico",
       tag,
+      insistente: true,
     };
   }
   if (chamado.status === "aceito") {
@@ -85,48 +84,15 @@ async function avisoDaMensagem(mensagem: Mensagem): Promise<Aviso | null> {
   return { para, titulo: autor, texto: resumir(mensagem.texto), url: `/${tipo}`, tag: `chat-${mensagem.chamado_id}` };
 }
 
-async function enviar(aviso: Aviso) {
-  const supabase = clienteDeServico();
-  const { data: inscricoes } = await supabase.from("inscricoes_push").select("id, endpoint, p256dh, auth").eq("perfil_id", aviso.para);
-  if (!inscricoes?.length) return;
-
-  // O "subject" do VAPID identifica quem envia para o serviço de push; a URL do site basta.
-  webpush.setVapidDetails(
-    "https://sos-bikes.vercel.app",
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!,
-  );
-  const corpo = JSON.stringify({ titulo: aviso.titulo, texto: aviso.texto, url: aviso.url, tag: aviso.tag });
-
-  await Promise.all(
-    inscricoes.map(async (inscricao) => {
-      try {
-        await webpush.sendNotification(
-          { endpoint: inscricao.endpoint, keys: { p256dh: inscricao.p256dh, auth: inscricao.auth } },
-          corpo,
-          { TTL: 60 * 10, urgency: "high" },
-        );
-      } catch (erro) {
-        // 404/410: o navegador cancelou a inscrição (trocou de aparelho, limpou os dados).
-        const status = (erro as { statusCode?: number }).statusCode;
-        if (status === 404 || status === 410) await supabase.from("inscricoes_push").delete().eq("id", inscricao.id);
-      }
-    }),
-  );
-}
-
 export async function POST(request: Request) {
   const segredo = process.env.NOTIFICACOES_SEGREDO;
   if (!segredo || request.headers.get("authorization") !== `Bearer ${segredo}`) {
     return new Response("Não autorizado", { status: 401 });
   }
-  if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-    return new Response("Chaves VAPID não configuradas", { status: 500 });
-  }
-
   const evento = (await request.json()) as Webhook;
   const aviso =
     evento.table === "chamados" ? await avisoDoChamado(evento) : evento.table === "mensagens" ? await avisoDaMensagem(evento.record) : null;
-  if (aviso) await enviar(aviso);
-  return new Response(null, { status: 204 });
+  if (!aviso) return Response.json({ aviso: null });
+  // O resultado aparece em net._http_response no Supabase: ajuda a ver por que um aviso não chegou.
+  return Response.json(await enviarAviso(aviso));
 }

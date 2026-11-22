@@ -25,6 +25,7 @@ import { IncomingCall } from "./IncomingCall";
 import { ActiveJob } from "./ActiveJob";
 import { Conversa } from "@/components/chat/Conversa";
 import { AtivarNotificacoes } from "@/components/AtivarNotificacoes";
+import { tocarAviso } from "@/lib/som";
 import { CloseJob } from "./CloseJob";
 import { JobSummary } from "./JobSummary";
 
@@ -87,6 +88,7 @@ export function MechanicPanel() {
       }
       if (vistos.current) {
         for (const novo of lista.filter((c) => c.status === "aguardando" && !vistos.current?.has(c.id))) {
+          tocarAviso(true);
           avisar(`Novo chamado de ${primeiroNome(novo.ciclista?.nome ?? "um ciclista")}: ${rotuloCategoria(novo.categoria)}.`, "info");
         }
       }

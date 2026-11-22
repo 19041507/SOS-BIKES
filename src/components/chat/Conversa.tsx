@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/Toaster";
 import { hora } from "@/components/historico/datas";
 import { STATUS_COM_CHAT, TAMANHO_MAXIMO, enviarMensagem, marcarComoLidas, useMensagens } from "@/lib/mensagens";
 import { useTituloDeAlerta } from "@/lib/movimento";
+import { tocarAviso } from "@/lib/som";
 import { iniciais, primeiroNome } from "@/lib/pessoas";
 import type { StatusChamado } from "@/lib/supabase/database.types";
 
@@ -33,6 +34,7 @@ export function Conversa({ chamado, outraPessoa }: ConversaProps) {
   }, [aberta]);
 
   const { mensagens, erro, carregar, adicionar } = useMensagens(chamado.id, (mensagem) => {
+    if (mensagem.autor_id !== perfil.id) tocarAviso();
     if (mensagem.autor_id !== perfil.id && !abertaAgora.current) {
       avisar(`${primeiroNome(outraPessoa)}: ${mensagem.texto}`, "info");
     }

@@ -40,6 +40,12 @@ function bytesDaChave(base64: string) {
   return Uint8Array.from(atob(preenchido), (letra) => letra.charCodeAt(0));
 }
 
+function mesmaChave(atual: ArrayBuffer | null, esperada: Uint8Array) {
+  if (!atual) return false;
+  const bytes = new Uint8Array(atual);
+  return bytes.length === esperada.length && bytes.every((byte, i) => byte === esperada[i]);
+}
+
 /** Pede a permissão (precisa vir de um toque), inscreve este navegador e salva no banco. */
 export async function ativarNotificacoes(): Promise<EstadoDasNotificacoes> {
   const estado = await estadoDasNotificacoes();
@@ -49,9 +55,14 @@ export async function ativarNotificacoes(): Promise<EstadoDasNotificacoes> {
   if (permissao !== "granted") return permissao === "denied" ? "bloqueadas" : "desativadas";
 
   const sw = (await registro()) ?? (await navigator.serviceWorker.ready);
-  const inscricao =
-    (await sw.pushManager.getSubscription()) ??
-    (await sw.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytesDaChave(CHAVE_PUBLICA!) }));
+  const chave = bytesDaChave(CHAVE_PUBLICA!);
+  let inscricao = await sw.pushManager.getSubscription();
+  // Inscrição feita com outra chave (as chaves VAPID mudaram) não recebe mais nada: refaz.
+  if (inscricao && !mesmaChave(inscricao.options.applicationServerKey, chave)) {
+    await inscricao.unsubscribe();
+    inscricao = null;
+  }
+  inscricao ??= await sw.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave });
   const { endpoint, keys } = inscricao.toJSON();
   if (!endpoint || !keys?.p256dh || !keys.auth) throw new Error("Não foi possível ativar as notificações.");
 
