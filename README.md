@@ -234,9 +234,10 @@ O webhook aponta para uma URL só (produção): como o banco é o mesmo para `de
 
 | Tabela | Conteúdo |
 |---|---|
-| `perfis` | Um por usuário do Auth: tipo (ciclista ou mecânico), nome, telefone, oficina e disponibilidade. Criado automaticamente no cadastro. |
+| `perfis` | Um por usuário do Auth: tipo (ciclista ou mecânico), nome, telefone, oficina e disponibilidade. Para mecânicos, também guarda especialidades, serviços e bairro/região de atendimento. Criado automaticamente no cadastro. |
+| `perfil_mecanico_fotos` | Fotos do perfil e dos trabalhos, com metadados; os arquivos ficam em um bucket público e podem ser acessados por URL. |
 | `chamados` | Pedido do ciclista para o mecânico escolhido, com status, estimativa, valor final, comissão de 10% (calculada pelo banco) e o horário de cada etapa. |
-| `avaliacoes` | Nota, comentário e gorjeta registrada, uma por chamado concluído. |
+| `avaliacoes` | Nota, comentário e gorjeta registrada, uma por chamado concluído. O comentário só aparece no perfil do mecânico com autorização explícita do ciclista. |
 
 Status do chamado: `aguardando` → `aceito` → `a_caminho` → `em_atendimento` → `concluido`, ou encerrado como `recusado`, `cancelado` ou `expirado`.
 

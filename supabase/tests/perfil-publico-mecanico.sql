@@ -41,6 +41,20 @@ insert into public.avaliacoes (chamado_id, nota, comentario, comentario_publico)
   ('00000000-0000-4000-8000-000000000902', 3, 'Comentário antigo sem autorização pública.', false);
 reset role;
 
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000702', true);
+set local role authenticated;
+do $$ begin
+  assert (
+    select count(*) = 1
+    from public.avaliacoes_publicas_do_mecanico('00000000-0000-4000-8000-000000000801')
+  ), 'Somente o comentário autorizado deve aparecer';
+  assert (
+    select comentario = 'Atendimento rápido e cuidadoso.'
+    from public.avaliacoes_publicas_do_mecanico('00000000-0000-4000-8000-000000000801')
+  ), 'O comentário público deve ser retornado sem identidade do ciclista';
+end $$;
+reset role;
+
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000801', true);
 set local role authenticated;
 insert into public.perfil_mecanico_fotos (mecanico_id, caminho, tipo, descricao)
