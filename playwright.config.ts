@@ -18,7 +18,7 @@ if (
   throw new Error("Os testes E2E só podem usar o Supabase local em http://127.0.0.1:54321.");
 }
 
-const baseURL = "http://127.0.0.1:3000";
+const baseURL = "http://localhost:3000";
 
 export default defineConfig({
   testDir: "./e2e",

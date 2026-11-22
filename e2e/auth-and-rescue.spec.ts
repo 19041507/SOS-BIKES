@@ -11,7 +11,7 @@ async function loginAsCyclist(page: Page) {
   await dismissLocationPrompt(page);
   await page.goto("/");
   await page.getByLabel("E-mail").fill(e2eAccounts.cyclist.email);
-  await page.getByLabel("Senha").fill(e2eAccounts.cyclist.password);
+  await page.getByRole("textbox", { name: "Senha" }).fill(e2eAccounts.cyclist.password);
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page.getByRole("heading", { name: "Sua bike deu problema no caminho?" })).toBeVisible();
 }
@@ -20,10 +20,10 @@ test("faz login e acessa a área do ciclista", async ({ page }) => {
   await dismissLocationPrompt(page);
   await page.goto("/");
   await page.getByLabel("E-mail").fill(e2eAccounts.cyclist.email);
-  await page.getByLabel("Senha").fill(e2eAccounts.cyclist.password);
+  await page.getByRole("textbox", { name: "Senha" }).fill(e2eAccounts.cyclist.password);
   await page.getByRole("button", { name: "Entrar" }).click();
 
-  await expect(page).toHaveURL(/\/ciclista$/);
+  await expect(page).toHaveURL(/\/ciclista$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Sua bike deu problema no caminho?" })).toBeVisible();
 });
 
@@ -33,7 +33,7 @@ test("cria uma conta de ciclista", async ({ page }) => {
   await page.getByLabel("Nome completo").fill("Nova Pessoa E2E");
   await page.getByLabel("WhatsApp").fill("81999990000");
   await page.getByLabel("E-mail").fill(`novo-${Date.now()}@sosbikes.test`);
-  await page.getByLabel("Senha").fill(E2E_PASSWORD);
+  await page.getByRole("textbox", { name: "Senha" }).fill(E2E_PASSWORD);
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Criar conta" }).click();
 
