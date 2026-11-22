@@ -1,0 +1,8 @@
+.area { min-height: 100dvh; display: flex; flex-direction: column; }
+.texto :where(p, a, button, input, textarea, select, label) { font-size: max(1em, 1.125rem); }
+.contraste :where(section, header, footer, nav, article) { background: white !important; color: black !important; border-color: black !important; }
+.contraste :where(p, label, h1, h2, h3, h4, time, span) { color: black !important; }
+.contraste :where(input, textarea, select, button, a) { color: black !important; background: white !important; border: 1px solid black !important; }
+.contraste a[aria-current="page"] { background: black !important; color: white !important; }
+.contraste a[aria-current="page"] span { color: white !important; }
+.movimento *, .movimento *::before, .movimento *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

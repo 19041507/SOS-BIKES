@@ -24,6 +24,20 @@ export type DadosCompletos = {
   conversas: Conversa[];
   atividade: Atividade[];
 };
+export type BasePerfil = {
+  perfil: Perfil;
+  privados: DadosPrivados | null;
+  oficina: Oficina | null;
+  fotoUrl: string | null;
+  fachadaUrl: string | null;
+};
+export type ItemPerfil = {
+  id: string; criado_em: string; nome?: string; modelo?: string; apelido?: string | null;
+  cor?: string | null; foto_caminho?: string | null; fotoUrl?: string | null;
+  endereco?: string; oficina?: string | null; nota?: number; comentario?: string | null;
+  status?: string; tipo?: string;
+};
+export type PaginaPerfil = { itens: ItemPerfil[]; proxima: { data: string; id: string } | null };
 const comuns = [
   { id: "favoritos", titulo: "Favoritos" },
   { id: "avaliacao", titulo: "Sua avaliação" },

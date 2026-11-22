@@ -1,7 +1,7 @@
 (async () => {
   const { PGlite } = await import('@electric-sql/pglite');
-  const fs = require('node:fs');
-  const path = require('node:path');
+  const fs = await import('node:fs');
+  const path = await import('node:path');
   const db = new PGlite();
   try {
     await db.exec(fs.readFileSync('supabase/tests/suporte.sql', 'utf8'));

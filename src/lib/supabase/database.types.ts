@@ -200,6 +200,8 @@ export type Database = {
       salvar_perfil_completo: { Args: { operacao: string; dados: Json }; Returns: undefined };
       trocar_foto_perfil: { Args: { destino: string; item_id: string | null; antiga: string | null; nova: string | null }; Returns: boolean };
       listar_secao_perfil: { Args: { secao: string; antes?: string; antes_id?: string }; Returns: Json };
+      resumo_avaliacao_perfil: { Args: never; Returns: Json };
+      marcar_mensagens_perfil_lidas: { Args: { ids: string[] }; Returns: undefined };
       meus_mecanicos_favoritos: {
         Args: never;
         Returns: { id: string; nome: string; oficina: string | null; disponivel: boolean; media: number | null; avaliacoes: number; atendimentos: number }[];

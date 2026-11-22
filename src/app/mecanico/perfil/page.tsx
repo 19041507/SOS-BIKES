@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { FormularioDePerfil } from "@/components/perfil/FormularioDePerfil";
+import { Suspense } from "react";
+import { PerfilCompleto } from "@/components/perfil/completo/PerfilCompleto";
 import { InstalarApp } from "@/components/InstalarApp";
 
 export const metadata: Metadata = {
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 export default function PerfilPage() {
   return (
     <>
-      <FormularioDePerfil />
+      <Suspense fallback={<p className="p-6">Carregando perfil…</p>}><PerfilCompleto /></Suspense>
       <div id="instalar-app" tabIndex={-1} className="mx-auto w-full max-w-4xl scroll-mt-4 px-3 pb-6 sm:px-6">
         <InstalarApp />
       </div>

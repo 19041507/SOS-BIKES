@@ -131,7 +131,7 @@ begin
       raise check_violation using message='Confirme a remoção dos dados da oficina anterior.';
     end if;
     insert into public.oficina_privada(usuario_id,vinculado,cnpj,endereco,foto_caminho)
-      values(u,vinculo,cnpj_val,case when vinculo then nullif(btrim(dados->>'endereco'),'') else null end,
+      values(u,vinculo,cnpj_val,case when vinculo and (atual.cnpj is null or atual.cnpj=cnpj_val) then nullif(btrim(dados->>'endereco'),'') else null end,
         case when vinculo and atual.cnpj=cnpj_val then atual.foto_caminho else null end)
       on conflict(usuario_id) do update set vinculado=excluded.vinculado,cnpj=excluded.cnpj,endereco=excluded.endereco,foto_caminho=excluded.foto_caminho;
     update public.perfis set oficina=case when vinculo then nome_oficina else null end where id=u;
@@ -315,3 +315,24 @@ begin
 end $$;
 revoke all on function public.listar_secao_perfil(text,timestamptz,uuid) from public,anon;
 grant execute on function public.listar_secao_perfil(text,timestamptz,uuid) to authenticated;
+
+create function public.resumo_avaliacao_perfil() returns jsonb language sql stable security definer set search_path='' as $$
+  select jsonb_build_object('quantidade',count(*),'media',round(avg(nota),1)) from (
+    select a.nota from public.avaliacoes a join public.chamados c on c.id=a.chamado_id where c.mecanico_id=auth.uid() and c.status='concluido'
+    union all
+    select a.nota from public.avaliacoes_ciclistas a join public.chamados c on c.id=a.chamado_id where c.ciclista_id=auth.uid() and c.status='concluido'
+  ) notas;
+$$;
+revoke all on function public.resumo_avaliacao_perfil() from public,anon;
+grant execute on function public.resumo_avaliacao_perfil() to authenticated;
+
+create function public.marcar_mensagens_perfil_lidas(ids uuid[]) returns void language plpgsql security definer set search_path='' as $$
+begin
+  if auth.uid() is null then raise insufficient_privilege; end if;
+  if coalesce(cardinality(ids),0)>50 then raise check_violation; end if;
+  update public.mensagens m set lida_em=now() from public.chamados c
+    where m.id=any(ids) and c.id=m.chamado_id and auth.uid() in(c.ciclista_id,c.mecanico_id)
+      and m.autor_id<>auth.uid() and m.lida_em is null;
+end $$;
+revoke all on function public.marcar_mensagens_perfil_lidas(uuid[]) from public,anon;
+grant execute on function public.marcar_mensagens_perfil_lidas(uuid[]) to authenticated;

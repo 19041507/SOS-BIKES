@@ -1,0 +1,22 @@
+import { afterEach, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { EditorPerfil } from "@/components/perfil/completo/EditorPerfil";
+import { Toaster } from "@/components/ui/Toaster";
+import { salvarSecaoPerfil } from "@/app/_actions/perfil-completo";
+vi.mock("@/app/_actions/perfil-completo",()=>({salvarSecaoPerfil:vi.fn()}));
+vi.mock("next/navigation",()=>({useRouter:()=>({refresh:vi.fn()})}));
+afterEach(cleanup);
+const campos=[{id:"modelo",titulo:"Modelo da bicicleta",max:100,obrigatorio:true}];
+it("valida antes de enviar e mantém rascunho em erro real",async()=>{
+  const user=userEvent.setup();
+  render(<Toaster><EditorPerfil operacao="bicicleta" campos={campos} iniciais={{modelo:""}} aoSalvar={()=>{}} /></Toaster>);
+  await user.click(screen.getByRole("button",{name:"Salvar"}));
+  expect(salvarSecaoPerfil).not.toHaveBeenCalled();
+  expect(await screen.findByRole("alert")).toBeTruthy();
+  await user.type(screen.getByLabelText("Modelo da bicicleta"),"Caloi Explorer");
+  vi.mocked(salvarSecaoPerfil).mockResolvedValue({ok:false,erro:"Banco indisponível"});
+  await user.click(screen.getByRole("button",{name:"Salvar"}));
+  expect((await screen.findByRole("alert")).textContent).toContain("Banco indisponível");
+  expect((screen.getByLabelText("Modelo da bicicleta") as HTMLInputElement).value).toBe("Caloi Explorer");
+});

@@ -82,6 +82,21 @@ do $$ begin
   raise exception 'foto alheia referenciada';
 exception when insufficient_privilege then null; end $$;
 reset role;
+select pg_temp.exigir(public.resumo_avaliacao_perfil() is not null,'resumo real de notas');
+insert into public.chamados(id,ciclista_id,mecanico_id,categoria,endereco,status,estimativa,tempo_chegada_min) values
+('30000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000001','pneu','Outro endereco teste','aceito',30,10);
+set local role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000002',true);
+insert into public.mensagens(chamado_id,texto) values
+('30000000-0000-0000-0000-000000000002','Primeira mensagem'),
+('30000000-0000-0000-0000-000000000002','Segunda mensagem');
+select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
+select public.marcar_mensagens_perfil_lidas(array(select id from public.mensagens where texto='Primeira mensagem'));
+select pg_temp.exigir((select lida_em is not null from public.mensagens where texto='Primeira mensagem'),'mensagem visivel lida');
+select pg_temp.exigir((select lida_em is null from public.mensagens where texto='Segunda mensagem'),'mensagem fora da pagina nao marcada');
+select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000002',true);
+select pg_temp.exigir((select count(*)=0 from public.mensagens),'terceiro nao le chat');
+reset role;
 select pg_temp.exigir(not (select public from storage.buckets where id='fotos-perfil'),'bucket privado');
 select pg_temp.exigir(not public.documento_perfil_valido('11111111111','cpf'),'CPF repetido recusado');
 select pg_temp.exigir(public.documento_perfil_valido('12ABC34501DE35','cnpj'),'CNPJ alfanumerico valido');
