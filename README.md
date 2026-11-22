@@ -144,6 +144,26 @@ Use somente um banco de teste com o schema de Auth do Supabase e os papéis
 `authenticated`/`anon`. Este teste deve ser executado antes de liberar a migration;
 não o rode no banco de produção.
 
+## Perfil público do mecânico
+
+Usuários autenticados podem consultar `/mecanicos/<id>` para ver as especialidades,
+serviços, região de atendimento, fotos escolhidas pelo mecânico, avaliações e
+comentários que o ciclista autorizou publicar. Os comentários existentes permanecem
+privados por padrão; o ciclista pode retirar a autorização nos detalhes do chamado.
+Fotos usam um bucket público, então qualquer pessoa com a URL do arquivo pode vê-las.
+
+Para habilitar o perfil, aplique
+[perfil_publico_mecanico.sql](supabase/migrations/20261126000000_perfil_publico_mecanico.sql)
+no Supabase antes do merge/deploy. A migration adiciona campos e fotos, ajusta a
+permissão de atualização de perfis e cria consultas autenticadas com retorno
+limitado. Valide as regras em um banco de teste com as migrations aplicadas:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/perfil-publico-mecanico.sql
+```
+
+O teste desfaz os dados ao final; não o execute no banco de produção.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
