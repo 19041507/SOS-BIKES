@@ -222,6 +222,7 @@ export function MechanicPanel() {
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-3 sm:p-4">
+      <h1 className="sr-only">Painel do mecânico</h1>
       <AvailabilityCard online={online} busy={ocupado} hasActiveCall={Boolean(atual)} onToggle={alternarDisponibilidade} />
       {online && (
         <AtivarNotificacoes

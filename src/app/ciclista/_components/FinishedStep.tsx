@@ -36,7 +36,7 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
         </svg>
       </span>
       <div>
-        <h2 className="font-display text-[22px] font-bold">Assistência finalizada</h2>
+        <h1 className="font-display text-[22px] font-bold">Assistência finalizada</h1>
         <p className="mt-1.5 text-[15px] text-muted">
           {primeiroNome(chamado.mecanico?.nome ?? "O mecânico")} ajudou você a consertar sua bike!
         </p>

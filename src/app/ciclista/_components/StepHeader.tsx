@@ -21,7 +21,7 @@ export function StepHeader({ eyebrow, title, onBack }: StepHeaderProps) {
       )}
       <div>
         <p className="text-[13px] font-semibold text-subtle">{eyebrow}</p>
-        <h2 className="mt-0.5 font-display text-[22px] font-bold">{title}</h2>
+        <h1 className="mt-0.5 font-display text-[22px] font-bold">{title}</h1>
       </div>
     </div>
   );
