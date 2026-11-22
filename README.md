@@ -182,7 +182,7 @@ Sem esse template, o e-mail padrão do Supabase não leva à tela de senha nova.
 
 Com o app fechado, o mecânico é avisado de chamado novo e de cancelamento; o ciclista, de chamado aceito e de quando o mecânico chega; e os dois, de mensagens no chat. A pergunta para ativar aparece ao ligar "Disponível" (mecânico) e depois do primeiro pedido (ciclista). No iPhone só funciona com o app instalado na tela inicial (iOS 16.4+).
 
-Como funciona: o Supabase chama `/api/notificacoes` (Database Webhooks) quando um chamado é criado ou muda e quando chega mensagem; a rota busca as inscrições de quem deve receber (`inscricoes_push`) e envia com `web-push`. O `public/sw.js` mostra o aviso (não mostra se o app estiver aberto na tela) e abre o app ao tocar.
+Como funciona: o Supabase chama `/api/notificacoes` (Database Webhooks) quando um chamado é criado ou muda e quando chega mensagem; a rota busca as inscrições de quem deve receber (`inscricoes_push`) e envia com `web-push`. O `public/sw.js` mostra o aviso (também com o app aberto) e abre o app ao tocar; dentro do app, além do aviso na tela, toca um som curto.
 
 ### Configurar (uma vez)
 
@@ -198,6 +198,15 @@ Como funciona: o Supabase chama `/api/notificacoes` (Database Webhooks) quando u
    - `mensagens`: tabela `mensagens`, evento **Insert**
    - Nos dois: tipo **HTTP Request**, método **POST**, URL `https://sos-bikes.vercel.app/api/notificacoes`, cabeçalho `Authorization` = `Bearer <NOTIFICACOES_SEGREDO>`.
 4. Aplicar a migration `supabase/migrations/20261125000000_notificacoes.sql`.
+
+**Diagnóstico:** ao ativar, o app manda um aviso de teste e mostra o erro se não conseguir. E cada chamada do webhook guarda o resultado (aparelhos inscritos, enviados e erros por aparelho):
+
+```sql
+select created, status_code, left(content::text, 300) as resposta
+from net._http_response order by created desc limit 5;
+```
+
+`401` = cabeçalho `Authorization` errado (precisa de `Bearer `); `"inscricoes":0` = a pessoa não ativou; erro `403` = chaves VAPID diferentes das usadas ao ativar (ativar de novo resolve).
 
 O webhook aponta para uma URL só (produção): como o banco é o mesmo para `dev`, previews e produção, os avisos são enviados pela produção. Para testar antes do release, trocar a URL do webhook pela da `dev` por um tempo.
 
