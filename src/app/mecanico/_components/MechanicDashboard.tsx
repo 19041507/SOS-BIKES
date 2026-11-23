@@ -265,7 +265,7 @@ export function MechanicDashboard({ dados, erro }: MechanicDashboardProps) {
                     <p className="text-star">
                       <span aria-hidden="true">
                         {"★".repeat(a.nota)}
-                        <span className="text-subtle">{"★".repeat(5 - a.nota)}</span>
+                        <span className="text-line">{"★".repeat(5 - a.nota)}</span>
                       </span>
                       <span className="sr-only">{a.nota} de 5 estrelas</span>
                     </p>

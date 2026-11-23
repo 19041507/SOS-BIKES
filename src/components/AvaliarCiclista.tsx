@@ -24,7 +24,7 @@ export function AvaliarCiclista({ chamado }: Props) {
       <p className="text-xl text-star">
         <span aria-hidden="true">
           {"★".repeat(enviada.nota)}
-          <span className="text-subtle">{"★".repeat(5 - enviada.nota)}</span>
+          <span className="text-line">{"★".repeat(5 - enviada.nota)}</span>
         </span>
         <span className="sr-only">{enviada.nota} de 5 estrelas</span>
       </p>

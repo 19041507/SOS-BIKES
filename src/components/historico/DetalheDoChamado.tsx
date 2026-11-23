@@ -161,7 +161,7 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
                 <p className="text-xl text-star">
                   <span aria-hidden="true">
                     {"★".repeat(chamado.avaliacao.nota)}
-                    <span className="text-subtle">{"★".repeat(5 - chamado.avaliacao.nota)}</span>
+                    <span className="text-line">{"★".repeat(5 - chamado.avaliacao.nota)}</span>
                   </span>
                   <span className="sr-only">{chamado.avaliacao.nota} de 5 estrelas</span>
                 </p>
@@ -187,7 +187,7 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
                     <p className="text-xl text-star">
                       <span aria-hidden="true">
                         {"★".repeat(chamado.avaliacao_ciclista.nota)}
-                        <span className="text-subtle">{"★".repeat(5 - chamado.avaliacao_ciclista.nota)}</span>
+                        <span className="text-line">{"★".repeat(5 - chamado.avaliacao_ciclista.nota)}</span>
                       </span>
                       <span className="sr-only">{chamado.avaliacao_ciclista.nota} de 5 estrelas</span>
                     </p>

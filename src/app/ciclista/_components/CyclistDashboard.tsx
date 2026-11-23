@@ -28,7 +28,7 @@ function Estrelas({ nota }: { nota: number }) {
     <span className="text-star">
       <span aria-hidden="true">
         {"★".repeat(nota)}
-        <span className="text-subtle">{"★".repeat(5 - nota)}</span>
+        <span className="text-line">{"★".repeat(5 - nota)}</span>
       </span>
       <span className="sr-only">{nota} de 5 estrelas</span>
     </span>
