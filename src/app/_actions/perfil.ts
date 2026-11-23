@@ -4,10 +4,11 @@ import { normalizarTelefone } from "@/lib/cadastro";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIAS, type Categoria } from "@/lib/categorias";
 
+/** `oficina` ausente = não alterar (no Meu perfil completo, a oficina tem seção própria, com CNPJ). */
 type DadosDoPerfil = {
   nome: string;
   telefone: string;
-  oficina: string;
+  oficina?: string;
   bairro_regiao: string;
   especialidades: Categoria[];
   servicos: string;
@@ -66,7 +67,7 @@ export async function atualizarPerfil(dados: DadosDoPerfil): Promise<ResultadoDo
       // Só o mecânico tem oficina; vazio = autônomo.
       ...(atual.tipo === "mecanico"
         ? {
-            oficina: oficina || null,
+            ...(dados.oficina !== undefined ? { oficina: oficina || null } : {}),
             bairro_regiao: bairroRegiao || null,
             especialidades,
             servicos,
