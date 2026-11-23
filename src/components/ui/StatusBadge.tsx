@@ -12,7 +12,7 @@ const STATUS: Record<StatusChamado, { label: string; className: string }> = {
 };
 
 export function rotuloStatus(status: StatusChamado) {
-  return STATUS[status].label;
+  return STATUS[status]?.label ?? status;
 }
 
 export function StatusBadge({ status }: { status: StatusChamado }) {

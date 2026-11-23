@@ -23,25 +23,24 @@ export function ListaPerfil({secao,vazio,children}:{secao:string;vazio:string;ch
       .finally(()=>{if(ativo&&revisao.current===versao){ocupado.current=false;setPendente(false);}});
     return ()=>{ativo=false; revisao.current=-1;};
   },[secao,consulta]);
-  async function carregar(mais=false) {
+  async function carregarMais() {
     if(ocupado.current) return;
     ocupado.current=true;
     setPendente(true);setErro("");
     const versao=++revisao.current;
     try {
-      const r=await carregarSecaoPerfil(secao,mais?pagina?.proxima??undefined:undefined);
+      const r=await carregarSecaoPerfil(secao,pagina?.proxima??undefined);
       if(revisao.current!==versao) return;
       if(!r.ok) {setErro(r.erro);return;}
-      setPagina(p=>({proxima:r.dados.proxima,itens:mais?[...(p?.itens??[]),...r.dados.itens.filter(i=>!p?.itens.some(a=>a.id===i.id))]:r.dados.itens}));
+      setPagina(p=>({proxima:r.dados.proxima,itens:[...(p?.itens??[]),...r.dados.itens.filter(i=>!p?.itens.some(a=>a.id===i.id))]}));
     } catch {if(revisao.current===versao) setErro("Não foi possível carregar a lista.");}
     finally {if(revisao.current===versao){ocupado.current=false;setPendente(false);}}
   }
   return <div className="flex min-w-0 flex-col gap-4">
-    <Button variant="secondary" loading={pendente} onClick={()=>void carregar()} className="self-start">Atualizar lista</Button>
     {erro&&<p role="alert" className="text-sm text-danger">{erro}</p>}
-    {!pagina&&!erro&&<p role="status">Carregando…</p>}
+    {!pagina&&!erro&&<p role="status" className="text-sm text-muted">Carregando…</p>}
     {pagina?.itens.length===0&&!erro&&<p className="rounded-xl bg-surface p-4 text-sm text-muted">{vazio}</p>}
     {pagina&&<ul className="flex min-w-0 flex-col gap-4">{pagina.itens.map(item=><li key={item.id} className="min-w-0 rounded-xl border border-line p-4">{children(item,()=>{setPendente(true);setErro("");setConsulta(c=>c+1);})}</li>)}</ul>}
-    {pagina?.proxima&&<Button variant="secondary" loading={pendente} onClick={()=>void carregar(true)}>Carregar mais</Button>}
+    {pagina?.proxima&&<Button variant="secondary" loading={pendente} loadingText="Carregando…" onClick={()=>void carregarMais()} className="self-start">Carregar mais</Button>}
   </div>;
 }

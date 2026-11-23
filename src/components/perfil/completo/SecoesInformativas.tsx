@@ -5,6 +5,8 @@ import {useEffect,useState} from "react";
 import {carregarResumoAvaliacoes} from "@/app/_actions/perfil-completo";
 import type {BasePerfil} from "@/lib/perfil-completo/types";
 import {pendenciasPerfil} from "@/lib/perfil-completo/status";
+import type {StatusChamado} from "@/lib/supabase/database.types";
+import {rotuloStatus} from "@/components/ui/StatusBadge";
 import {EditorPerfil} from "./EditorPerfil";
 import {ListaPerfil} from "./ListaPerfil";
 
@@ -18,12 +20,20 @@ export function AcessibilidadePerfil({base,atualizar}:{base:BasePerfil;atualizar
     ]} iniciais={{texto_ampliado:String(base.privados?.texto_ampliado??false),alto_contraste:String(base.privados?.alto_contraste??false),reduzir_movimentos:String(base.privados?.reduzir_movimentos??false)}} aoSalvar={atualizar}/>
   </div>;
 }
+/** O banco registra "Chamado: <status>"; aqui vira o mesmo rótulo do histórico. */
+function rotuloAtividade(tipo:string|undefined) {
+  const status=tipo?.match(/^Chamado: (\w+)$/)?.[1];
+  return status?`Chamado: ${rotuloStatus(status as StatusChamado)}`:tipo;
+}
+const formatarNota=(nota:number)=>nota.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1});
+
 export function StatusPerfil({base}:{base:BasePerfil}) {
   const pendencias=pendenciasPerfil(base.perfil,base.oficina);
   return <div className="flex flex-col gap-4 text-sm leading-relaxed">
     <p className="font-semibold">{pendencias.length?"Cadastro com informações pendentes":"Dados obrigatórios do cadastro preenchidos"}</p>
     {pendencias.length>0&&<ul className="list-disc pl-5">{pendencias.map(p=><li key={p}>{p}</li>)}</ul>}
-    <p>Este status informa somente a completude dos dados. O SOS Bikes não realiza análise automatizada de diretrizes nem verificação documental. Não representa aprovação, punição ou selo de confiança.</p>
+    {pendencias.length>0&&<p>Complete em <Link href={`/${base.perfil.tipo}/perfil?secao=${pendencias.some(p=>p.includes("oficina"))?"oficina":"dados"}`} scroll={false} className="font-semibold text-brand underline">{pendencias.some(p=>p.includes("oficina"))?"Minha oficina":"Dados pessoais"}</Link>.</p>}
+    <p>Este status informa somente se os dados obrigatórios estão preenchidos. O SOS Bikes não verifica documentos. Não representa aprovação, punição ou selo de confiança.</p>
     <p>CPF, idade e fotos são opcionais. Uma pendência não bloqueia seus atendimentos existentes.</p>
     <Link href="/termos" className="font-semibold text-brand underline">Consultar termos de uso</Link>
   </div>;
@@ -48,7 +58,7 @@ export function AtividadePerfil() {
   return <div className="flex flex-col gap-4">
     <p className="text-sm text-muted">Eventos reais de cadastro e situação dos seus chamados. Não inclui todos os cliques e não é uma auditoria completa.</p>
     <ListaPerfil secao="atividade" vazio="Nenhuma atividade registrada.">{item=><>
-      <p className="font-semibold">{item.tipo}</p><time className="text-sm text-muted" dateTime={item.criado_em}>{new Date(item.criado_em).toLocaleString("pt-BR")}</time>
+      <p className="font-semibold">{rotuloAtividade(item.tipo)}</p><time className="text-sm text-muted" dateTime={item.criado_em}>{new Date(item.criado_em).toLocaleString("pt-BR")}</time>
     </>}</ListaPerfil>
   </div>;
 }
@@ -63,9 +73,9 @@ export function AvaliacaoPerfil() {
   return <div className="flex flex-col gap-4">
     <p className="text-sm text-muted">Avaliações recebidas dos outros participantes em atendimentos concluídos.</p>
     {erro&&<p role="alert" className="text-sm text-danger">{erro}</p>}
-    {resumo&&<p className="rounded-xl bg-brand-soft p-4 font-semibold text-brand">{resumo.quantidade?`${resumo.media?.toFixed(1)} / 5 · ${resumo.quantidade} avaliações recebidas`:"Ainda sem nota média"}</p>}
+    {resumo&&<p className="rounded-xl bg-brand-soft p-4 font-semibold text-brand">{resumo.quantidade&&resumo.media!==null?`${formatarNota(resumo.media)} / 5 · ${resumo.quantidade} ${resumo.quantidade===1?"avaliação recebida":"avaliações recebidas"}`:"Sem avaliações ainda"}</p>}
     <ListaPerfil secao="avaliacao" vazio="Você ainda não recebeu avaliações.">{item=><>
-      <p className="font-semibold" aria-label={`${item.nota} de 5 estrelas`}>{"★".repeat(item.nota??0)} <span className="text-sm font-normal">{item.nota}/5</span></p>
+      <p className="font-semibold"><span aria-hidden="true" className="text-star">{"★".repeat(item.nota??0)}</span> <span className="text-sm font-normal"><span className="sr-only">Nota </span>{item.nota}/5</span></p>
       {item.comentario&&<p className="mt-2 text-sm break-words">{item.comentario}</p>}
       <time dateTime={item.criado_em} className="text-sm text-muted">{new Date(item.criado_em).toLocaleDateString("pt-BR")}</time>
     </>}</ListaPerfil>

@@ -12,6 +12,16 @@ export function formatarCpf(valor: string) {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
+/** CNPJ (inclusive o alfanumérico) em 00.000.000/0000-00, em maiúsculas, enquanto a pessoa digita. */
+export function formatarCnpj(valor: string) {
+  const c = valor.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 14);
+  if (c.length <= 2) return c;
+  if (c.length <= 5) return `${c.slice(0, 2)}.${c.slice(2)}`;
+  if (c.length <= 8) return `${c.slice(0, 2)}.${c.slice(2, 5)}.${c.slice(5)}`;
+  if (c.length <= 12) return `${c.slice(0, 2)}.${c.slice(2, 5)}.${c.slice(5, 8)}/${c.slice(8)}`;
+  return `${c.slice(0, 2)}.${c.slice(2, 5)}.${c.slice(5, 8)}/${c.slice(8, 12)}-${c.slice(12)}`;
+}
+
 /** Receita Federal: módulo 11, caracteres do CNPJ convertidos por ASCII - 48. */
 export function validarDocumento(entrada: unknown, especie: "cpf" | "cnpj"): string | null | false {
   if (entrada == null || entrada === "") return null;
@@ -39,8 +49,10 @@ export function validarDocumento(entrada: unknown, especie: "cpf" | "cnpj"): str
 }
 
 function texto(valor: unknown, campo: string, min: number, max: number) {
-  if (typeof valor !== "string" || valor.trim().length < min || valor.trim().length > max) throw new Error(`${campo}: use entre ${min} e ${max} caracteres.`);
-  return valor.trim();
+  const limpo = typeof valor === "string" ? valor.trim() : "";
+  if (!limpo) throw new Error(`Preencha o campo ${campo}.`);
+  if (limpo.length < min || limpo.length > max) throw new Error(`${campo}: use entre ${min} e ${max} caracteres.`);
+  return limpo;
 }
 function id(valor: unknown) {
   if (!uuidValido(valor)) throw new Error("Identificador inválido.");
@@ -67,7 +79,7 @@ export function validarOperacao(operacao: string, entrada: unknown): Record<stri
       return { vinculado: true, nome: texto(d.nome, "Nome da oficina", 1, 120), cnpj, endereco: d.endereco ? texto(d.endereco, "Endereço", 5, 200) : null, confirmar: d.confirmar === true };
     }
     case "bicicleta":
-      return { id: d.id ? id(d.id) : null, modelo: texto(d.modelo, "Modelo", 1, 100), apelido: d.apelido ? texto(d.apelido, "Apelido", 1, 80) : null, cor: d.cor ? texto(d.cor, "Cor", 1, 40) : null };
+      return { id: d.id ? id(d.id) : null, modelo: texto(d.modelo, "Modelo da bicicleta", 1, 100), apelido: d.apelido ? texto(d.apelido, "Apelido", 1, 80) : null, cor: d.cor ? texto(d.cor, "Cor", 1, 40) : null };
     case "local":
       return { id: d.id ? id(d.id) : null, nome: texto(d.nome, "Nome do local", 1, 80), endereco: texto(d.endereco, "Endereço", 5, 200) };
     case "remover_bicicleta":
