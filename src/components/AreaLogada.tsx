@@ -11,8 +11,6 @@ import { PerfilProvider } from "./PerfilProvider";
 import { FavoritosProvider } from "./FavoritosProvider";
 import { LegalLinks } from "./LegalLinks";
 import { Toaster } from "./ui/Toaster";
-import { createClient } from "@/lib/supabase/server";
-import preferencias from "./perfil/completo/preferencias.module.css";
 
 type AreaLogadaProps = {
   tipo: Enum<"tipo_perfil">;
@@ -31,13 +29,9 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
 
   const primeiroNome = perfil.nome.split(" ")[0];
   const nome = tipo === "mecanico" ? `${primeiroNome} · ${perfil.oficina ?? "Mecânico autônomo"}` : primeiroNome;
-  const db = await createClient();
-  const { data: ajustes } = await db.from("perfil_privado").select("texto_ampliado,alto_contraste,reduzir_movimentos").eq("usuario_id",perfil.id).maybeSingle();
-  // Ausência da migration não deve quebrar pedidos/histórico; Meu perfil informa o erro.
-  const classes = [preferencias.area, ajustes?.texto_ampliado ? preferencias.texto : "", ajustes?.alto_contraste ? preferencias.contraste : "", ajustes?.reduzir_movimentos ? preferencias.movimento : ""].filter(Boolean).join(" ");
 
   return (
-    <div className={classes}>
+    <>
       <AppHeader
         badge={tipo === "mecanico" ? "Mecânico" : undefined}
         links={links}
@@ -62,7 +56,7 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
           </footer>
         </Toaster>
       </PerfilProvider>
-    </div>
+    </>
   );
 }
 
