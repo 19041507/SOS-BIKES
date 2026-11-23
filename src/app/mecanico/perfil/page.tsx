@@ -11,8 +11,10 @@ export default function PerfilPage() {
   return (
     <>
       <FormularioDePerfil />
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-3 pb-4 sm:px-4">
+      <div className="mx-auto w-full max-w-4xl px-3 sm:px-6">
         <FotosDoPerfil />
+      </div>
+      <div id="instalar-app" tabIndex={-1} className="mx-auto w-full max-w-4xl scroll-mt-4 px-3 pb-6 sm:px-6">
         <InstalarApp />
       </div>
     </>

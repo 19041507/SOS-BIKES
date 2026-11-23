@@ -34,9 +34,9 @@ export function TrackingStep({ chamado, busy, onCancel }: TrackingStepProps) {
     <div className="flex flex-col gap-4.5">
       <div>
         <p className="text-[13px] font-semibold text-subtle">Chamado em andamento</p>
-        <h2 className="mt-0.5 font-display text-[22px] font-bold">
+        <h1 className="mt-0.5 font-display text-[22px] font-bold">
           {stage === 1 ? `${primeiroNome(nome)} está a caminho` : "Atendimento em andamento"}
-        </h2>
+        </h1>
         {stage === 1 && chamado.tempo_chegada_min && (
           <p className="mt-1 text-sm text-muted" aria-live="polite">
             {minutosRestantes ? `Chegada estimada em ~${minutosRestantes} min.` : "Deve chegar a qualquer momento."}

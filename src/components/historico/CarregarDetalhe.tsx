@@ -31,7 +31,7 @@ export function CarregarDetalhe({ params, visao, voltarPara }: CarregarDetalhePr
         </svg>
         {voltarPara.rotulo}
       </Link>
-      {chamado === undefined && <div className="h-64 rounded-2xl bg-slate-100 motion-safe:animate-pulse" aria-label="Carregando" />}
+      {chamado === undefined && <div className="h-64 rounded-2xl bg-slate-100 motion-safe:animate-pulse" role="status" aria-label="Carregando chamado" />}
       {chamado === null && (
         <Card className="text-center">
           <h1 className="font-display text-xl font-bold">Chamado não encontrado</h1>

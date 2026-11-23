@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { pedirNovaSenha } from "../../_actions/auth";
 import { emailValido } from "@/lib/cadastro";
+import { useFocoNoPrimeiroCampoInvalido } from "@/lib/foco";
 
 export function FormularioDeRecuperacao() {
   const params = useSearchParams();
@@ -13,17 +14,22 @@ export function FormularioDeRecuperacao() {
   const [enviadoPara, setEnviadoPara] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const linkInvalido = params.get("link") === "invalido";
+  const { formRef, prepararFoco } = useFocoNoPrimeiroCampoInvalido();
 
   function enviar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!emailValido(email.trim())) {
       setErro("Informe um e-mail válido.");
+      prepararFoco();
       return;
     }
     setErro(null);
     startTransition(async () => {
       const resultado = await pedirNovaSenha(email);
-      if ("erro" in resultado) setErro(resultado.erro);
+      if ("erro" in resultado) {
+        prepararFoco();
+        setErro(resultado.erro);
+      }
       else setEnviadoPara(email.trim().toLowerCase());
     });
   }
@@ -48,7 +54,7 @@ export function FormularioDeRecuperacao() {
   }
 
   return (
-    <form onSubmit={enviar} noValidate className="flex flex-col gap-5">
+    <form ref={formRef} onSubmit={enviar} noValidate className="flex flex-col gap-5">
       {linkInvalido && (
         <p role="alert" className="rounded-xl bg-warn-soft px-4 py-3 text-sm leading-snug font-medium text-warn">
           O link expirou ou já foi usado. Peça um novo abaixo.

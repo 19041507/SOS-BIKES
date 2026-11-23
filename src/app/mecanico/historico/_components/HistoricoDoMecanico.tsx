@@ -43,13 +43,12 @@ export function HistoricoDoMecanico() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="radiogroup" aria-label="Período" className="flex gap-1 rounded-xl bg-slate-100 p-1">
+        <div role="group" aria-label="Período" className="flex gap-1 rounded-xl bg-slate-100 p-1">
           {PERIODOS.map((p) => (
             <button
               key={p.id}
               type="button"
-              role="radio"
-              aria-checked={periodo === p.id}
+              aria-pressed={periodo === p.id}
               onClick={() => setPeriodo(p.id)}
               className={`h-10 rounded-lg px-4 text-sm font-semibold transition-colors ${
                 periodo === p.id ? "bg-white text-brand shadow-sm" : "text-subtle hover:text-ink"

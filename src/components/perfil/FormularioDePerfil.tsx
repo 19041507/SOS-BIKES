@@ -11,6 +11,8 @@ import { useToast } from "@/components/ui/Toaster";
 import { formatarTelefone, normalizarTelefone } from "@/lib/cadastro";
 import { CATEGORIAS, type Categoria } from "@/lib/categorias";
 import { iniciais } from "@/lib/pessoas";
+import { TrocarSenha } from "./TrocarSenha";
+import { Notificacoes } from "./Notificacoes";
 
 type Campo = "nome" | "telefone" | "oficina" | "bairro_regiao";
 type CampoComErro = Campo | "especialidades" | "servicos" | "geral";
@@ -55,14 +57,18 @@ export function FormularioDePerfil() {
     if (Object.keys(novos).length > 0) return;
 
     startTransition(async () => {
-      const resultado = await atualizarPerfil({ ...valores, especialidades, servicos });
-      if ("erros" in resultado) {
-        setErros(resultado.erros);
-        return;
+      try {
+        const resultado = await atualizarPerfil({ ...valores, especialidades, servicos });
+        if ("erros" in resultado) {
+          setErros(resultado.erros);
+          return;
+        }
+        avisar("Perfil atualizado.", "sucesso");
+        // Recarrega o layout para o cabeçalho mostrar o nome novo.
+        router.refresh();
+      } catch {
+        setErros({ geral: "Não foi possível salvar. Tente de novo." });
       }
-      avisar("Perfil atualizado.", "sucesso");
-      // Recarrega o layout para o cabeçalho mostrar o nome novo.
-      router.refresh();
     });
   }
 
@@ -84,26 +90,33 @@ export function FormularioDePerfil() {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-3 sm:p-4">
-      <div className="flex items-center gap-4">
-        <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-brand-muted text-xl font-bold text-brand">
-          {iniciais(valores.nome || perfil.nome)}
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-5 p-3 sm:p-6">
+      <header className="flex flex-wrap items-center gap-4 rounded-2xl bg-brand p-5 text-white sm:p-7">
+        <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/15 text-xl font-bold">
+          {iniciais(perfil.nome)}
         </span>
         <div>
+          <p className="mb-1 text-xs font-semibold tracking-wider text-white/80">{mecanico ? "ESPAÇO DO MECÂNICO" : "ESPAÇO DO CICLISTA"}</p>
           <h1 className="font-display text-2xl font-bold sm:text-3xl">Meu perfil</h1>
-          <p className="text-[15px] text-muted">{mecanico ? "Mecânico" : "Ciclista"}</p>
+          <p className="mt-1 text-sm text-white/90">Seus dados de contato e a segurança da sua conta.</p>
         </div>
         {mecanico && (
           <Link
             href={`/mecanicos/${perfil.id}`}
-            className="ml-auto flex min-h-11 items-center rounded-xl border border-field bg-white px-3 text-sm font-semibold text-brand hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand"
+            className="ml-auto flex min-h-11 shrink-0 items-center rounded-xl bg-white px-3 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Visualizar perfil público
           </Link>
         )}
-      </div>
+      </header>
 
       <Card>
+        <div className="mb-5 flex items-start gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21v-2a8 8 0 0 1 16 0v2" /></svg>
+          </span>
+          <div><h2 className="font-display text-xl font-bold">Dados pessoais</h2><p className="mt-1 text-sm text-muted">Mantenha seus dados atualizados para os atendimentos.</p></div>
+        </div>
         <form onSubmit={salvar} noValidate className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="nome" className="text-sm font-semibold">Nome completo</label>
@@ -211,6 +224,8 @@ export function FormularioDePerfil() {
           </Button>
         </form>
       </Card>
+      <TrocarSenha />
+      <Notificacoes />
     </main>
   );
 }

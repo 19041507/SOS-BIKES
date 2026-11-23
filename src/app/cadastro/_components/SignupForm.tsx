@@ -4,6 +4,7 @@ import { useState, useTransition, type ChangeEvent, type FormEvent } from "react
 import Link from "next/link";
 import { cadastrar, type ResultadoDoCadastro } from "../../_actions/auth";
 import { SENHA_MINIMA, emailValido, formatarTelefone, normalizarTelefone } from "@/lib/cadastro";
+import { useFocoNoPrimeiroCampoInvalido } from "@/lib/foco";
 
 type Profile = "ciclista" | "mecanico";
 type Campo = "nome" | "telefone" | "oficina" | "email" | "senha";
@@ -31,6 +32,7 @@ export function SignupForm() {
   const [confirmarEmail, setConfirmarEmail] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [aceitouTermos, setAceitouTermos] = useState(false);
+  const { formRef, prepararFoco } = useFocoNoPrimeiroCampoInvalido();
 
   function alterar(campo: Campo, valor: string) {
     setValores((atual) => ({ ...atual, [campo]: campo === "telefone" ? formatarTelefone(valor) : valor }));
@@ -52,12 +54,18 @@ export function SignupForm() {
     event.preventDefault();
     const novos = validar();
     setErros(novos);
-    if (Object.keys(novos).length > 0) return;
+    if (Object.keys(novos).length > 0) {
+      prepararFoco();
+      return;
+    }
     startTransition(async () => {
       // Se a conta já entra direto, a action redireciona para a área do perfil.
       const resultado: ResultadoDoCadastro = await cadastrar({ perfil: profile, ...valores, aceitouTermos });
       if ("confirmarEmail" in resultado) setConfirmarEmail(resultado.confirmarEmail);
-      else setErros(resultado.erros);
+      else {
+        prepararFoco();
+        setErros(resultado.erros);
+      }
     });
   }
 
@@ -96,7 +104,7 @@ export function SignupForm() {
     );
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+    <form ref={formRef} onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <fieldset className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
         <legend className="sr-only">Perfil</legend>
         {PROFILES.map((option) => {

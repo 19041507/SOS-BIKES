@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { entrar } from "../_actions/auth";
+import { useFocoNoPrimeiroCampoInvalido } from "@/lib/foco";
 
 type Profile = "ciclista" | "mecanico";
 
@@ -21,6 +22,7 @@ export function LoginForm() {
   /** "Esqueci minha senha" só aparece depois de uma tentativa com e-mail ou senha incorretos. */
   const [errouSenha, setErrouSenha] = useState(false);
   const [pending, startTransition] = useTransition();
+  const { formRef, prepararFoco } = useFocoNoPrimeiroCampoInvalido();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,7 +31,10 @@ export function LoginForm() {
     if (!password) nextErrors.password = "Informe sua senha.";
     setErrors(nextErrors);
     setLoginError(null);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0) {
+      prepararFoco();
+      return;
+    }
     startTransition(async () => {
       // Em caso de sucesso, a action redireciona para a área do perfil.
       const result = await entrar({ email, senha: password, perfil: profile });
@@ -39,7 +44,7 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+    <form ref={formRef} onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <fieldset className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
         <legend className="sr-only">Perfil</legend>
         {PROFILES.map((option) => {
