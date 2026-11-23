@@ -39,6 +39,29 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 
 Os dois valores ficam no painel do Supabase, no botão **Connect** da página inicial do projeto. Nunca use a **Secret key** (`sb_secret_...`) no front. Sem esse arquivo o site abre, mas o login responde que não está configurado.
 
+## Testes automatizados
+
+Os testes unitários e de componentes usam Vitest e Testing Library; os fluxos de login, cadastro e pedido de socorro usam Playwright com um Supabase local isolado. Os testes E2E nunca usam o banco remoto.
+Para executar os testes E2E, use Node.js 22 ou superior; o SDK do Supabase usado na preparação dos testes requer o WebSocket nativo disponível nessa versão.
+
+```bash
+npm test
+npm run test:watch
+```
+
+Para os testes E2E, instale e inicie o Docker Desktop. O comando `npx` executa a Supabase CLI. No PowerShell, inicie e prepare o banco local:
+
+```powershell
+npx supabase start
+npx supabase db reset
+npx supabase status
+$env:NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321"
+$env:NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "<Anon key exibida pelo comando anterior>"
+npm run test:e2e
+```
+
+O reset recria o banco local a partir das migrations; as contas de teste são criadas pelo próprio teste. A configuração local desativa a confirmação de e-mail apenas nesse ambiente. O workflow do GitHub Actions executa Vitest e Playwright em Pull Requests.
+
 ## Login
 
 O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "Sou ciclista" ou "Sou mecânico"; se a conta for do outro tipo, o login avisa qual opção escolher.
