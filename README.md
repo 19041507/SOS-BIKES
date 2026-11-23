@@ -167,6 +167,26 @@ Use somente um banco de teste com o schema de Auth do Supabase e os papéis
 `authenticated`/`anon`. Este teste deve ser executado antes de liberar a migration;
 não o rode no banco de produção.
 
+## Perfil público do mecânico
+
+Usuários autenticados podem consultar `/mecanicos/<id>` para ver as especialidades,
+serviços, região de atendimento, fotos escolhidas pelo mecânico, avaliações e
+comentários que o ciclista autorizou publicar. Os comentários existentes permanecem
+privados por padrão; o ciclista pode retirar a autorização nos detalhes do chamado.
+Fotos usam um bucket público, então qualquer pessoa com a URL do arquivo pode vê-las.
+
+Para habilitar o perfil, aplique
+[perfil_publico_mecanico.sql](supabase/migrations/20261126000000_perfil_publico_mecanico.sql)
+no Supabase antes do merge/deploy. A migration adiciona campos e fotos, ajusta a
+permissão de atualização de perfis e cria consultas autenticadas com retorno
+limitado. Valide as regras em um banco de teste com as migrations aplicadas:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/perfil-publico-mecanico.sql
+```
+
+O teste desfaz os dados ao final; não o execute no banco de produção.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
@@ -237,9 +257,10 @@ O webhook aponta para uma URL só (produção): como o banco é o mesmo para `de
 
 | Tabela | Conteúdo |
 |---|---|
-| `perfis` | Um por usuário do Auth: tipo (ciclista ou mecânico), nome, telefone, oficina e disponibilidade. Criado automaticamente no cadastro. |
+| `perfis` | Um por usuário do Auth: tipo (ciclista ou mecânico), nome, telefone, oficina e disponibilidade. Para mecânicos, também guarda especialidades, serviços e bairro/região de atendimento. Criado automaticamente no cadastro. |
+| `perfil_mecanico_fotos` | Fotos do perfil e dos trabalhos, com metadados; os arquivos ficam em um bucket público e podem ser acessados por URL. |
 | `chamados` | Pedido do ciclista para o mecânico escolhido, com status, estimativa, valor final, comissão de 10% (calculada pelo banco) e o horário de cada etapa. |
-| `avaliacoes` | Nota, comentário e gorjeta registrada, uma por chamado concluído. |
+| `avaliacoes` | Nota, comentário e gorjeta registrada, uma por chamado concluído. O comentário só aparece no perfil do mecânico com autorização explícita do ciclista. |
 
 Status do chamado: `aguardando` → `aceito` → `a_caminho` → `em_atendimento` → `concluido`, ou encerrado como `recusado`, `cancelado` ou `expirado`.
 

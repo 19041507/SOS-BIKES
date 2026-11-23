@@ -130,14 +130,29 @@ export async function mudarChamado(id: string, mudanca: MudancaDeChamado) {
   return resultado(data, error) as ChamadoCompleto;
 }
 
-export async function avaliarChamado(dados: { chamadoId: string; nota: number; comentario: string; gorjeta: number | null }) {
+export async function avaliarChamado(dados: {
+  chamadoId: string;
+  nota: number;
+  comentario: string;
+  comentarioPublico: boolean;
+  gorjeta: number | null;
+}) {
   const { error } = await supabase().from("avaliacoes").insert({
     chamado_id: dados.chamadoId,
     nota: dados.nota,
     comentario: dados.comentario.trim() || null,
+    comentario_publico: dados.comentarioPublico && Boolean(dados.comentario.trim()),
     gorjeta: dados.gorjeta,
   });
   if (error) throw new Error(mensagemDeErro(error));
+}
+
+export async function ocultarComentarioPublico(chamadoId: string) {
+  const { error } = await supabase()
+    .from("avaliacoes")
+    .update({ comentario_publico: false })
+    .eq("chamado_id", chamadoId);
+  if (error) throw new Error("Não foi possível ocultar o comentário. Tente novamente.");
 }
 
 export async function definirDisponibilidade(perfilId: string, disponivel: boolean) {
