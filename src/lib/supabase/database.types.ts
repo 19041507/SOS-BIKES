@@ -55,6 +55,9 @@ export type Database = {
           telefone: string | null;
           oficina: string | null;
           disponivel: boolean;
+          especialidades: Database["public"]["Enums"]["categoria_defeito"][];
+          servicos: string[];
+          bairro_regiao: string | null;
           criado_em: string;
         };
         Insert: {
@@ -64,6 +67,9 @@ export type Database = {
           telefone?: string | null;
           oficina?: string | null;
           disponivel?: boolean;
+          especialidades?: Database["public"]["Enums"]["categoria_defeito"][];
+          servicos?: string[];
+          bairro_regiao?: string | null;
           criado_em?: string;
         };
         Update: {
@@ -73,9 +79,47 @@ export type Database = {
           telefone?: string | null;
           oficina?: string | null;
           disponivel?: boolean;
+          especialidades?: Database["public"]["Enums"]["categoria_defeito"][];
+          servicos?: string[];
+          bairro_regiao?: string | null;
           criado_em?: string;
         };
         Relationships: [];
+      };
+      perfil_mecanico_fotos: {
+        Row: {
+          id: string;
+          mecanico_id: string;
+          caminho: string;
+          tipo: Database["public"]["Enums"]["tipo_foto_mecanico"];
+          descricao: string;
+          criado_em: string;
+        };
+        Insert: {
+          id?: string;
+          mecanico_id: string;
+          caminho: string;
+          tipo: Database["public"]["Enums"]["tipo_foto_mecanico"];
+          descricao: string;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          mecanico_id?: string;
+          caminho?: string;
+          tipo?: Database["public"]["Enums"]["tipo_foto_mecanico"];
+          descricao?: string;
+          criado_em?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "perfil_mecanico_fotos_mecanico_id_fkey";
+            columns: ["mecanico_id"];
+            isOneToOne: false;
+            referencedRelation: "perfis";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       chamados: {
         Row: {
@@ -168,6 +212,7 @@ export type Database = {
           nota: number;
           comentario: string | null;
           gorjeta: number | null;
+          comentario_publico: boolean;
           criado_em: string;
         };
         Insert: {
@@ -175,6 +220,7 @@ export type Database = {
           nota: number;
           comentario?: string | null;
           gorjeta?: number | null;
+          comentario_publico?: boolean;
           criado_em?: string;
         };
         Update: {
@@ -182,6 +228,7 @@ export type Database = {
           nota?: number;
           comentario?: string | null;
           gorjeta?: number | null;
+          comentario_publico?: boolean;
           criado_em?: string;
         };
         Relationships: [
@@ -220,6 +267,24 @@ export type Database = {
           distancia_km: number | null;
         }[];
       };
+      perfil_publico_mecanico: {
+        Args: { mecanico: string };
+        Returns: {
+          id: string;
+          nome: string;
+          oficina: string | null;
+          bairro_regiao: string | null;
+          especialidades: Database["public"]["Enums"]["categoria_defeito"][];
+          servicos: string[];
+          media: number | null;
+          avaliacoes: number;
+          atendimentos: number;
+        }[];
+      };
+      avaliacoes_publicas_do_mecanico: {
+        Args: { mecanico: string };
+        Returns: { nota: number; comentario: string }[];
+      };
       salvar_inscricao_push: {
         Args: { endereco: string; chave_p256dh: string; chave_auth: string };
         Returns: undefined;
@@ -239,6 +304,7 @@ export type Database = {
     };
     Enums: {
       tipo_perfil: "ciclista" | "mecanico";
+      tipo_foto_mecanico: "perfil" | "trabalho";
       categoria_defeito: "pneu" | "corrente" | "freio" | "roda" | "selim";
       status_chamado:
         | "aguardando"

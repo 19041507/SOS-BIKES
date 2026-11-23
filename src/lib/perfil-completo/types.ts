@@ -44,13 +44,13 @@ const comuns = [
   { id: "status", titulo: "Status do perfil" },
   { id: "atividade", titulo: "Sua atividade" },
 ] as const;
-export type SecaoPerfil = "dados" | "bicicletas" | "locais" | "oficina" | typeof comuns[number]["id"];
+export type SecaoPerfil = "dados" | "bicicletas" | "locais" | "oficina" | "publico" | typeof comuns[number]["id"];
 export function secoesDoPerfil(tipo: Perfil["tipo"]): { id: SecaoPerfil; titulo: string }[] {
   return [
     { id: "dados", titulo: "Dados pessoais" },
     ...(tipo === "ciclista"
       ? [{ id: "bicicletas" as const, titulo: "Minhas bicicletas" }, { id: "locais" as const, titulo: "Localizações utilizadas" }]
-      : [{ id: "oficina" as const, titulo: "Minha oficina" }]),
+      : [{ id: "oficina" as const, titulo: "Minha oficina" }, { id: "publico" as const, titulo: "Perfil público" }]),
     ...comuns.map(s => s.id === "favoritos" ? { ...s, titulo: tipo === "ciclista" ? "Mecânicos favoritos" : "Clientes favoritos" } : s),
   ];
 }

@@ -11,6 +11,7 @@ import {iniciais} from "@/lib/pessoas";
 import {secoesDoPerfil,type BasePerfil,type SecaoPerfil} from "@/lib/perfil-completo/types";
 import {TrocarSenha} from "../TrocarSenha";
 import {Notificacoes} from "../Notificacoes";
+import {FotosDoPerfil} from "../FotosDoPerfil";
 import {DadosPessoais,OficinaPerfil,BicicletasPerfil,LocaisPerfil,FavoritosPerfil} from "./SecoesCadastro";
 import {AcessibilidadePerfil,AjudaPerfil,StatusPerfil,AtividadePerfil,AvaliacaoPerfil} from "./SecoesInformativas";
 import {RascunhosPerfil} from "./RascunhosPerfil";
@@ -20,6 +21,7 @@ const ICONES:Record<SecaoPerfil,string>={
   bicicletas:"M5 20a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm14 0a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 16l5-9 5 9H5Zm5-9H7m8-3h3l2 8",
   locais:"M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0ZM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z",
   oficina:"M3 21h18M5 21V9m14 12V9M3 9l2-6h14l2 6H3Zm6 12v-7h6v7",
+  publico:"M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Zm10-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z",
   favoritos:"m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z",
   avaliacao:"M4 3h16v14H9l-5 4V3Zm4 5h8m-8 4h5",
   acessibilidade:"M12 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM4 9l8 2 8-2m-8 2v5m0 0-4 6m4-6 4 6",
@@ -59,6 +61,11 @@ export function PerfilCompleto() {
   // "Dados pessoais" não depende das tabelas novas: o formulário de nome/WhatsApp/oficina sempre aparece.
   const conteudo=selecionada.id==="dados"?<DadosPessoais base={base} atualizar={recarregar}/>:base?{
     oficina:<OficinaPerfil base={base} atualizar={recarregar}/>,
+    // Fotos e comentários que os ciclistas veem antes de escolher (perfil público, #116).
+    publico:<div className="flex flex-col gap-5">
+      <Link href={`/mecanicos/${perfil.id}`} className="self-start font-semibold text-brand underline">Visualizar perfil público</Link>
+      <FotosDoPerfil/>
+    </div>,
     bicicletas:<BicicletasPerfil/>,
     locais:<LocaisPerfil/>,
     favoritos:<FavoritosPerfil base={base}/>,

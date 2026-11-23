@@ -13,7 +13,7 @@ export default function TermosPage() {
       </section>
       <section>
         <h2>2. Conta e informações</h2>
-        <p>Forneça dados corretos de nome, e-mail, telefone e perfil. Proteja sua senha e use somente contas e informações que você está autorizado a utilizar. Mecânicos devem manter a disponibilidade e as informações da oficina atualizadas. Não inclua documentos, dados bancários ou informações de terceiros nos campos livres.</p>
+        <p>Forneça dados corretos de nome, e-mail, telefone e perfil. Proteja sua senha e use somente contas e informações que você está autorizado a utilizar. Mecânicos devem manter a disponibilidade, as informações da oficina, especialidades, serviços e região de atendimento atualizadas. Só publique fotos que você tem autorização para divulgar. Não inclua documentos, dados bancários ou informações de terceiros nos campos livres.</p>
       </section>
       <section>
         <h2>3. Pedidos e atendimento</h2>
@@ -25,7 +25,7 @@ export default function TermosPage() {
       </section>
       <section>
         <h2>5. Conduta e avaliações</h2>
-        <p>Trate os participantes com respeito, inclusive no chat do chamado. Não publique informações falsas, ofensivas, discriminatórias ou dados pessoais desnecessários. Ciclista e mecânico podem avaliar um ao outro após um atendimento concluído. Utilize telefone e endereço recebidos somente para tratar do atendimento.</p>
+        <p>Trate os participantes com respeito, inclusive no chat do chamado. Não publique informações falsas, ofensivas, discriminatórias ou dados pessoais desnecessários. Ciclista e mecânico podem avaliar um ao outro após um atendimento concluído. O comentário do ciclista só será exibido no perfil do mecânico se houver autorização explícita; ela pode ser retirada nos detalhes do chamado. Utilize telefone e endereço recebidos somente para tratar do atendimento.</p>
       </section>
       <section>
         <h2>6. Dados pessoais e alterações</h2>

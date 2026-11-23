@@ -14,7 +14,7 @@ vi.mock("@/app/_actions/auth", () => ({ trocarSenha: vi.fn() }));
 afterEach(cleanup);
 beforeEach(() => { refresh.mockClear(); vi.mocked(atualizarPerfil).mockReset(); });
 function abrir(tipo: Perfil["tipo"] = "ciclista") {
-  const perfil: Perfil = { id: "dono", tipo, nome: "Ana Teste", telefone: "81999990000", oficina: tipo === "mecanico" ? "Oficina Teste" : null, disponivel: false, criado_em: "2026-11-21T12:00:00Z" };
+  const perfil: Perfil = { id: "dono", tipo, nome: "Ana Teste", telefone: "81999990000", oficina: tipo === "mecanico" ? "Oficina Teste" : null, disponivel: false, especialidades: [], servicos: [], bairro_regiao: null, criado_em: "2026-11-21T12:00:00Z" };
   render(<PerfilProvider perfil={perfil}><Toaster><FormularioDePerfil /></Toaster></PerfilProvider>);
 }
 it.each(["ciclista", "mecanico"] as const)("%s tem Senha abaixo de Dados pessoais e mantém campos", tipo => {
@@ -34,7 +34,7 @@ it("salva valores e pede atualização do cabeçalho após sucesso", async () =>
   await user.type(screen.getByLabelText("Nome completo"), "Ana Atualizada");
   await user.click(screen.getByRole("button", {name:"Salvar alterações"}));
   expect((await screen.findByRole("status")).textContent).toContain("Perfil atualizado.");
-  expect(atualizarPerfil).toHaveBeenCalledWith({nome:"Ana Atualizada",telefone:"(81) 99999-0000",oficina:""});
+  expect(atualizarPerfil).toHaveBeenCalledWith({nome:"Ana Atualizada",telefone:"(81) 99999-0000",bairro_regiao:"",oficina:"",especialidades:[],servicos:""});
   expect(refresh).toHaveBeenCalledOnce();
 });
 it("falha de rede mantém rascunho e não atualiza cabeçalho", async () => {

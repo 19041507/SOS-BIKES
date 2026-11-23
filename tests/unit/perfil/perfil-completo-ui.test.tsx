@@ -10,7 +10,7 @@ vi.mock("@/app/_actions/auth",()=>({trocarSenha:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>({refresh:vi.fn()}),useSearchParams:()=>new URLSearchParams()}));
 afterEach(cleanup);
 it.each(["ciclista","mecanico"] as const)("%s tem seções reais e senha abaixo dos dados",async tipo=>{
-  const perfil:Perfil={id:"dono",nome:"Ana Silva",telefone:"81999990000",tipo,oficina:null,disponivel:false,criado_em:"2026-11-21"};
+  const perfil:Perfil={id:"dono",nome:"Ana Silva",telefone:"81999990000",tipo,oficina:null,disponivel:false,especialidades:[],servicos:[],bairro_regiao:null,criado_em:"2026-11-21"};
   vi.mocked(carregarPerfilCompleto).mockResolvedValue({ok:true,dados:{perfil,privados:null,oficina:null,fotoUrl:null,fachadaUrl:null}});
   render(<PerfilProvider perfil={perfil}><Toaster><PerfilCompleto/></Toaster></PerfilProvider>);
   expect(await screen.findByLabelText("CPF (opcional e privado)")).toBeTruthy();
@@ -24,7 +24,7 @@ it.each(["ciclista","mecanico"] as const)("%s tem seções reais e senha abaixo 
   expect(titulos.indexOf("Senha")).toBeGreaterThan(titulos.indexOf("Dados pessoais"));
 });
 it("troca de conta não mantém dados privados da conta anterior durante a recarga",async()=>{
-  const perfil:Perfil={id:"conta-a",nome:"Ana Silva",telefone:"81999990000",tipo:"ciclista",oficina:null,disponivel:false,criado_em:"2026-11-21"};
+  const perfil:Perfil={id:"conta-a",nome:"Ana Silva",telefone:"81999990000",tipo:"ciclista",oficina:null,disponivel:false,especialidades:[],servicos:[],bairro_regiao:null,criado_em:"2026-11-21"};
   vi.mocked(carregarPerfilCompleto).mockResolvedValue({ok:true,dados:{perfil,privados:{usuario_id:perfil.id,cpf:"52998224725",idade:25,foto_caminho:null,texto_ampliado:false,alto_contraste:false,reduzir_movimentos:false},oficina:null,fotoUrl:null,fachadaUrl:null}});
   const montar=(p:Perfil)=><PerfilProvider perfil={p}><Toaster><PerfilCompleto/></Toaster></PerfilProvider>;
   const view=render(montar(perfil));
@@ -34,7 +34,7 @@ it("troca de conta não mantém dados privados da conta anterior durante a recar
   expect(screen.queryByDisplayValue("52998224725")).toBeNull();
 });
 it("sem os dados privados (ex.: migration ausente), nome e WhatsApp continuam editáveis",async()=>{
-  const perfil:Perfil={id:"dono",nome:"Ana Silva",telefone:"81999990000",tipo:"ciclista",oficina:null,disponivel:false,criado_em:"2026-11-21"};
+  const perfil:Perfil={id:"dono",nome:"Ana Silva",telefone:"81999990000",tipo:"ciclista",oficina:null,disponivel:false,especialidades:[],servicos:[],bairro_regiao:null,criado_em:"2026-11-21"};
   vi.mocked(carregarPerfilCompleto).mockResolvedValue({ok:false,erro:"Não foi possível carregar os dados adicionais."});
   render(<PerfilProvider perfil={perfil}><Toaster><PerfilCompleto/></Toaster></PerfilProvider>);
   expect(await screen.findByRole("alert")).toBeTruthy();
@@ -43,7 +43,7 @@ it("sem os dados privados (ex.: migration ausente), nome e WhatsApp continuam ed
   expect(screen.queryByLabelText("CPF (opcional e privado)")).toBeNull();
 });
 it("no perfil completo do mecânico, Dados pessoais não mostra nem envia a oficina",async()=>{
-  const perfil:Perfil={id:"dono",nome:"Lucas Silva",telefone:"81999990000",tipo:"mecanico",oficina:"BikeFast",disponivel:false,criado_em:"2026-11-21"};
+  const perfil:Perfil={id:"dono",nome:"Lucas Silva",telefone:"81999990000",tipo:"mecanico",oficina:"BikeFast",disponivel:false,especialidades:[],servicos:[],bairro_regiao:null,criado_em:"2026-11-21"};
   vi.mocked(carregarPerfilCompleto).mockResolvedValue({ok:true,dados:{perfil,privados:null,oficina:null,fotoUrl:null,fachadaUrl:null}});
   render(<PerfilProvider perfil={perfil}><Toaster><PerfilCompleto/></Toaster></PerfilProvider>);
   expect(await screen.findByLabelText("Nome completo")).toBeTruthy();
