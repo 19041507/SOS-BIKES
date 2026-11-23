@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { formatarCpf, validarOperacao, validarDocumento } from "@/lib/perfil-completo/validacao";
+import { formatarCnpj, formatarCpf, validarOperacao, validarDocumento } from "@/lib/perfil-completo/validacao";
 
 it("valida CPF e CNPJ numerico/alfanumerico sem aceitar repetidos ou DV errado", () => {
   expect(validarDocumento("529.982.247-25", "cpf")).toBe("52998224725");
@@ -34,4 +34,13 @@ it("CPF: só números, até 11, formatado enquanto digita", () => {
   expect(formatarCpf("5299822")).toBe("529.982.2");
   expect(formatarCpf("529.982.247-25 extra 99")).toBe("529.982.247-25");
   expect(formatarCpf("")).toBe("");
+});
+
+it("formata CNPJ numérico e alfanumérico enquanto digita", () => {
+  expect(formatarCnpj("11222333000181")).toBe("11.222.333/0001-81");
+  expect(formatarCnpj("12abc34501de35")).toBe("12.ABC.345/01DE-35");
+  expect(formatarCnpj("112")).toBe("11.2");
+});
+it("campo obrigatório vazio pede para preencher, sem falar em caracteres", () => {
+  expect(() => validarOperacao("bicicleta", {modelo:"  "})).toThrow("Preencha o campo Modelo da bicicleta.");
 });

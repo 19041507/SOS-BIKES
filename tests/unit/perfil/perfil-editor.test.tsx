@@ -46,3 +46,41 @@ it("duplo clique envia somente uma gravação enquanto a resposta está pendente
   await act(async()=>{concluir({ok:true,dados:{limpezaPendente:false}});});
   expect(await screen.findByText("Dados salvos.")).toBeTruthy();
 });
+
+const CAMPOS_OFICINA=[
+  {id:"vinculado",titulo:"Estou vinculado a uma oficina",tipo:"checkbox" as const},
+  {id:"nome",titulo:"Nome da oficina",max:120,soVinculado:true},
+  {id:"cnpj",titulo:"CNPJ da oficina",tipo:"cnpj" as const,max:18,soVinculado:true},
+  {id:"endereco",titulo:"Endereço da oficina (opcional)",max:200,soVinculado:true},
+];
+const OFICINA={vinculado:"true",nome:"BikeFast",cnpj:"11.222.333/0001-81",endereco:"Rua das Flores, 10"};
+it("redigitar o mesmo CNPJ não apaga o endereço nem pede confirmação",async()=>{
+  vi.mocked(salvarSecaoPerfil).mockResolvedValue({ok:true,dados:{limpezaPendente:false}});
+  const user=userEvent.setup();
+  render(<Toaster><EditorPerfil operacao="oficina" campos={CAMPOS_OFICINA} iniciais={OFICINA} cnpjAnterior="11222333000181" aoSalvar={()=>{}} /></Toaster>);
+  const cnpj=screen.getByLabelText("CNPJ da oficina");
+  await user.clear(cnpj);
+  await user.type(cnpj,"11222333000181");
+  expect((cnpj as HTMLInputElement).value).toBe("11.222.333/0001-81");
+  expect((screen.getByLabelText("Endereço da oficina (opcional)") as HTMLInputElement).value).toBe("Rua das Flores, 10");
+  await user.click(screen.getByRole("button",{name:"Salvar"}));
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+  expect(salvarSecaoPerfil).toHaveBeenCalledWith("oficina",expect.objectContaining({cnpj:"11222333000181",endereco:"Rua das Flores, 10",confirmar:false}));
+});
+it("trocar de CNPJ pede confirmação na tela antes de salvar",async()=>{
+  vi.mocked(salvarSecaoPerfil).mockResolvedValue({ok:true,dados:{limpezaPendente:false}});
+  const user=userEvent.setup();
+  render(<Toaster><EditorPerfil operacao="oficina" campos={CAMPOS_OFICINA} iniciais={OFICINA} cnpjAnterior="11222333000181" aoSalvar={()=>{}} /></Toaster>);
+  const cnpj=screen.getByLabelText("CNPJ da oficina");
+  await user.clear(cnpj);
+  await user.type(cnpj,"11444777000161");
+  await user.click(screen.getByRole("button",{name:"Salvar"}));
+  expect(salvarSecaoPerfil).not.toHaveBeenCalled();
+  expect(screen.getByRole("alertdialog").textContent).toContain("O CNPJ mudou");
+  await user.click(screen.getByRole("button",{name:"Confirmar e salvar"}));
+  expect(salvarSecaoPerfil).toHaveBeenCalledWith("oficina",expect.objectContaining({cnpj:"11444777000161",confirmar:true}));
+});
+it("campo sem autocomplete próprio não sugere o nome da pessoa",()=>{
+  render(<Toaster><EditorPerfil operacao="oficina" campos={CAMPOS_OFICINA} iniciais={OFICINA} aoSalvar={()=>{}} /></Toaster>);
+  expect(screen.getByLabelText("Nome da oficina").getAttribute("autocomplete")).toBe("off");
+});

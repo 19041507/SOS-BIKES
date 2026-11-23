@@ -100,7 +100,8 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
         value={comment}
         onChange={(event) => {
           setComment(event.target.value);
-          setComentarioPublico(false);
+          // Sem texto não há o que publicar; editar o comentário mantém a escolha feita.
+          if (!event.target.value.trim()) setComentarioPublico(false);
         }}
         className="-mt-2.5 self-stretch resize-none rounded-xl border border-field p-3 text-[15px]"
       />

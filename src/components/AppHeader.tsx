@@ -6,7 +6,7 @@ import { NavPrincipal, type LinkDeNavegacao } from "./NavPrincipal";
 
 type AppHeaderProps = {
   links: LinkDeNavegacao[];
-  /** `fotoUrl`: foto do Meu perfil (link assinado, privado); sem ela, as iniciais. */
+  /** `fotoUrl`: ciclista, foto privada do Meu perfil; mecânico, a foto pública do perfil. Sem ela, as iniciais. */
   user: { initials: string; name: string; fotoUrl?: string | null };
   badge?: string;
 };

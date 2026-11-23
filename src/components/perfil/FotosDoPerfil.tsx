@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useEffect, useState, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import { usePerfil } from "@/components/PerfilProvider";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Confirmacao } from "@/components/ui/Confirmacao";
 import { createClient } from "@/lib/supabase/client";
 import { BUCKET_FOTOS_MECANICOS, TAMANHO_MAXIMO_FOTO, type TipoFotoMecanico } from "@/lib/perfil-mecanico";
 import { iniciais } from "@/lib/pessoas";
@@ -28,8 +29,15 @@ function nomeErro(erro: unknown) {
   return erro instanceof Error ? erro.message : "Não foi possível atualizar as fotos.";
 }
 
-export function FotosDoPerfil() {
+const DESCRICAO_MINIMA = 2;
+const CLASSE_ENVIO =
+  "flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-field bg-white px-3 text-sm font-semibold hover:bg-surface focus-within:ring-2 focus-within:ring-brand focus-within:ring-offset-2";
+
+/** Fotos públicas do mecânico. A foto do perfil daqui também aparece no topo do site (AreaLogada). */
+export function FotosDoPerfil({ aoMudarFotoDePerfil }: { aoMudarFotoDePerfil?: () => void } = {}) {
   const perfil = usePerfil();
+  const router = useRouter();
+  const [removendo, setRemovendo] = useState<Foto | null>(null);
   const [fotos, setFotos] = useState<Foto[]>([]);
   const [descricao, setDescricao] = useState("");
   const [carregando, setCarregando] = useState(true);
@@ -75,6 +83,12 @@ export function FotosDoPerfil() {
 
   const fotoDePerfil = fotos.find((foto) => foto.tipo === "perfil");
   const fotosDeTrabalho = fotos.filter((foto) => foto.tipo === "trabalho");
+  const descricaoPronta = descricao.trim().length >= DESCRICAO_MINIMA;
+
+  function fotoDePerfilMudou() {
+    router.refresh();
+    aoMudarFotoDePerfil?.();
+  }
 
   async function enviarFoto(event: ChangeEvent<HTMLInputElement>, tipo: TipoFotoMecanico) {
     const input = event.currentTarget;
@@ -94,8 +108,8 @@ export function FotosDoPerfil() {
     }
 
     const descricaoLimpa = tipo === "perfil" ? "Foto de perfil do mecânico" : descricao.trim();
-    if (descricaoLimpa.length < 2 || descricaoLimpa.length > 140) {
-      setErro("Descreva a foto do trabalho em até 140 caracteres.");
+    if (descricaoLimpa.length < DESCRICAO_MINIMA || descricaoLimpa.length > 140) {
+      setErro("Escreva a descrição da foto (2 a 140 caracteres) antes de escolher a imagem.");
       return;
     }
 
@@ -165,6 +179,7 @@ export function FotosDoPerfil() {
       }
 
       if (tipo === "trabalho") setDescricao("");
+      else fotoDePerfilMudou();
     } catch (e) {
       setErro(nomeErro(e));
     } finally {
@@ -174,6 +189,7 @@ export function FotosDoPerfil() {
 
   async function removerFoto(foto: Foto) {
     if (salvando) return;
+    setRemovendo(null);
     setErro(null);
     setSalvando(true);
     const cliente = createClient();
@@ -203,6 +219,7 @@ export function FotosDoPerfil() {
         throw new Error("Não foi possível remover o arquivo; a foto foi mantida no perfil.");
       }
       setFotos((atuais) => atuais.filter((atual) => atual.id !== foto.id));
+      if (foto.tipo === "perfil") fotoDePerfilMudou();
     } catch (e) {
       setErro(nomeErro(e));
     } finally {
@@ -211,9 +228,9 @@ export function FotosDoPerfil() {
   }
 
   return (
-    <Card className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4" aria-labelledby="fotos-publicas-titulo">
       <div>
-        <h2 className="font-display text-lg font-bold">Fotos do perfil e dos trabalhos</h2>
+        <h3 id="fotos-publicas-titulo" className="font-semibold">Fotos do perfil e dos trabalhos</h3>
         <p className="mt-1 text-sm leading-relaxed text-muted">
           As imagens são públicas por URL e aparecem no seu perfil. Publique somente fotos que você tem autorização para divulgar (JPEG, PNG ou WebP, até 5 MB).
         </p>
@@ -223,7 +240,8 @@ export function FotosDoPerfil() {
       {!carregando && (
         <div className="grid gap-5 sm:grid-cols-2">
           <section className="flex flex-col gap-2" aria-labelledby="foto-perfil-titulo">
-            <h3 id="foto-perfil-titulo" className="text-sm font-semibold">Foto do mecânico</h3>
+            <h4 id="foto-perfil-titulo" className="text-sm font-semibold">Foto do perfil</h4>
+            <p className="text-[13px] text-subtle">Aparece no seu perfil público e no topo do site.</p>
             {fotoDePerfil ? (
               <div className="flex items-center gap-3">
                 <Image
@@ -234,7 +252,7 @@ export function FotosDoPerfil() {
                   unoptimized
                   className="size-20 rounded-full object-cover"
                 />
-                <Button variant="secondary" disabled={salvando} onClick={() => void removerFoto(fotoDePerfil)}>
+                <Button variant="secondary" disabled={salvando} onClick={() => setRemovendo(fotoDePerfil)}>
                   Remover foto
                 </Button>
               </div>
@@ -243,7 +261,7 @@ export function FotosDoPerfil() {
                 {iniciais(perfil.nome)}
               </span>
             )}
-            <label className="mt-1 flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-field bg-white px-3 text-sm font-semibold hover:bg-surface">
+            <label className={`mt-1 ${CLASSE_ENVIO}`}>
               {salvando ? "Salvando…" : fotoDePerfil ? "Substituir foto" : "Adicionar foto"}
               <input
                 type="file"
@@ -256,7 +274,7 @@ export function FotosDoPerfil() {
           </section>
 
           <section className="flex flex-col gap-2" aria-labelledby="fotos-trabalho-titulo">
-            <h3 id="fotos-trabalho-titulo" className="text-sm font-semibold">Fotos dos trabalhos</h3>
+            <h4 id="fotos-trabalho-titulo" className="text-sm font-semibold">Fotos dos trabalhos</h4>
             <label htmlFor="descricao-foto-trabalho" className="text-[13px] text-subtle">Descrição da próxima foto</label>
             <input
               id="descricao-foto-trabalho"
@@ -264,14 +282,16 @@ export function FotosDoPerfil() {
               onChange={(event) => setDescricao(event.target.value)}
               maxLength={140}
               placeholder="Ex.: Troca de corrente"
+              aria-describedby="descricao-foto-trabalho-ajuda"
               className="h-11 rounded-xl border border-field px-3 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             />
-            <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-field bg-white px-3 text-sm font-semibold hover:bg-surface">
+            <p id="descricao-foto-trabalho-ajuda" className="text-[13px] text-subtle">Escreva a descrição antes de escolher a imagem.</p>
+            <label className={`${CLASSE_ENVIO} ${descricaoPronta ? "" : "cursor-not-allowed opacity-60"}`}>
               {salvando ? "Salvando…" : "Adicionar foto de trabalho"}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                disabled={salvando}
+                disabled={salvando || !descricaoPronta}
                 onChange={(event) => void enviarFoto(event, "trabalho")}
                 className="sr-only"
               />
@@ -288,12 +308,12 @@ export function FotosDoPerfil() {
                       unoptimized
                       className="aspect-[4/3] w-full rounded-lg object-cover"
                     />
-                    <p className="mt-1 text-xs text-muted">{foto.descricao}</p>
+                    <p className="mt-1 break-words text-xs text-muted">{foto.descricao}</p>
                     <button
                       type="button"
                       disabled={salvando}
-                      onClick={() => void removerFoto(foto)}
-                      className="mt-1 min-h-9 rounded px-2 text-xs font-semibold text-danger hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand"
+                      onClick={() => setRemovendo(foto)}
+                      className="mt-1 min-h-11 rounded px-2 text-xs font-semibold text-danger hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand"
                     >
                       Remover foto
                     </button>
@@ -305,7 +325,15 @@ export function FotosDoPerfil() {
         </div>
       )}
 
+      {removendo && (
+        <Confirmacao
+          texto={removendo.tipo === "perfil" ? "Remover a foto do perfil? Ela sai do seu perfil público e do topo do site." : `Remover a foto “${removendo.descricao}” do seu perfil público?`}
+          confirmar="Remover foto"
+          onConfirmar={() => void removerFoto(removendo)}
+          onCancelar={() => setRemovendo(null)}
+        />
+      )}
       {erro && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-danger">{erro}</p>}
-    </Card>
+    </section>
   );
 }

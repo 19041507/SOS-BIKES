@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { prepararFoto } from "@/lib/perfil-completo/imagens";
 import { validarOperacao, uuidValido } from "@/lib/perfil-completo/validacao";
+import { BUCKET_FOTOS_MECANICOS } from "@/lib/perfil-mecanico";
 import type { BasePerfil, ItemPerfil, PaginaPerfil, Resultado } from "@/lib/perfil-completo/types";
 
 class ErroPerfil extends Error {}
@@ -18,12 +19,16 @@ async function contexto() {
 type Contexto = Awaited<ReturnType<typeof contexto>>;
 const falhou = (erro:unknown): {ok:false;erro:string} => ({ok:false,erro:erro instanceof ErroPerfil ? erro.message : "Não foi possível concluir. Confira sua conexão e tente novamente."});
 
+// Foto que não gera link (arquivo apagado do Storage) fica sem imagem, sem derrubar a tela inteira.
 async function urlFoto(ctx:Contexto,caminho:string|null) {
-  if (!caminho) return null;
-  if (!caminho.startsWith(`${ctx.perfil.id}/`)) throw new ErroPerfil("Referência de foto inválida.");
-  const {data,error} = await ctx.db.storage.from("fotos-perfil").createSignedUrl(caminho,300);
-  if (error || !data) throw new ErroPerfil("Não foi possível carregar uma foto. Atualize para tentar novamente.");
-  return data.signedUrl;
+  if (!caminho || !caminho.startsWith(`${ctx.perfil.id}/`)) return null;
+  const {data,error} = await ctx.db.storage.from("fotos-perfil").createSignedUrl(caminho,3600);
+  return error || !data ? null : data.signedUrl;
+}
+/** Mecânico tem uma foto só: a pública do perfil (FotosDoPerfil), que também vai para o cabeçalho. */
+async function urlFotoPublica(ctx:Contexto) {
+  const {data} = await ctx.db.from("perfil_mecanico_fotos").select("caminho").eq("mecanico_id",ctx.perfil.id).eq("tipo","perfil").maybeSingle();
+  return data ? ctx.db.storage.from(BUCKET_FOTOS_MECANICOS).getPublicUrl(data.caminho).data.publicUrl : null;
 }
 async function limparFoto(ctx:Contexto,caminho:string|null) {
   if (!caminho || !caminho.startsWith(`${ctx.perfil.id}/`)) return true;
@@ -44,8 +49,11 @@ export async function carregarPerfilCompleto(): Promise<Resultado<BasePerfil>> {
       ctx.db.from("perfil_privado").select("*").eq("usuario_id",ctx.perfil.id).maybeSingle(),
       ctx.db.from("oficina_privada").select("*").eq("usuario_id",ctx.perfil.id).maybeSingle(),
     ]);
-    if (privado.error || oficina.error) throw new ErroPerfil("Não foi possível carregar os dados adicionais. Verifique se as migrations do perfil foram aplicadas.");
-    const [fotoUrl,fachadaUrl] = await Promise.all([urlFoto(ctx,privado.data?.foto_caminho??null),urlFoto(ctx,oficina.data?.foto_caminho??null)]);
+    if (privado.error || oficina.error) throw new ErroPerfil("Não foi possível carregar os dados adicionais do perfil. Tente novamente em instantes.");
+    const [fotoUrl,fachadaUrl] = await Promise.all([
+      ctx.perfil.tipo==="mecanico"?urlFotoPublica(ctx):urlFoto(ctx,privado.data?.foto_caminho??null),
+      urlFoto(ctx,oficina.data?.foto_caminho??null),
+    ]);
     return {ok:true,dados:{perfil:ctx.perfil,privados:privado.data,oficina:oficina.data,fotoUrl,fachadaUrl}};
   } catch (erro) { return falhou(erro); }
 }
@@ -62,6 +70,13 @@ export async function carregarSecaoPerfil(secao:string,cursor?:{data:string;id:s
     const ultimo=itens.at(-1);
     return {ok:true,dados:{itens,proxima:data.length>50&&ultimo?{data:ultimo.criado_em,id:ultimo.id}:null}};
   } catch (erro) { return falhou(erro); }
+}
+
+/** 42501: o registro já não existe (removido em outra aba) ou não é da pessoa; 23514 traz a mensagem da regra. */
+function mensagemDoBanco(error:{code?:string;message?:string}) {
+  if (error.code==="42501") return "Este registro não está mais disponível. Atualize a página.";
+  if (error.code==="23514"&&error.message?.startsWith("Confirme")) return error.message;
+  return "Não foi possível salvar. Confira os campos e tente novamente.";
 }
 
 export async function salvarSecaoPerfil(operacao:string,entrada:unknown): Promise<Resultado<{limpezaPendente:boolean}>> {
@@ -83,7 +98,7 @@ export async function salvarSecaoPerfil(operacao:string,entrada:unknown): Promis
       if (!dados.vinculado || trocouDeOficina) antiga=r.data?.foto_caminho??null;
     }
     const {error}=await ctx.db.rpc("salvar_perfil_completo",{operacao,dados});
-    if(error) throw new ErroPerfil(error.code==="42501"?"Você não tem permissão para esta alteração.":"Não foi possível salvar. Confira os campos e tente novamente.");
+    if(error) throw new ErroPerfil(mensagemDoBanco(error));
     const limpa=await limparFoto(ctx,antiga);
     revalidar();
     return {ok:true,dados:{limpezaPendente:!limpa}};

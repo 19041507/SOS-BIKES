@@ -1,30 +1,27 @@
 "use client";
 
 import { useState, useTransition, type ChangeEvent, type FormEvent } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { atualizarPerfil } from "@/app/_actions/perfil";
 import { usePerfil } from "@/components/PerfilProvider";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toaster";
 import { formatarTelefone, normalizarTelefone } from "@/lib/cadastro";
 import { CATEGORIAS, type Categoria } from "@/lib/categorias";
-import { iniciais } from "@/lib/pessoas";
-import { TrocarSenha } from "./TrocarSenha";
-import { Notificacoes } from "./Notificacoes";
 
-type Campo = "nome" | "telefone" | "oficina" | "bairro_regiao";
+type Campo = "nome" | "telefone" | "bairro_regiao";
 type CampoComErro = Campo | "especialidades" | "servicos" | "geral";
 
 const inputClass =
   "h-12 w-full rounded-xl border border-field bg-white px-3.5 text-[15px] outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger";
 
 /**
- * `embutido`: só o formulário de nome e WhatsApp, sem cabeçalho, senha e notificações. A oficina fica
- * na seção "Minha oficina" (nome + CNPJ obrigatório para quem registra oficina).
+ * Formulários do Meu perfil que salvam pelo `atualizarPerfil`:
+ * - `contato`: nome e WhatsApp ("Dados pessoais");
+ * - `publico`: região, especialidades e serviços do mecânico ("Perfil público"), que os ciclistas veem.
+ * A oficina tem seção própria ("Minha oficina", com CNPJ).
  */
-export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } = {}) {
+export function FormularioDePerfil({ parte }: { parte: "contato" | "publico" }) {
   const perfil = usePerfil();
   const router = useRouter();
   const avisar = useToast();
@@ -32,7 +29,6 @@ export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } 
   const [valores, setValores] = useState<Record<Campo, string>>({
     nome: perfil.nome,
     telefone: formatarTelefone(perfil.telefone ?? ""),
-    oficina: perfil.oficina ?? "",
     bairro_regiao: perfil.bairro_regiao ?? "",
   });
   // `?? []`: se o código chegar antes da migration, as colunas novas ainda não existem.
@@ -40,6 +36,7 @@ export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } 
   const [servicos, setServicos] = useState((perfil.servicos ?? []).join("\n"));
   const [erros, setErros] = useState<Partial<Record<CampoComErro, string>>>({});
   const [salvando, startTransition] = useTransition();
+  const publico = mecanico && parte === "publico";
 
   function alterar(campo: Campo, valor: string) {
     setValores((atual) => ({ ...atual, [campo]: campo === "telefone" ? formatarTelefone(valor) : valor }));
@@ -49,23 +46,33 @@ export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } 
   function salvar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const novos: typeof erros = {};
-    if (valores.nome.trim().length < 3) novos.nome = "Informe seu nome.";
-    if (!normalizarTelefone(valores.telefone)) novos.telefone = "Informe o WhatsApp com DDD.";
-    const servicosInformados = servicos.split(/\r?\n/).map((servico) => servico.trim()).filter(Boolean);
-    if (servicosInformados.length > 8 || servicosInformados.some((servico) => servico.length > 80)) {
-      novos.servicos = "Informe até 8 serviços, com no máximo 80 caracteres cada.";
+    if (parte === "contato") {
+      if (valores.nome.trim().length < 3) novos.nome = "Informe seu nome.";
+      if (!normalizarTelefone(valores.telefone)) novos.telefone = "Informe o WhatsApp com DDD.";
     }
-    const regiao = valores.bairro_regiao.trim();
-    if (mecanico && regiao.length === 1) novos.bairro_regiao = "Informe pelo menos 2 caracteres.";
+    if (publico) {
+      const servicosInformados = servicos.split(/\r?\n/).map((servico) => servico.trim()).filter(Boolean);
+      if (servicosInformados.length > 8 || servicosInformados.some((servico) => servico.length > 80)) {
+        novos.servicos = "Informe até 8 serviços, com no máximo 80 caracteres cada.";
+      }
+      if (valores.bairro_regiao.trim().length === 1) novos.bairro_regiao = "Informe pelo menos 2 caracteres.";
+    }
     setErros(novos);
     if (Object.keys(novos).length > 0) return;
 
     startTransition(async () => {
       try {
-        const { oficina, ...contato } = valores;
-        const resultado = await atualizarPerfil({ ...(embutido ? contato : { ...contato, oficina }), especialidades, servicos });
+        // Cada formulário manda só a sua parte; nome e WhatsApp vão sempre (o publico usa os já salvos).
+        const resultado = await atualizarPerfil(
+          publico
+            ? { nome: perfil.nome, telefone: perfil.telefone ?? "", bairro_regiao: valores.bairro_regiao, especialidades, servicos }
+            : { nome: valores.nome, telefone: valores.telefone },
+        );
         if ("erros" in resultado) {
-          setErros(resultado.erros);
+          // No formulário público, nome/WhatsApp inválidos só podem ser corrigidos em Dados pessoais.
+          setErros(publico && (resultado.erros.nome || resultado.erros.telefone)
+            ? { geral: "Antes, salve seu nome e WhatsApp em Dados pessoais." }
+            : resultado.erros);
           return;
         }
         avisar("Perfil atualizado.", "sucesso");
@@ -94,37 +101,29 @@ export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } 
     "aria-describedby": erros[id] ? `${id}-erro` : undefined,
   });
 
-  const formulario = (
+  return (
     <form onSubmit={salvar} noValidate className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="nome" className="text-sm font-semibold">Nome completo</label>
-        <input {...campo("nome")} autoComplete="name" className={inputClass} />
-        {erros.nome && <p id="nome-erro" className="text-[13px] text-danger">{erros.nome}</p>}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="telefone" className="text-sm font-semibold">WhatsApp</label>
-        <input {...campo("telefone")} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(81) 99999-0000" className={inputClass} />
-        {erros.telefone ? (
-          <p id="telefone-erro" className="text-[13px] text-danger">{erros.telefone}</p>
-        ) : (
-          <p className="text-[13px] text-subtle">
-            {mecanico ? "Os ciclistas usam esse número para falar com você durante o atendimento." : "O mecânico usa esse número para falar com você durante o atendimento."}
-          </p>
-        )}
-      </div>
-
-      {mecanico && !embutido && (
+      {parte === "contato" && (<>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="oficina" className="text-sm font-semibold">
-            Oficina <span className="font-normal text-subtle">(opcional)</span>
-          </label>
-          <input {...campo("oficina")} autoComplete="organization" className={inputClass} />
-          <p className="text-[13px] text-subtle">Em branco, você aparece como &quot;Mecânico autônomo&quot;.</p>
+          <label htmlFor="nome" className="text-sm font-semibold">Nome completo</label>
+          <input {...campo("nome")} autoComplete="name" className={inputClass} />
+          {erros.nome && <p id="nome-erro" className="text-[13px] text-danger">{erros.nome}</p>}
         </div>
-      )}
 
-      {mecanico && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="telefone" className="text-sm font-semibold">WhatsApp</label>
+          <input {...campo("telefone")} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(81) 99999-0000" className={inputClass} />
+          {erros.telefone ? (
+            <p id="telefone-erro" className="text-[13px] text-danger">{erros.telefone}</p>
+          ) : (
+            <p className="text-[13px] text-subtle">
+              {mecanico ? "Os ciclistas usam esse número para falar com você durante o atendimento." : "O mecânico usa esse número para falar com você durante o atendimento."}
+            </p>
+          )}
+        </div>
+      </>)}
+
+      {publico && (
         <>
           <fieldset className="flex flex-col gap-2">
             <legend className="text-sm font-semibold">Especialidades</legend>
@@ -166,7 +165,7 @@ export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } 
             {erros.servicos ? (
               <p id="servicos-erro" role="alert" className="text-[13px] text-danger">{erros.servicos}</p>
             ) : (
-              <p id="servicos-ajuda" className="text-[13px] text-subtle">Até 8 serviços, um por linha.</p>
+              <p id="servicos-ajuda" className="text-[13px] text-subtle">Até 8 serviços, um por linha, com até 80 caracteres cada.</p>
             )}
           </div>
 
@@ -201,43 +200,5 @@ export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } 
         Salvar alterações
       </Button>
     </form>
-  );
-
-  // Dentro do Meu perfil completo, só o formulário: a página já tem cabeçalho, senha e notificações.
-  if (embutido) return formulario;
-
-  return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-5 p-3 sm:p-6">
-      <header className="flex flex-wrap items-center gap-4 rounded-2xl bg-brand p-5 text-white sm:p-7">
-        <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/15 text-xl font-bold">
-          {iniciais(perfil.nome)}
-        </span>
-        <div>
-          <p className="mb-1 text-xs font-semibold tracking-wider text-white/80">{mecanico ? "ESPAÇO DO MECÂNICO" : "ESPAÇO DO CICLISTA"}</p>
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">Meu perfil</h1>
-          <p className="mt-1 text-sm text-white/90">Seus dados de contato e a segurança da sua conta.</p>
-        </div>
-        {mecanico && (
-          <Link
-            href={`/mecanicos/${perfil.id}`}
-            className="ml-auto flex min-h-11 shrink-0 items-center rounded-xl bg-white px-3 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            Visualizar perfil público
-          </Link>
-        )}
-      </header>
-
-      <Card>
-        <div className="mb-5 flex items-start gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21v-2a8 8 0 0 1 16 0v2" /></svg>
-          </span>
-          <div><h2 className="font-display text-xl font-bold">Dados pessoais</h2><p className="mt-1 text-sm text-muted">Mantenha seus dados atualizados para os atendimentos.</p></div>
-        </div>
-        {formulario}
-      </Card>
-      <TrocarSenha />
-      <Notificacoes />
-    </main>
   );
 }
