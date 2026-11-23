@@ -25,9 +25,12 @@ const dataCurta = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "sho
 
 function Estrelas({ nota }: { nota: number }) {
   return (
-    <span className="text-star" aria-label={`${nota} de 5 estrelas`}>
-      {"★".repeat(nota)}
-      <span className="text-line">{"★".repeat(5 - nota)}</span>
+    <span className="text-star">
+      <span aria-hidden="true">
+        {"★".repeat(nota)}
+        <span className="text-line">{"★".repeat(5 - nota)}</span>
+      </span>
+      <span className="sr-only">{nota} de 5 estrelas</span>
     </span>
   );
 }
@@ -102,7 +105,7 @@ export function CyclistDashboard({ perfil, position, mechanics, notice, onStart 
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="font-display text-lg font-bold">Mecânicos disponíveis agora</h2>
           {mechanics && (
-            <span className="text-3xl font-bold text-ok tabular-nums" aria-label={`${total} disponíveis`}>
+            <span className="text-3xl font-bold text-ok tabular-nums">
               {total}
             </span>
           )}
@@ -129,6 +132,12 @@ export function CyclistDashboard({ perfil, position, mechanics, notice, onStart 
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{m.nome}</p>
                   <p className="truncate text-[13px] text-subtle">{m.oficina ?? "Mecânico autônomo"}</p>
+                  <Link
+                    href={`/mecanicos/${m.id}`}
+                    className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
+                  >
+                    Ver perfil
+                  </Link>
                 </div>
                 <span className="text-sm font-semibold">
                   {m.media ? (

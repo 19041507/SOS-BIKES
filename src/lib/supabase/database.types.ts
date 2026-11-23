@@ -4,9 +4,17 @@
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
+type Privada<Row> = { Row: Row; Insert: Partial<Row>; Update: Partial<Row>; Relationships: [] };
+
 export type Database = {
   public: {
     Tables: {
+      perfil_privado: Privada<{ usuario_id: string; cpf: string | null; idade: number | null; foto_caminho: string | null; texto_ampliado: boolean; alto_contraste: boolean; reduzir_movimentos: boolean }>;
+      oficina_privada: Privada<{ usuario_id: string; vinculado: boolean; cnpj: string | null; endereco: string | null; foto_caminho: string | null }>;
+      bicicletas_perfil: Privada<{ id: string; usuario_id: string; modelo: string; apelido: string | null; cor: string | null; foto_caminho: string | null; criado_em: string }>;
+      locais_perfil: Privada<{ id: string; usuario_id: string; nome: string; endereco: string; criado_em: string }>;
+      clientes_favoritos: Privada<{ usuario_id: string; cliente_id: string; criado_em: string }>;
+      atividade_perfil: Privada<{ id: string; usuario_id: string; tipo: string; criado_em: string }>;
       avaliacoes_ciclistas: {
         Row: { chamado_id: string; nota: number; comentario: string | null; criado_em: string };
         Insert: { chamado_id: string; nota: number; comentario?: string | null; criado_em?: string };
@@ -47,6 +55,9 @@ export type Database = {
           telefone: string | null;
           oficina: string | null;
           disponivel: boolean;
+          especialidades: Database["public"]["Enums"]["categoria_defeito"][];
+          servicos: string[];
+          bairro_regiao: string | null;
           criado_em: string;
         };
         Insert: {
@@ -56,6 +67,9 @@ export type Database = {
           telefone?: string | null;
           oficina?: string | null;
           disponivel?: boolean;
+          especialidades?: Database["public"]["Enums"]["categoria_defeito"][];
+          servicos?: string[];
+          bairro_regiao?: string | null;
           criado_em?: string;
         };
         Update: {
@@ -65,9 +79,47 @@ export type Database = {
           telefone?: string | null;
           oficina?: string | null;
           disponivel?: boolean;
+          especialidades?: Database["public"]["Enums"]["categoria_defeito"][];
+          servicos?: string[];
+          bairro_regiao?: string | null;
           criado_em?: string;
         };
         Relationships: [];
+      };
+      perfil_mecanico_fotos: {
+        Row: {
+          id: string;
+          mecanico_id: string;
+          caminho: string;
+          tipo: Database["public"]["Enums"]["tipo_foto_mecanico"];
+          descricao: string;
+          criado_em: string;
+        };
+        Insert: {
+          id?: string;
+          mecanico_id: string;
+          caminho: string;
+          tipo: Database["public"]["Enums"]["tipo_foto_mecanico"];
+          descricao: string;
+          criado_em?: string;
+        };
+        Update: {
+          id?: string;
+          mecanico_id?: string;
+          caminho?: string;
+          tipo?: Database["public"]["Enums"]["tipo_foto_mecanico"];
+          descricao?: string;
+          criado_em?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "perfil_mecanico_fotos_mecanico_id_fkey";
+            columns: ["mecanico_id"];
+            isOneToOne: false;
+            referencedRelation: "perfis";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       chamados: {
         Row: {
@@ -160,6 +212,7 @@ export type Database = {
           nota: number;
           comentario: string | null;
           gorjeta: number | null;
+          comentario_publico: boolean;
           criado_em: string;
         };
         Insert: {
@@ -167,6 +220,7 @@ export type Database = {
           nota: number;
           comentario?: string | null;
           gorjeta?: number | null;
+          comentario_publico?: boolean;
           criado_em?: string;
         };
         Update: {
@@ -174,6 +228,7 @@ export type Database = {
           nota?: number;
           comentario?: string | null;
           gorjeta?: number | null;
+          comentario_publico?: boolean;
           criado_em?: string;
         };
         Relationships: [
@@ -189,6 +244,10 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      salvar_perfil_completo: { Args: { operacao: string; dados: Json }; Returns: undefined };
+      trocar_foto_perfil: { Args: { destino: string; item_id: string | null; antiga: string | null; nova: string | null }; Returns: boolean };
+      listar_secao_perfil: { Args: { secao: string; antes?: string; antes_id?: string }; Returns: Json };
+      resumo_avaliacao_perfil: { Args: never; Returns: Json };
       meus_mecanicos_favoritos: {
         Args: never;
         Returns: { id: string; nome: string; oficina: string | null; disponivel: boolean; media: number | null; avaliacoes: number; atendimentos: number }[];
@@ -207,6 +266,24 @@ export type Database = {
           longitude: number | null;
           distancia_km: number | null;
         }[];
+      };
+      perfil_publico_mecanico: {
+        Args: { mecanico: string };
+        Returns: {
+          id: string;
+          nome: string;
+          oficina: string | null;
+          bairro_regiao: string | null;
+          especialidades: Database["public"]["Enums"]["categoria_defeito"][];
+          servicos: string[];
+          media: number | null;
+          avaliacoes: number;
+          atendimentos: number;
+        }[];
+      };
+      avaliacoes_publicas_do_mecanico: {
+        Args: { mecanico: string };
+        Returns: { nota: number; comentario: string }[];
       };
       salvar_inscricao_push: {
         Args: { endereco: string; chave_p256dh: string; chave_auth: string };
@@ -227,6 +304,7 @@ export type Database = {
     };
     Enums: {
       tipo_perfil: "ciclista" | "mecanico";
+      tipo_foto_mecanico: "perfil" | "trabalho";
       categoria_defeito: "pneu" | "corrente" | "freio" | "roda" | "selim";
       status_chamado:
         | "aguardando"

@@ -437,11 +437,11 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
       <section className="flex w-full min-w-0 flex-col gap-4 rounded-2xl border border-line bg-white p-5 sm:p-6 lg:w-auto lg:max-w-[480px] lg:flex-[1_1_400px]">
         {preferidoId && chamado === null && (draft === "category" || draft === "location") && (
           <p className="rounded-xl bg-brand-soft px-3.5 py-3 text-sm text-brand-dark">
-            Novo pedido para seu mecânico favorito. Informe o defeito e o endereço; a disponibilidade será conferida antes do envio.
+            Novo pedido para o mecânico escolhido. Informe o defeito e o endereço; a disponibilidade será conferida antes do envio.
           </p>
         )}
         {chamado === undefined && (
-          <div className="flex flex-col gap-3" aria-busy="true" aria-label="Carregando">
+          <div className="flex flex-col gap-3" role="status" aria-busy="true" aria-label="Carregando chamado">
             <div className="h-6 w-2/3 rounded bg-slate-100 motion-safe:animate-pulse" />
             <div className="h-24 rounded-2xl bg-slate-100 motion-safe:animate-pulse" />
             <div className="h-14 rounded-xl bg-slate-100 motion-safe:animate-pulse" />
@@ -479,7 +479,7 @@ export function CyclistFlow({ mecanicoFavoritoId }: { mecanicoFavoritoId?: strin
         {chamado === null && draft === "mechanics" && (
           <MechanicListStep
             mechanics={disponiveis}
-            notice={aviso ?? (preferidoId ? disponiveis === null ? "Verificando a disponibilidade do seu mecânico favorito…" : disponiveis.length ? "Seu mecânico favorito está selecionado. Confirme em “Solicitar” para enviar o pedido." : "Seu mecânico favorito não está disponível agora. Você pode atualizar a lista ou escolher outro mecânico." : null)}
+            notice={aviso ?? (preferidoId ? disponiveis === null ? "Verificando a disponibilidade do mecânico escolhido…" : disponiveis.length ? "O mecânico escolhido está selecionado. Confirme em “Solicitar” para enviar o pedido." : "O mecânico escolhido não está disponível agora. Você pode atualizar a lista ou escolher outro mecânico." : null)}
             error={erro}
             requesting={solicitando}
             onBack={() => setDraft("location")}

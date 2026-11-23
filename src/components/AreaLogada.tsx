@@ -11,6 +11,24 @@ import { PerfilProvider } from "./PerfilProvider";
 import { FavoritosProvider } from "./FavoritosProvider";
 import { LegalLinks } from "./LegalLinks";
 import { Toaster } from "./ui/Toaster";
+import { createClient } from "@/lib/supabase/server";
+import { BUCKET_FOTOS_MECANICOS } from "@/lib/perfil-mecanico";
+import preferencias from "./perfil/completo/preferencias.module.css";
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/** Ciclista: foto do Meu perfil, em bucket privado (link assinado de 1 hora). */
+async function fotoPrivada(db: Supabase, caminho: string | null) {
+  if (!caminho) return null;
+  const { data } = await db.storage.from("fotos-perfil").createSignedUrl(caminho, 3600);
+  return data?.signedUrl ?? null;
+}
+
+/** Mecânico: a mesma foto pública do perfil que os ciclistas veem (uma foto só). */
+async function fotoPublicaDoMecanico(db: Supabase, mecanicoId: string) {
+  const { data } = await db.from("perfil_mecanico_fotos").select("caminho").eq("mecanico_id", mecanicoId).eq("tipo", "perfil").maybeSingle();
+  return data ? db.storage.from(BUCKET_FOTOS_MECANICOS).getPublicUrl(data.caminho).data.publicUrl : null;
+}
 
 type AreaLogadaProps = {
   tipo: Enum<"tipo_perfil">;
@@ -29,13 +47,18 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
 
   const primeiroNome = perfil.nome.split(" ")[0];
   const nome = tipo === "mecanico" ? `${primeiroNome} · ${perfil.oficina ?? "Mecânico autônomo"}` : primeiroNome;
+  const db = await createClient();
+  const { data: ajustes } = await db.from("perfil_privado").select("texto_ampliado,alto_contraste,reduzir_movimentos,foto_caminho").eq("usuario_id",perfil.id).maybeSingle();
+  const fotoUrl = tipo === "mecanico" ? await fotoPublicaDoMecanico(db, perfil.id) : await fotoPrivada(db, ajustes?.foto_caminho ?? null);
+  // Ausência da migration não deve quebrar pedidos/histórico; Meu perfil informa o erro.
+  const classes = [preferencias.area, ajustes?.texto_ampliado ? preferencias.texto : "", ajustes?.alto_contraste ? preferencias.contraste : "", ajustes?.reduzir_movimentos ? preferencias.movimento : ""].filter(Boolean).join(" ");
 
   return (
-    <>
+    <div className={classes}>
       <AppHeader
         badge={tipo === "mecanico" ? "Mecânico" : undefined}
         links={links}
-        user={{ initials: iniciais(perfil.nome), name: nome }}
+        user={{ initials: iniciais(perfil.nome), name: nome, fotoUrl }}
       />
       {!perfil.telefone && (
         <div role="status" className="border-b border-warn/20 bg-warn-soft">
@@ -56,7 +79,7 @@ export async function AreaLogada({ tipo, links, children }: AreaLogadaProps) {
           </footer>
         </Toaster>
       </PerfilProvider>
-    </>
+    </div>
   );
 }
 

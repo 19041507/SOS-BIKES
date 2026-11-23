@@ -262,9 +262,12 @@ export function MechanicDashboard({ dados, erro }: MechanicDashboardProps) {
                     href={`/mecanico/historico/${a.id}`}
                     className="block rounded-xl bg-surface p-3 hover:bg-brand-soft focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
                   >
-                    <p className="text-star" aria-label={`${a.nota} de 5 estrelas`}>
-                      {"★".repeat(a.nota)}
-                      <span className="text-line">{"★".repeat(5 - a.nota)}</span>
+                    <p className="text-star">
+                      <span aria-hidden="true">
+                        {"★".repeat(a.nota)}
+                        <span className="text-line">{"★".repeat(5 - a.nota)}</span>
+                      </span>
+                      <span className="sr-only">{a.nota} de 5 estrelas</span>
                     </p>
                     {a.comentario && <p className="mt-1 text-sm leading-snug">“{a.comentario}”</p>}
                     <p className="mt-1 text-xs text-subtle">{primeiroNome(a.ciclista)}</p>

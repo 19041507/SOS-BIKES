@@ -1,0 +1,159 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { prepararFoto } from "@/lib/perfil-completo/imagens";
+import { validarOperacao, uuidValido } from "@/lib/perfil-completo/validacao";
+import { BUCKET_FOTOS_MECANICOS } from "@/lib/perfil-mecanico";
+import type { BasePerfil, ItemPerfil, PaginaPerfil, Resultado } from "@/lib/perfil-completo/types";
+
+class ErroPerfil extends Error {}
+async function contexto() {
+  const db = await createClient();
+  const {data:auth,error} = await db.auth.getUser();
+  if (error || !auth.user) throw new ErroPerfil("Sua sessão expirou. Entre de novo.");
+  const {data:perfil,error:erroPerfil} = await db.from("perfis").select("*").eq("id",auth.user.id).single();
+  if (erroPerfil || !perfil) throw new ErroPerfil("Não foi possível carregar seu perfil.");
+  return {db,perfil};
+}
+type Contexto = Awaited<ReturnType<typeof contexto>>;
+const falhou = (erro:unknown): {ok:false;erro:string} => ({ok:false,erro:erro instanceof ErroPerfil ? erro.message : "Não foi possível concluir. Confira sua conexão e tente novamente."});
+
+// Foto que não gera link (arquivo apagado do Storage) fica sem imagem, sem derrubar a tela inteira.
+async function urlFoto(ctx:Contexto,caminho:string|null) {
+  if (!caminho || !caminho.startsWith(`${ctx.perfil.id}/`)) return null;
+  const {data,error} = await ctx.db.storage.from("fotos-perfil").createSignedUrl(caminho,3600);
+  return error || !data ? null : data.signedUrl;
+}
+/** Mecânico tem uma foto só: a pública do perfil (FotosDoPerfil), que também vai para o cabeçalho. */
+async function urlFotoPublica(ctx:Contexto) {
+  const {data} = await ctx.db.from("perfil_mecanico_fotos").select("caminho").eq("mecanico_id",ctx.perfil.id).eq("tipo","perfil").maybeSingle();
+  return data ? ctx.db.storage.from(BUCKET_FOTOS_MECANICOS).getPublicUrl(data.caminho).data.publicUrl : null;
+}
+async function limparFoto(ctx:Contexto,caminho:string|null) {
+  if (!caminho || !caminho.startsWith(`${ctx.perfil.id}/`)) return true;
+  try {
+    const {error} = await ctx.db.storage.from("fotos-perfil").remove([caminho]);
+    return !error;
+  } catch { return false; }
+}
+function revalidar() {
+  // Falha de invalidação não desfaz uma gravação já confirmada pelo banco.
+  try { revalidatePath("/ciclista","layout"); revalidatePath("/mecanico","layout"); } catch { /* A interface ainda solicita router.refresh(). */ }
+}
+
+export async function carregarPerfilCompleto(): Promise<Resultado<BasePerfil>> {
+  try {
+    const ctx = await contexto();
+    const [privado,oficina] = await Promise.all([
+      ctx.db.from("perfil_privado").select("*").eq("usuario_id",ctx.perfil.id).maybeSingle(),
+      ctx.db.from("oficina_privada").select("*").eq("usuario_id",ctx.perfil.id).maybeSingle(),
+    ]);
+    if (privado.error || oficina.error) throw new ErroPerfil("Não foi possível carregar os dados adicionais do perfil. Tente novamente em instantes.");
+    const [fotoUrl,fachadaUrl] = await Promise.all([
+      ctx.perfil.tipo==="mecanico"?urlFotoPublica(ctx):urlFoto(ctx,privado.data?.foto_caminho??null),
+      urlFoto(ctx,oficina.data?.foto_caminho??null),
+    ]);
+    return {ok:true,dados:{perfil:ctx.perfil,privados:privado.data,oficina:oficina.data,fotoUrl,fachadaUrl}};
+  } catch (erro) { return falhou(erro); }
+}
+
+export async function carregarSecaoPerfil(secao:string,cursor?:{data:string;id:string}): Promise<Resultado<PaginaPerfil>> {
+  try {
+    if (!["bicicletas","locais","locais_usados","favoritos","clientes","avaliacao","atividade"].includes(secao)) throw new ErroPerfil("Seção inválida.");
+    if (cursor && (!uuidValido(cursor.id) || !Number.isFinite(Date.parse(cursor.data)))) throw new ErroPerfil("Página inválida.");
+    const ctx = await contexto();
+    const {data,error} = await ctx.db.rpc("listar_secao_perfil",{secao,...(cursor?{antes:cursor.data,antes_id:cursor.id}:{})});
+    if (error || !Array.isArray(data) || data.some(v => !v || typeof v!=="object" || Array.isArray(v) || typeof v.id!=="string" || typeof v.criado_em!=="string")) throw new ErroPerfil("Não foi possível carregar esta lista. Tente novamente.");
+    const itens = data.slice(0,50) as ItemPerfil[];
+    if (secao==="bicicletas") await Promise.all(itens.map(async item => { item.fotoUrl=await urlFoto(ctx,item.foto_caminho??null); }));
+    const ultimo=itens.at(-1);
+    return {ok:true,dados:{itens,proxima:data.length>50&&ultimo?{data:ultimo.criado_em,id:ultimo.id}:null}};
+  } catch (erro) { return falhou(erro); }
+}
+
+/** 42501: o registro já não existe (removido em outra aba) ou não é da pessoa; 23514 traz a mensagem da regra. */
+function mensagemDoBanco(error:{code?:string;message?:string}) {
+  if (error.code==="42501") return "Este registro não está mais disponível. Atualize a página.";
+  if (error.code==="23514"&&error.message?.startsWith("Confirme")) return error.message;
+  return "Não foi possível salvar. Confira os campos e tente novamente.";
+}
+
+export async function salvarSecaoPerfil(operacao:string,entrada:unknown): Promise<Resultado<{limpezaPendente:boolean}>> {
+  let dados;
+  try { dados=validarOperacao(operacao,entrada); }
+  catch (erro) { return {ok:false,erro:erro instanceof Error?erro.message:"Dados inválidos."}; }
+  try {
+    const ctx=await contexto();
+    let antiga:string|null=null;
+    if (operacao==="remover_bicicleta") {
+      const r=await ctx.db.from("bicicletas_perfil").select("foto_caminho").eq("usuario_id",ctx.perfil.id).eq("id",String(dados.id)).single();
+      if(r.error) throw new ErroPerfil("Bicicleta não encontrada.");
+      antiga=r.data.foto_caminho;
+    } else if(operacao==="oficina") {
+      const r=await ctx.db.from("oficina_privada").select("foto_caminho,cnpj").eq("usuario_id",ctx.perfil.id).maybeSingle();
+      if(r.error) throw new ErroPerfil("Não foi possível carregar a oficina.");
+      // Mesma regra do banco: a fachada só sai ao deixar de ter oficina ou trocar de CNPJ.
+      const trocouDeOficina=Boolean(r.data?.cnpj)&&r.data?.cnpj!==dados.cnpj;
+      if (!dados.vinculado || trocouDeOficina) antiga=r.data?.foto_caminho??null;
+    }
+    const {error}=await ctx.db.rpc("salvar_perfil_completo",{operacao,dados});
+    if(error) throw new ErroPerfil(mensagemDoBanco(error));
+    const limpa=await limparFoto(ctx,antiga);
+    revalidar();
+    return {ok:true,dados:{limpezaPendente:!limpa}};
+  } catch(erro) { return falhou(erro); }
+}
+
+export async function alterarFotoPerfil(form:FormData): Promise<Resultado<{limpezaPendente:boolean}>> {
+  try {
+    const destino=form.get("destino");
+    const item=form.get("id");
+    if(!["avatar","fachada","bicicleta"].includes(String(destino)) || (destino==="bicicleta"&&!uuidValido(item))) throw new ErroPerfil("Destino de foto inválido.");
+    const ctx=await contexto();
+    let antiga:string|null;
+    if(destino==="avatar") {
+      const r=await ctx.db.from("perfil_privado").select("foto_caminho").eq("usuario_id",ctx.perfil.id).maybeSingle();
+      if(r.error) throw new ErroPerfil("Não foi possível consultar a foto atual.");
+      antiga=r.data?.foto_caminho??null;
+    } else if(destino==="fachada") {
+      const r=await ctx.db.from("oficina_privada").select("foto_caminho").eq("usuario_id",ctx.perfil.id).eq("vinculado",true).single();
+      if(r.error) throw new ErroPerfil("Salve o vínculo com a oficina antes de adicionar a fachada.");
+      antiga=r.data.foto_caminho;
+    } else {
+      const r=await ctx.db.from("bicicletas_perfil").select("foto_caminho").eq("usuario_id",ctx.perfil.id).eq("id",String(item)).single();
+      if(r.error) throw new ErroPerfil("Bicicleta não encontrada.");
+      antiga=r.data.foto_caminho;
+    }
+    let nova:string|null=null;
+    if(form.get("remover")!=="true") {
+      const arquivo=form.get("arquivo");
+      if(!(arquivo instanceof File) || arquivo.size>5242880) throw new ErroPerfil("Escolha uma imagem de até 5 MB.");
+      let bytes:Buffer;
+      try { bytes=await prepararFoto(new Uint8Array(await arquivo.arrayBuffer()),arquivo.type); }
+      catch(erro) { throw new ErroPerfil(erro instanceof Error?erro.message:"Imagem inválida."); }
+      nova=`${ctx.perfil.id}/${destino}/${crypto.randomUUID()}.webp`;
+      const upload=await ctx.db.storage.from("fotos-perfil").upload(nova,bytes,{contentType:"image/webp",upsert:false});
+      if(upload.error) throw new ErroPerfil("Não foi possível enviar a foto. Tente novamente.");
+    }
+    // Em erro de transporte o commit pode ter ocorrido: não apagar a nova foto.
+    const troca=await ctx.db.rpc("trocar_foto_perfil",{destino:String(destino),item_id:destino==="bicicleta"?String(item):null,antiga,nova});
+    if(troca.error || !troca.data) {
+      const rollbackConfirmado=troca.error&&/^(22|23|40|42|P0)[A-Z0-9]{3}$/.test(troca.error.code??"");
+      if(nova&&(!troca.error||rollbackConfirmado)) await limparFoto(ctx,nova);
+      throw new ErroPerfil("Não foi possível confirmar a alteração. Atualize antes de tentar novamente.");
+    }
+    const limpa=await limparFoto(ctx,antiga);
+    revalidar();
+    return {ok:true,dados:{limpezaPendente:!limpa}};
+  } catch(erro) { return falhou(erro); }
+}
+
+export async function carregarResumoAvaliacoes():Promise<Resultado<{quantidade:number;media:number|null}>> {
+  try {
+    const ctx=await contexto();
+    const {data,error}=await ctx.db.rpc("resumo_avaliacao_perfil");
+    if(error||!data||typeof data!=="object"||Array.isArray(data)||typeof data.quantidade!=="number"||(data.media!==null&&typeof data.media!=="number")) throw new ErroPerfil("Não foi possível carregar o resumo das avaliações.");
+    return {ok:true,dados:{quantidade:data.quantidade,media:data.media}};
+  } catch(e) {return falhou(e);}
+}

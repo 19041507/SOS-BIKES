@@ -11,12 +11,13 @@ type FinishedStepProps = {
   chamado: ChamadoCompleto;
   busy: boolean;
   error: string | null;
-  onConfirm: (avaliacao: { nota: number; comentario: string; gorjeta: number | null }) => void;
+  onConfirm: (avaliacao: { nota: number; comentario: string; comentarioPublico: boolean; gorjeta: number | null }) => void;
 };
 
 export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepProps) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [comentarioPublico, setComentarioPublico] = useState(false);
   const [tip, setTip] = useState<number | "outro" | null>(null);
   const [otherTip, setOtherTip] = useState("");
   const priceChanged = chamado.valor_final !== chamado.estimativa;
@@ -36,7 +37,7 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
         </svg>
       </span>
       <div>
-        <h2 className="font-display text-[22px] font-bold">Assistência finalizada</h2>
+        <h1 className="font-display text-[22px] font-bold">Assistência finalizada</h1>
         <p className="mt-1.5 text-[15px] text-muted">
           {primeiroNome(chamado.mecanico?.nome ?? "O mecânico")} ajudou você a consertar sua bike!
         </p>
@@ -54,9 +55,12 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
           <dd>{formatBRL(chamado.valor_final ?? 0)}</dd>
         </div>
         {priceChanged && chamado.motivo_variacao && (
-          <p className="mb-3 rounded-lg bg-warn-soft px-3 py-2.5 text-sm leading-snug text-warn">
-            Motivo informado pelo mecânico: {chamado.motivo_variacao}
-          </p>
+          <div>
+            <dt className="sr-only">Motivo da variação de preço</dt>
+            <dd className="mb-3 rounded-lg bg-warn-soft px-3 py-2.5 text-sm leading-snug text-warn">
+              Motivo informado pelo mecânico: {chamado.motivo_variacao}
+            </dd>
+          </div>
         )}
       </dl>
 
@@ -94,9 +98,26 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
         id="comment"
         rows={2}
         value={comment}
-        onChange={(event) => setComment(event.target.value)}
+        onChange={(event) => {
+          setComment(event.target.value);
+          // Sem texto não há o que publicar; editar o comentário mantém a escolha feita.
+          if (!event.target.value.trim()) setComentarioPublico(false);
+        }}
         className="-mt-2.5 self-stretch resize-none rounded-xl border border-field p-3 text-[15px]"
       />
+      <label className="flex items-start gap-2 self-stretch text-left text-sm text-muted">
+        <input
+          type="checkbox"
+          checked={comentarioPublico}
+          disabled={!comment.trim()}
+          onChange={(event) => setComentarioPublico(event.target.checked)}
+          className="mt-0.5 size-4 shrink-0 accent-brand"
+        />
+        <span>
+          Autorizo exibir este comentário no perfil público do mecânico. Meu nome e os dados
+          do atendimento não serão mostrados. Posso ocultá-lo depois nos detalhes do chamado.
+        </span>
+      </label>
 
       <p className="self-stretch text-left text-sm font-semibold">
         Gorjeta <span className="font-normal text-subtle">(opcional, paga diretamente ao mecânico)</span>
@@ -141,7 +162,7 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
         type="button"
         disabled={rating === 0 || busy}
         aria-describedby={rating === 0 ? "rating-hint" : undefined}
-        onClick={() => onConfirm({ nota: rating, comentario: comment, gorjeta })}
+        onClick={() => onConfirm({ nota: rating, comentario: comment, comentarioPublico, gorjeta })}
         className="h-14 self-stretch rounded-xl bg-brand text-base font-semibold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:bg-[#a9bcd8]"
       >
         {busy ? "Enviando…" : "Enviar avaliação"}

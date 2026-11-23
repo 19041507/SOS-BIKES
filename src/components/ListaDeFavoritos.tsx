@@ -41,6 +41,7 @@ export function ListaDeFavoritos() {
       {carregando && (
         <div
           className="h-28 rounded-2xl bg-slate-100 motion-safe:animate-pulse"
+          role="status"
           aria-label="Carregando favoritos"
         />
       )}
@@ -78,13 +79,17 @@ export function ListaDeFavoritos() {
                 </p>
                 {mecanico.media !== null && (
                   <p className="mt-1 text-[13px] text-subtle">
-                    <span className="text-star" aria-label="Nota">★</span>{" "}
-                    {String(mecanico.media).replace(".", ",")} · {mecanico.avaliacoes} avaliações
+                    <span className="text-star" aria-hidden="true">★</span>{" "}
+                    <span className="sr-only">Nota média: </span>
+                    {String(mecanico.media).replace(".", ",")} · {mecanico.avaliacoes} {mecanico.avaliacoes === 1 ? "avaliação" : "avaliações"}
                   </p>
                 )}
               </div>
               <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
                 <SalvarMecanico mecanico={mecanico} />
+                <ButtonLink href={`/mecanicos/${mecanico.id}`} variant="secondary">
+                  Ver perfil
+                </ButtonLink>
                 {mecanico.disponivel ? (
                   <ButtonLink
                     href={`/ciclista?mecanico=${encodeURIComponent(mecanico.id)}`}

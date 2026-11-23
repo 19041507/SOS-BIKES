@@ -39,6 +39,29 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 
 Os dois valores ficam no painel do Supabase, no botão **Connect** da página inicial do projeto. Nunca use a **Secret key** (`sb_secret_...`) no front. Sem esse arquivo o site abre, mas o login responde que não está configurado.
 
+## Testes automatizados
+
+Os testes unitários e de componentes usam Vitest e Testing Library; os fluxos de login, cadastro e pedido de socorro usam Playwright com um Supabase local isolado. Os testes E2E nunca usam o banco remoto.
+Para executar os testes E2E, use Node.js 22 ou superior; o SDK do Supabase usado na preparação dos testes requer o WebSocket nativo disponível nessa versão.
+
+```bash
+npm test
+npm run test:watch
+```
+
+Para os testes E2E, instale e inicie o Docker Desktop. O comando `npx` executa a Supabase CLI. No PowerShell, inicie e prepare o banco local:
+
+```powershell
+npx supabase start
+npx supabase db reset
+npx supabase status
+$env:NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321"
+$env:NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "<Anon key exibida pelo comando anterior>"
+npm run test:e2e
+```
+
+O reset recria o banco local a partir das migrations; as contas de teste são criadas pelo próprio teste. A configuração local desativa a confirmação de e-mail apenas nesse ambiente. O workflow do GitHub Actions executa Vitest e Playwright em Pull Requests.
+
 ## Login
 
 O login usa o Supabase Auth (e-mail e senha). No formulário, a pessoa escolhe "Sou ciclista" ou "Sou mecânico"; se a conta for do outro tipo, o login avisa qual opção escolher.
@@ -144,6 +167,26 @@ Use somente um banco de teste com o schema de Auth do Supabase e os papéis
 `authenticated`/`anon`. Este teste deve ser executado antes de liberar a migration;
 não o rode no banco de produção.
 
+## Perfil público do mecânico
+
+Usuários autenticados podem consultar `/mecanicos/<id>` para ver as especialidades,
+serviços, região de atendimento, fotos escolhidas pelo mecânico, avaliações e
+comentários que o ciclista autorizou publicar. Os comentários existentes permanecem
+privados por padrão; o ciclista pode retirar a autorização nos detalhes do chamado.
+Fotos usam um bucket público, então qualquer pessoa com a URL do arquivo pode vê-las.
+
+Para habilitar o perfil, aplique
+[perfil_publico_mecanico.sql](supabase/migrations/20261126000000_perfil_publico_mecanico.sql)
+no Supabase antes do merge/deploy. A migration adiciona campos e fotos, ajusta a
+permissão de atualização de perfis e cria consultas autenticadas com retorno
+limitado. Valide as regras em um banco de teste com as migrations aplicadas:
+
+```bash
+psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/perfil-publico-mecanico.sql
+```
+
+O teste desfaz os dados ao final; não o execute no banco de produção.
+
 ## Cadastro
 
 Em `/cadastro` (link "Cadastre-se" no login), a pessoa escolhe o perfil e informa nome, WhatsApp, e-mail e senha (mínimo de 6 caracteres). O mecânico também pode informar a oficina; em branco, aparece como "Mecânico autônomo". O perfil no banco é criado automaticamente com esses dados.
@@ -214,9 +257,10 @@ O webhook aponta para uma URL só (produção): como o banco é o mesmo para `de
 
 | Tabela | Conteúdo |
 |---|---|
-| `perfis` | Um por usuário do Auth: tipo (ciclista ou mecânico), nome, telefone, oficina e disponibilidade. Criado automaticamente no cadastro. |
+| `perfis` | Um por usuário do Auth: tipo (ciclista ou mecânico), nome, telefone, oficina e disponibilidade. Para mecânicos, também guarda especialidades, serviços e bairro/região de atendimento. Criado automaticamente no cadastro. |
+| `perfil_mecanico_fotos` | Fotos do perfil e dos trabalhos, com metadados; os arquivos ficam em um bucket público e podem ser acessados por URL. |
 | `chamados` | Pedido do ciclista para o mecânico escolhido, com status, estimativa, valor final, comissão de 10% (calculada pelo banco) e o horário de cada etapa. |
-| `avaliacoes` | Nota, comentário e gorjeta registrada, uma por chamado concluído. |
+| `avaliacoes` | Nota, comentário e gorjeta registrada, uma por chamado concluído. O comentário só aparece no perfil do mecânico com autorização explícita do ciclista. |
 
 Status do chamado: `aguardando` → `aceito` → `a_caminho` → `em_atendimento` → `concluido`, ou encerrado como `recusado`, `cancelado` ou `expirado`.
 
