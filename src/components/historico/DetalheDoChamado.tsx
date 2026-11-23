@@ -158,9 +158,12 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
             <h2 className="font-display text-lg font-bold">{visao === "mecanico" ? "Avaliação recebida do ciclista" : "Sua avaliação do mecânico"}</h2>
             {chamado.avaliacao ? (
               <>
-                <p className="text-xl text-star" aria-label={`${chamado.avaliacao.nota} de 5 estrelas`}>
-                  {"★".repeat(chamado.avaliacao.nota)}
-                  <span className="text-line">{"★".repeat(5 - chamado.avaliacao.nota)}</span>
+                <p className="text-xl text-star">
+                  <span aria-hidden="true">
+                    {"★".repeat(chamado.avaliacao.nota)}
+                    <span className="text-line">{"★".repeat(5 - chamado.avaliacao.nota)}</span>
+                  </span>
+                  <span className="sr-only">{chamado.avaliacao.nota} de 5 estrelas</span>
                 </p>
                 {chamado.avaliacao.comentario && <p className="text-[15px]">“{chamado.avaliacao.comentario}”</p>}
                 {chamado.avaliacao.gorjeta ? (
@@ -181,9 +184,12 @@ export function DetalheDoChamado({ chamado, visao }: DetalheDoChamadoProps) {
                 <h2 className="font-display text-lg font-bold">Avaliação recebida do mecânico</h2>
                 {chamado.avaliacao_ciclista ? (
                   <>
-                    <p className="text-xl text-star" aria-label={`${chamado.avaliacao_ciclista.nota} de 5 estrelas`}>
-                      {"★".repeat(chamado.avaliacao_ciclista.nota)}
-                      <span className="text-line">{"★".repeat(5 - chamado.avaliacao_ciclista.nota)}</span>
+                    <p className="text-xl text-star">
+                      <span aria-hidden="true">
+                        {"★".repeat(chamado.avaliacao_ciclista.nota)}
+                        <span className="text-line">{"★".repeat(5 - chamado.avaliacao_ciclista.nota)}</span>
+                      </span>
+                      <span className="sr-only">{chamado.avaliacao_ciclista.nota} de 5 estrelas</span>
                     </p>
                     {chamado.avaliacao_ciclista.comentario && (
                       <p className="break-words text-[15px]">{chamado.avaliacao_ciclista.comentario}</p>

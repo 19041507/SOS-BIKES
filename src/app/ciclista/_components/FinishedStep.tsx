@@ -36,7 +36,7 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
         </svg>
       </span>
       <div>
-        <h2 className="font-display text-[22px] font-bold">Assistência finalizada</h2>
+        <h1 className="font-display text-[22px] font-bold">Assistência finalizada</h1>
         <p className="mt-1.5 text-[15px] text-muted">
           {primeiroNome(chamado.mecanico?.nome ?? "O mecânico")} ajudou você a consertar sua bike!
         </p>
@@ -54,9 +54,12 @@ export function FinishedStep({ chamado, busy, error, onConfirm }: FinishedStepPr
           <dd>{formatBRL(chamado.valor_final ?? 0)}</dd>
         </div>
         {priceChanged && chamado.motivo_variacao && (
-          <p className="mb-3 rounded-lg bg-warn-soft px-3 py-2.5 text-sm leading-snug text-warn">
-            Motivo informado pelo mecânico: {chamado.motivo_variacao}
-          </p>
+          <div>
+            <dt className="sr-only">Motivo da variação de preço</dt>
+            <dd className="mb-3 rounded-lg bg-warn-soft px-3 py-2.5 text-sm leading-snug text-warn">
+              Motivo informado pelo mecânico: {chamado.motivo_variacao}
+            </dd>
+          </div>
         )}
       </dl>
 

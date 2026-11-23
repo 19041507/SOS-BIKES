@@ -25,9 +25,12 @@ const dataCurta = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "sho
 
 function Estrelas({ nota }: { nota: number }) {
   return (
-    <span className="text-star" aria-label={`${nota} de 5 estrelas`}>
-      {"★".repeat(nota)}
-      <span className="text-line">{"★".repeat(5 - nota)}</span>
+    <span className="text-star">
+      <span aria-hidden="true">
+        {"★".repeat(nota)}
+        <span className="text-line">{"★".repeat(5 - nota)}</span>
+      </span>
+      <span className="sr-only">{nota} de 5 estrelas</span>
     </span>
   );
 }
@@ -102,7 +105,7 @@ export function CyclistDashboard({ perfil, position, mechanics, notice, onStart 
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="font-display text-lg font-bold">Mecânicos disponíveis agora</h2>
           {mechanics && (
-            <span className="text-3xl font-bold text-ok tabular-nums" aria-label={`${total} disponíveis`}>
+            <span className="text-3xl font-bold text-ok tabular-nums">
               {total}
             </span>
           )}

@@ -16,9 +16,9 @@ export function ProposalStep({ chamado, busy, onConfirm, onChooseAnother }: Prop
     <div className="flex flex-col gap-4">
       <div>
         <p className="text-[13px] font-semibold text-ok">Chamado aceito</p>
-        <h2 className="mt-0.5 font-display text-[22px] font-bold">
+        <h1 className="mt-0.5 font-display text-[22px] font-bold">
           {primeiroNome(chamado.mecanico?.nome ?? "O mecânico")} pode atender você
-        </h2>
+        </h1>
       </div>
       <dl className="rounded-2xl border border-line px-4">
         <div className="flex justify-between border-b border-line py-3 text-[15px]">

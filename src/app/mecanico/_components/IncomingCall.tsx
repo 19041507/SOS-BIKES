@@ -97,7 +97,7 @@ export function IncomingCall({
         >
           <div
             style={{ width: `${(secondsLeft / totalSeconds) * 100}%` }}
-            className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${urgent ? "bg-danger" : "bg-ok"}`}
+            className={`h-full rounded-full transition-[width] duration-1000 ease-linear motion-reduce:transition-none ${urgent ? "bg-danger" : "bg-ok"}`}
           />
         </div>
       </div>

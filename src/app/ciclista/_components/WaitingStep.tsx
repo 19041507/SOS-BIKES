@@ -40,7 +40,7 @@ export function WaitingStep({ chamado, limitSeconds, cancelling, onCancel }: Wai
         </span>
       </div>
       <div role="status">
-        <h2 className="font-display text-[22px] font-bold">Aguardando {primeiroNome(nome)}</h2>
+        <h1 className="font-display text-[22px] font-bold">Aguardando {primeiroNome(nome)}</h1>
         <p className="mt-1 text-sm font-semibold tabular-nums text-subtle">Aguardando há {formatElapsed(elapsed)}</p>
       </div>
       <p className="text-[15px] leading-normal text-muted">

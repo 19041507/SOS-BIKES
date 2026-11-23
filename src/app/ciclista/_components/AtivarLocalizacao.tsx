@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { conterTabNoDialogo } from "@/lib/foco";
 
 type AtivarLocalizacaoProps = {
   onAtivar: () => Promise<void>;
@@ -20,6 +21,7 @@ const VANTAGENS = [
 export function AtivarLocalizacao({ onAtivar, onAgoraNao }: AtivarLocalizacaoProps) {
   const [ativando, setAtivando] = useState(false);
   const principal = useRef<HTMLButtonElement>(null);
+  const dialogo = useRef<HTMLElement>(null);
 
   useEffect(() => {
     principal.current?.focus();
@@ -30,12 +32,15 @@ export function AtivarLocalizacao({ onAtivar, onAgoraNao }: AtivarLocalizacaoPro
       className="fixed inset-0 z-[2000] flex items-end justify-center bg-ink/50 backdrop-blur-sm sm:items-center sm:p-4"
       onKeyDown={(event) => {
         if (event.key === "Escape" && !ativando) onAgoraNao();
+        conterTabNoDialogo(event, dialogo.current);
       }}
     >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="ativar-localizacao-titulo"
+        ref={dialogo}
+        tabIndex={-1}
         className="max-h-[100dvh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:max-w-md sm:rounded-3xl motion-safe:animate-[toast-entrada_250ms_ease-out]"
       >
         <div className="relative h-40 overflow-hidden rounded-t-3xl bg-brand" aria-hidden="true">

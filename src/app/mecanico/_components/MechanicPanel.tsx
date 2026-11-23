@@ -222,6 +222,7 @@ export function MechanicPanel() {
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-3 sm:p-4">
+      <h1 className="sr-only">Painel do mecânico</h1>
       <AvailabilityCard online={online} busy={ocupado} hasActiveCall={Boolean(atual)} onToggle={alternarDisponibilidade} />
       {online && (
         <AtivarNotificacoes
@@ -248,7 +249,7 @@ export function MechanicPanel() {
         )}
 
         {chamados === null && (
-          <div className="flex flex-col gap-3" aria-busy="true" aria-label="Carregando chamados">
+          <div className="flex flex-col gap-3" role="status" aria-busy="true" aria-label="Carregando chamados">
             <div className="h-6 w-1/2 rounded bg-slate-100 motion-safe:animate-pulse" />
             <div className="h-32 rounded-2xl bg-slate-100 motion-safe:animate-pulse" />
           </div>
