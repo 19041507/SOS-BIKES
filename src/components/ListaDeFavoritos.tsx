@@ -81,7 +81,7 @@ export function ListaDeFavoritos() {
                   <p className="mt-1 text-[13px] text-subtle">
                     <span className="text-star" aria-hidden="true">★</span>{" "}
                     <span className="sr-only">Nota média: </span>
-                    {String(mecanico.media).replace(".", ",")} · {mecanico.avaliacoes} avaliações
+                    {String(mecanico.media).replace(".", ",")} · {mecanico.avaliacoes} {mecanico.avaliacoes === 1 ? "avaliação" : "avaliações"}
                   </p>
                 )}
               </div>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { VoltarDoPerfil } from "./VoltarDoPerfil";
 import { Card } from "@/components/ui/Card";
 import { CATEGORIAS } from "@/lib/categorias";
 import type { PerfilPublicoDoMecanico } from "@/lib/perfil-publico-mecanico";
@@ -7,7 +8,7 @@ import { iniciais } from "@/lib/pessoas";
 
 function Avaliacao({ nota }: { nota: number }) {
   return (
-    <span className="text-star" aria-label={`${nota} de 5 estrelas`}>
+    <span role="img" className="text-star" aria-label={`${String(nota).replace(".", ",")} de 5 estrelas`}>
       {"★".repeat(Math.round(nota))}
       <span className="text-line">{"★".repeat(5 - Math.round(nota))}</span>
     </span>
@@ -26,12 +27,7 @@ export function PerfilPublicoMecanico({
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 p-3 sm:p-4">
-      <Link
-        href={podeSolicitar ? "/ciclista" : "/mecanico"}
-        className="flex min-h-11 w-fit items-center gap-2 rounded-lg px-1 text-sm font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
-      >
-        <span aria-hidden="true">←</span> Voltar
-      </Link>
+      <VoltarDoPerfil inicio={podeSolicitar ? "/ciclista" : "/mecanico"} />
 
       <Card className="flex flex-col gap-5 sm:flex-row sm:items-center">
         {fotoPerfil ? (
@@ -51,7 +47,7 @@ export function PerfilPublicoMecanico({
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-brand">Perfil do mecânico</p>
           <h1 className="mt-1 break-words font-display text-3xl font-bold sm:text-4xl">{mecanico.nome}</h1>
-          <p className="mt-1 text-base text-muted">{mecanico.oficina ?? "Mecânico autônomo"}</p>
+          <p className="mt-1 break-words text-base text-muted">{mecanico.oficina ?? "Mecânico autônomo"}</p>
           {mecanico.bairro_regiao && (
             <p className="mt-2 text-sm text-muted">
               <span aria-hidden="true">⌖ </span>
@@ -66,7 +62,7 @@ export function PerfilPublicoMecanico({
                 {mecanico.avaliacoes === 1 ? "avaliação" : "avaliações"})
               </span>
             ) : (
-              <span className="text-subtle">Ainda sem avaliações</span>
+              <span className="text-subtle">Sem avaliações ainda</span>
             )}
             <span className="text-subtle">
               {mecanico.atendimentos} {mecanico.atendimentos === 1 ? "atendimento concluído" : "atendimentos concluídos"}
@@ -104,8 +100,8 @@ export function PerfilPublicoMecanico({
             <div className="border-t border-line pt-3">
               <h3 className="text-sm font-semibold">Serviços oferecidos</h3>
               <ul className="mt-2 flex flex-wrap gap-2">
-                {mecanico.servicos.map((servico) => (
-                  <li key={servico} className="rounded-full bg-surface px-3 py-1.5 text-sm text-muted">{servico}</li>
+                {mecanico.servicos.map((servico, indice) => (
+                  <li key={`${indice}-${servico}`} className="max-w-full break-words rounded-full bg-surface px-3 py-1.5 text-sm text-muted">{servico}</li>
                 ))}
               </ul>
             </div>
@@ -128,7 +124,7 @@ export function PerfilPublicoMecanico({
                     unoptimized
                     className="aspect-[4/3] w-full rounded-xl object-cover"
                   />
-                  <p className="mt-1.5 text-sm text-muted">{foto.descricao}</p>
+                  <p className="mt-1.5 break-words text-sm text-muted">{foto.descricao}</p>
                 </li>
               ))}
             </ul>
@@ -149,7 +145,7 @@ export function PerfilPublicoMecanico({
               {mecanico.avaliacoesPublicas.map((avaliacao, indice) => (
                 <li key={`${avaliacao.nota}-${indice}`} className="py-3 first:pt-0 last:pb-0">
                   <Avaliacao nota={avaliacao.nota} />
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted">{avaliacao.comentario}</p>
+                  <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted">{avaliacao.comentario}</p>
                 </li>
               ))}
             </ul>
