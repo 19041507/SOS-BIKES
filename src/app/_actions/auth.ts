@@ -22,7 +22,12 @@ export async function trocarSenha(dados: { atual: string; nova: string }): Promi
     });
     return await trocarSenhaAutenticada({
       getUser: () => supabase.auth.getUser(),
-      signInWithPassword: entrada => isolado.auth.signInWithPassword(entrada),
+      signInWithPassword: async entrada => {
+        const resultado = await isolado.auth.signInWithPassword(entrada);
+        // A conferência abre uma sessão própria no Auth: encerra para não acumular sessões órfãs.
+        if (resultado.data.session) await isolado.auth.signOut({ scope: "local" }).catch(() => {});
+        return resultado;
+      },
       updateUser: alteracao => supabase.auth.updateUser(alteracao),
     }, dados);
   } catch {
