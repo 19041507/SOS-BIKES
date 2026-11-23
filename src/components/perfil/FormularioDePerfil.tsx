@@ -17,7 +17,8 @@ type Campo = "nome" | "telefone" | "oficina";
 const inputClass =
   "h-12 w-full rounded-xl border border-field bg-white px-3.5 text-[15px] outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger";
 
-export function FormularioDePerfil() {
+/** `embutido`: só o formulário (nome, WhatsApp e oficina), sem cabeçalho, senha e notificações. */
+export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } = {}) {
   const perfil = usePerfil();
   const router = useRouter();
   const avisar = useToast();
@@ -67,6 +68,51 @@ export function FormularioDePerfil() {
     "aria-describedby": erros[id] ? `${id}-erro` : undefined,
   });
 
+  const formulario = (
+    <form onSubmit={salvar} noValidate className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="nome" className="text-sm font-semibold">Nome completo</label>
+        <input {...campo("nome")} autoComplete="name" className={inputClass} />
+        {erros.nome && <p id="nome-erro" className="text-[13px] text-danger">{erros.nome}</p>}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="telefone" className="text-sm font-semibold">WhatsApp</label>
+        <input {...campo("telefone")} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(81) 99999-0000" className={inputClass} />
+        {erros.telefone ? (
+          <p id="telefone-erro" className="text-[13px] text-danger">{erros.telefone}</p>
+        ) : (
+          <p className="text-[13px] text-subtle">
+            {mecanico ? "Os ciclistas usam esse número para falar com você durante o atendimento." : "O mecânico usa esse número para falar com você durante o atendimento."}
+          </p>
+        )}
+      </div>
+
+      {mecanico && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="oficina" className="text-sm font-semibold">
+            Oficina <span className="font-normal text-subtle">(opcional)</span>
+          </label>
+          <input {...campo("oficina")} autoComplete="organization" className={inputClass} />
+          <p className="text-[13px] text-subtle">Em branco, você aparece como &quot;Mecânico autônomo&quot;.</p>
+        </div>
+      )}
+
+      {erros.geral && (
+        <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-danger">
+          {erros.geral}
+        </p>
+      )}
+
+      <Button type="submit" size="lg" loading={salvando} loadingText="Salvando…" className="sm:w-fit sm:px-10">
+        Salvar alterações
+      </Button>
+    </form>
+  );
+
+  // Dentro do Meu perfil completo, só o formulário: a página já tem cabeçalho, senha e notificações.
+  if (embutido) return formulario;
+
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-5 p-3 sm:p-6">
       <header className="flex items-center gap-4 rounded-2xl bg-brand p-5 text-white sm:p-7">
@@ -87,45 +133,7 @@ export function FormularioDePerfil() {
           </span>
           <div><h2 className="font-display text-xl font-bold">Dados pessoais</h2><p className="mt-1 text-sm text-muted">Mantenha seus dados atualizados para os atendimentos.</p></div>
         </div>
-        <form onSubmit={salvar} noValidate className="flex flex-col gap-5">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="nome" className="text-sm font-semibold">Nome completo</label>
-            <input {...campo("nome")} autoComplete="name" className={inputClass} />
-            {erros.nome && <p id="nome-erro" className="text-[13px] text-danger">{erros.nome}</p>}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="telefone" className="text-sm font-semibold">WhatsApp</label>
-            <input {...campo("telefone")} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(81) 99999-0000" className={inputClass} />
-            {erros.telefone ? (
-              <p id="telefone-erro" className="text-[13px] text-danger">{erros.telefone}</p>
-            ) : (
-              <p className="text-[13px] text-subtle">
-                {mecanico ? "Os ciclistas usam esse número para falar com você durante o atendimento." : "O mecânico usa esse número para falar com você durante o atendimento."}
-              </p>
-            )}
-          </div>
-
-          {mecanico && (
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="oficina" className="text-sm font-semibold">
-                Oficina <span className="font-normal text-subtle">(opcional)</span>
-              </label>
-              <input {...campo("oficina")} autoComplete="organization" className={inputClass} />
-              <p className="text-[13px] text-subtle">Em branco, você aparece como &quot;Mecânico autônomo&quot;.</p>
-            </div>
-          )}
-
-          {erros.geral && (
-            <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-danger">
-              {erros.geral}
-            </p>
-          )}
-
-          <Button type="submit" size="lg" loading={salvando} loadingText="Salvando…" className="sm:w-fit sm:px-10">
-            Salvar alterações
-          </Button>
-        </form>
+        {formulario}
       </Card>
       <TrocarSenha />
       <Notificacoes />

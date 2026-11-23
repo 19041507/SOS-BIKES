@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: { serverActions: { bodySizeLimit: "8mb" } },
   // O service worker não pode ficar em cache: cada deploy precisa entregar a versão nova.
   async headers() {
     return [
