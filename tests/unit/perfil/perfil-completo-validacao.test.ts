@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { validarOperacao, validarDocumento } from "@/lib/perfil-completo/validacao";
+import { formatarCpf, validarOperacao, validarDocumento } from "@/lib/perfil-completo/validacao";
 
 it("valida CPF e CNPJ numerico/alfanumerico sem aceitar repetidos ou DV errado", () => {
   expect(validarDocumento("529.982.247-25", "cpf")).toBe("52998224725");
@@ -28,4 +28,10 @@ it("recusa operacoes, IDs e campos de colecao invalidos", () => {
   expect(() => validarOperacao("remover_bicicleta", {id:"outro"})).toThrow();
   expect(() => validarOperacao("bicicleta", {modelo:""})).toThrow();
   expect(() => validarOperacao("preferencias", {alto_contraste:"true"})).toThrow();
+});
+it("CPF: só números, até 11, formatado enquanto digita", () => {
+  expect(formatarCpf("abc529")).toBe("529");
+  expect(formatarCpf("5299822")).toBe("529.982.2");
+  expect(formatarCpf("529.982.247-25 extra 99")).toBe("529.982.247-25");
+  expect(formatarCpf("")).toBe("");
 });

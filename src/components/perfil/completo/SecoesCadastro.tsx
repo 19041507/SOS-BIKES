@@ -7,13 +7,14 @@ import { removerFavorito } from "@/lib/favoritos";
 import type { BasePerfil } from "@/lib/perfil-completo/types";
 import { Button } from "@/components/ui/Button";
 import { FormularioDePerfil } from "@/components/perfil/FormularioDePerfil";
+import { formatarCpf } from "@/lib/perfil-completo/validacao";
 import { EditorPerfil, type CampoEditor } from "./EditorPerfil";
 import { FotoPerfil } from "./FotoPerfil";
 import { ListaPerfil } from "./ListaPerfil";
 
 // Nome e WhatsApp ficam no FormularioDePerfil (regras do cadastro); aqui só os dados privados.
 export const CAMPOS_PESSOAIS:CampoEditor[]=[
-  {id:"cpf",titulo:"CPF (opcional e privado)",max:14,tipo:"password"},
+  {id:"cpf",titulo:"CPF (opcional e privado)",max:14,tipo:"cpf"},
   {id:"idade",titulo:"Idade (opcional e privada)",tipo:"number"},
 ];
 const CAMPOS_BIKE:CampoEditor[]=[{id:"modelo",titulo:"Modelo da bicicleta",max:100,obrigatorio:true},{id:"apelido",titulo:"Apelido (opcional)",max:80},{id:"cor",titulo:"Cor (opcional)",max:40}];
@@ -21,15 +22,13 @@ const CAMPOS_LOCAL:CampoEditor[]=[{id:"nome",titulo:"Nome do local",max:80,obrig
 
 /** Sem `base` (dados privados indisponíveis), nome e WhatsApp continuam editáveis. */
 export function DadosPessoais({base,atualizar}:{base:BasePerfil|null;atualizar:()=>void}) {
-  const [mostrar,setMostrar]=useState(false);
   return <div className="flex flex-col gap-6">
     <FormularioDePerfil embutido/>
     {base&&<section className="flex flex-col gap-5 border-t border-line pt-6">
       <h3 className="font-semibold">Foto e dados privados</h3>
       <FotoPerfil destino="avatar" url={base.fotoUrl} aoSalvar={atualizar}/>
-      <EditorPerfil operacao="dados" campos={CAMPOS_PESSOAIS.map(c=>c.id==="cpf"?{...c,tipo:mostrar?"text":"password"}:c)}
-        iniciais={{cpf:base.privados?.cpf??"",idade:String(base.privados?.idade??"")}} aoSalvar={atualizar}/>
-      <Button variant="secondary" aria-pressed={mostrar} onClick={()=>setMostrar(v=>!v)} className="self-start">{mostrar?"Ocultar CPF":"Mostrar CPF"}</Button>
+      <EditorPerfil operacao="dados" campos={CAMPOS_PESSOAIS}
+        iniciais={{cpf:formatarCpf(base.privados?.cpf??""),idade:String(base.privados?.idade??"")}} aoSalvar={atualizar}/>
       <p className="text-sm text-muted">CPF e idade são opcionais e visíveis apenas para você. O documento não é uma verificação de identidade.</p>
     </section>}
   </div>;
