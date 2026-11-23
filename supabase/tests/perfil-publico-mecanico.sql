@@ -70,6 +70,19 @@ reset role;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000701', true);
 set local role authenticated;
+-- Ocultar o comentário é a única mudança permitida: nota, comentário e gorjeta ficam como foram enviados.
+do $$ begin
+  begin
+    update public.avaliacoes set nota = 1, comentario_publico = false
+    where chamado_id = '00000000-0000-4000-8000-000000000901';
+    raise exception 'O ciclista não deveria alterar a nota de uma avaliação enviada';
+  exception when insufficient_privilege then null; end;
+  begin
+    update public.avaliacoes set comentario = 'Reescrito', gorjeta = 0
+    where chamado_id = '00000000-0000-4000-8000-000000000901';
+    raise exception 'O ciclista não deveria alterar comentário ou gorjeta de uma avaliação enviada';
+  exception when insufficient_privilege then null; end;
+end $$;
 update public.avaliacoes
 set comentario_publico = false
 where chamado_id = '00000000-0000-4000-8000-000000000901';

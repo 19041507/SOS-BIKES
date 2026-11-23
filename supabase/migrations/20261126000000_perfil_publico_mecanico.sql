@@ -124,6 +124,15 @@ create policy "Mecânico envia fotos ao próprio diretório"
     and privado.tipo_do_perfil((select auth.uid())) = 'mecanico'
   );
 
+-- O remove() do Storage seleciona o objeto antes de apagar: sem SELECT, apaga 0 linhas sem erro
+-- e a foto "removida" continua pública pela URL.
+create policy "Mecânico vê os arquivos do próprio diretório"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'sos-bikes-perfis-mecanicos'
+    and split_part(name, '/', 1) = (select auth.uid())::text
+  );
+
 create policy "Mecânico remove fotos do próprio diretório"
   on storage.objects for delete to authenticated
   using (
@@ -139,7 +148,9 @@ alter table public.avaliacoes
     or length(btrim(coalesce(comentario, ''))) > 0
   );
 
-grant insert (comentario_publico) on public.avaliacoes to authenticated;
+-- avaliacoes nunca restringiu colunas: o padrão do Supabase dá UPDATE na tabela inteira.
+-- Sem o revoke, a policy abaixo deixaria o ciclista reescrever nota, comentário e gorjeta.
+revoke update on public.avaliacoes from authenticated, anon;
 grant update (comentario_publico) on public.avaliacoes to authenticated;
 
 create policy "Ciclista controla a publicação do próprio comentário"
