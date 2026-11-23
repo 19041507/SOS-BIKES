@@ -29,8 +29,9 @@ export function FormularioDePerfil() {
     oficina: perfil.oficina ?? "",
     bairro_regiao: perfil.bairro_regiao ?? "",
   });
-  const [especialidades, setEspecialidades] = useState<Categoria[]>(perfil.especialidades);
-  const [servicos, setServicos] = useState(perfil.servicos.join("\n"));
+  // `?? []`: se o código chegar antes da migration, as colunas novas ainda não existem.
+  const [especialidades, setEspecialidades] = useState<Categoria[]>(perfil.especialidades ?? []);
+  const [servicos, setServicos] = useState((perfil.servicos ?? []).join("\n"));
   const [erros, setErros] = useState<Partial<Record<CampoComErro, string>>>({});
   const [salvando, startTransition] = useTransition();
 
