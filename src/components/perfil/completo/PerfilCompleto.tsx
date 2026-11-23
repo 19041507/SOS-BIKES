@@ -13,6 +13,7 @@ import {secoesDoPerfil,type BasePerfil,type SecaoPerfil} from "@/lib/perfil-comp
 import {TrocarSenha} from "../TrocarSenha";
 import {Notificacoes} from "../Notificacoes";
 import {FotosDoPerfil} from "../FotosDoPerfil";
+import {FormularioDePerfil} from "../FormularioDePerfil";
 import {DadosPessoais,OficinaPerfil,BicicletasPerfil,LocaisPerfil,FavoritosPerfil} from "./SecoesCadastro";
 import {AcessibilidadePerfil,AjudaPerfil,StatusPerfil,AtividadePerfil,AvaliacaoPerfil} from "./SecoesInformativas";
 import {RascunhosPerfil} from "./RascunhosPerfil";
@@ -59,14 +60,16 @@ export function PerfilCompleto() {
   }
   const recarregar=()=>{void atualizar();};
   const atual=base?.perfil??perfil;
-  // "Dados pessoais" não depende das tabelas novas: o formulário de nome/WhatsApp/oficina sempre aparece.
-  const conteudo=selecionada.id==="dados"?<DadosPessoais base={base} atualizar={recarregar}/>:base?{
+  // "Dados pessoais" e "Perfil público" não dependem das tabelas privadas: aparecem mesmo se elas falharem.
+  const conteudo=selecionada.id==="dados"?<DadosPessoais base={base} atualizar={recarregar} mecanico={perfil.tipo==="mecanico"}/>
+    // O que os ciclistas veem antes de escolher (perfil público, #116).
+    :selecionada.id==="publico"?<div className="flex flex-col gap-6">
+      <p className="text-sm text-muted">Estas informações aparecem para os ciclistas no seu perfil público. <Link href={`/mecanicos/${perfil.id}`} className="font-semibold text-brand underline">Visualizar perfil público</Link></p>
+      <FormularioDePerfil parte="publico"/>
+      <div className="border-t border-line pt-6"><FotosDoPerfil aoMudarFotoDePerfil={recarregar}/></div>
+    </div>
+    :base?{
     oficina:<OficinaPerfil base={base} atualizar={recarregar}/>,
-    // Fotos e comentários que os ciclistas veem antes de escolher (perfil público, #116).
-    publico:<div className="flex flex-col gap-5">
-      <Link href={`/mecanicos/${perfil.id}`} className="self-start font-semibold text-brand underline">Visualizar perfil público</Link>
-      <FotosDoPerfil/>
-    </div>,
     bicicletas:<BicicletasPerfil/>,
     locais:<LocaisPerfil/>,
     favoritos:<FavoritosPerfil base={base}/>,
@@ -86,9 +89,10 @@ export function PerfilCompleto() {
       </header>
       {erro&&<div role="alert" className="flex flex-col gap-3 rounded-xl bg-red-50 p-4 text-sm text-danger"><p>{erro}</p><Button variant="secondary" loading={carregando} onClick={recarregar} className="self-start">Tentar novamente</Button></div>}
       <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <nav aria-label="Seções de Meu perfil" className="grid min-w-0 grid-cols-2 gap-1 rounded-2xl border border-line bg-white p-2 sm:grid-cols-3 lg:grid-cols-1">
+        {/* No celular, uma faixa com rolagem lateral em vez de 5 linhas de botões antes do conteúdo. */}
+        <nav aria-label="Seções de Meu perfil" className="-mx-3 flex min-w-0 gap-1 overflow-x-auto border-y border-line bg-white p-2 sm:mx-0 sm:rounded-2xl sm:border lg:flex-col lg:overflow-visible">
           {secoes.map(s=><Link key={s.id} href={`/${perfil.tipo}/perfil?secao=${s.id}`} scroll={false} aria-current={s.id===selecionada.id?"page":undefined}
-            className={`flex min-h-12 min-w-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${s.id===selecionada.id?"bg-brand text-white":"text-muted hover:bg-brand-soft hover:text-brand"}`}>
+            className={`flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${s.id===selecionada.id?"bg-brand text-white":"text-muted hover:bg-brand-soft hover:text-brand"}`}>
             <svg width="20" height="20" className="shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={ICONES[s.id]}/></svg><span>{s.titulo}</span>
           </Link>)}
         </nav>
@@ -96,8 +100,7 @@ export function PerfilCompleto() {
           <Card className="min-w-0"><h2 className="mb-5 font-display text-xl font-bold">{selecionada.titulo}</h2>
             {conteudo??(!erro&&<p role="status">Carregando seus dados…</p>)}
           </Card>
-          {selecionada.id==="dados"&&<TrocarSenha/>}
-          <Notificacoes/>
+          {selecionada.id==="dados"&&<><TrocarSenha/><Notificacoes/></>}
         </div>
       </div>
     </main>

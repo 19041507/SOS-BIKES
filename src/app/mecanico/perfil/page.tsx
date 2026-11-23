@@ -11,7 +11,7 @@ export default function PerfilPage() {
   return (
     <>
       <Suspense fallback={<p className="p-6">Carregando perfil…</p>}><PerfilCompleto /></Suspense>
-      <div id="instalar-app" tabIndex={-1} className="mx-auto w-full max-w-4xl scroll-mt-4 px-3 pb-6 sm:px-6">
+      <div id="instalar-app" tabIndex={-1} className="mx-auto w-full max-w-7xl scroll-mt-4 px-3 pb-6 sm:px-6">
         <InstalarApp />
       </div>
     </>

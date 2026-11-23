@@ -4,14 +4,18 @@ import { normalizarTelefone } from "@/lib/cadastro";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIAS, type Categoria } from "@/lib/categorias";
 
-/** `oficina` ausente = não alterar (no Meu perfil completo, a oficina tem seção própria, com CNPJ). */
+/**
+ * `oficina` ausente = não alterar (no Meu perfil completo, a oficina tem seção própria, com CNPJ).
+ * Região, especialidades e serviços ausentes = não alterar: no Meu perfil eles ficam em "Perfil público",
+ * num formulário separado do de contato.
+ */
 type DadosDoPerfil = {
   nome: string;
   telefone: string;
   oficina?: string;
-  bairro_regiao: string;
-  especialidades: Categoria[];
-  servicos: string;
+  bairro_regiao?: string;
+  especialidades?: Categoria[];
+  servicos?: string;
 };
 
 export type ResultadoDoPerfil =
@@ -34,21 +38,25 @@ export async function atualizarPerfil(dados: DadosDoPerfil): Promise<ResultadoDo
     ? [...new Set(especialidadesInput)]
     : [];
 
+  const comPublico = dados?.especialidades !== undefined || dados?.servicos !== undefined || dados?.bairro_regiao !== undefined;
+
   const erros: Partial<Record<keyof DadosDoPerfil, string>> = {};
   if (nome.length < 3) erros.nome = "Informe seu nome.";
   if (!telefone) erros.telefone = "Informe o WhatsApp com DDD.";
-  if (bairroRegiao.length === 1 || bairroRegiao.length > 80) {
-    erros.bairro_regiao = "Informe um bairro ou região com 2 a 80 caracteres.";
-  }
-  if (
-    !Array.isArray(dados?.especialidades)
-    || especialidades.length > CATEGORIAS.length
-    || !especialidades.every((especialidade) => especialidadesValidas.has(especialidade))
-  ) {
-    erros.especialidades = "Selecione especialidades válidas.";
-  }
-  if (!servicosValidos || servicos.length > 8 || servicos.some((servico) => servico.length > 80) || servicos.join("").length > 640) {
-    erros.servicos = "Informe até 8 serviços, com no máximo 80 caracteres cada.";
+  if (comPublico) {
+    if (bairroRegiao.length === 1 || bairroRegiao.length > 80) {
+      erros.bairro_regiao = "Informe um bairro ou região com 2 a 80 caracteres.";
+    }
+    if (
+      !Array.isArray(dados?.especialidades)
+      || especialidades.length > CATEGORIAS.length
+      || !especialidades.every((especialidade) => especialidadesValidas.has(especialidade))
+    ) {
+      erros.especialidades = "Selecione especialidades válidas.";
+    }
+    if (!servicosValidos || servicos.length > 8 || servicos.some((servico) => servico.length > 80) || servicos.join("").length > 640) {
+      erros.servicos = "Informe até 8 serviços, com no máximo 80 caracteres cada.";
+    }
   }
   if (Object.keys(erros).length > 0) return { erros };
 
@@ -68,9 +76,7 @@ export async function atualizarPerfil(dados: DadosDoPerfil): Promise<ResultadoDo
       ...(atual.tipo === "mecanico"
         ? {
             ...(dados.oficina !== undefined ? { oficina: oficina || null } : {}),
-            bairro_regiao: bairroRegiao || null,
-            especialidades,
-            servicos,
+            ...(comPublico ? { bairro_regiao: bairroRegiao || null, especialidades, servicos } : {}),
           }
         : {}),
     })
