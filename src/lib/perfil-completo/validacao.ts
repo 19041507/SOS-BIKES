@@ -3,6 +3,15 @@ import type { Json } from "@/lib/supabase/database.types";
 export function uuidValido(id: unknown): id is string {
   return typeof id === "string" && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id);
 }
+/** Só dígitos (até 11), já no formato 000.000.000-00 enquanto a pessoa digita. */
+export function formatarCpf(valor: string) {
+  const d = valor.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+}
+
 /** Receita Federal: módulo 11, caracteres do CNPJ convertidos por ASCII - 48. */
 export function validarDocumento(entrada: unknown, especie: "cpf" | "cnpj"): string | null | false {
   if (entrada == null || entrada === "") return null;

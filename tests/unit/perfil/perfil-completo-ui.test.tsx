@@ -1,5 +1,5 @@
 import {afterEach,expect,it,vi} from "vitest";
-import {cleanup,render,screen} from "@testing-library/react";
+import {cleanup,fireEvent,render,screen} from "@testing-library/react";
 import {PerfilCompleto} from "@/components/perfil/completo/PerfilCompleto";
 import {PerfilProvider} from "@/components/PerfilProvider";
 import {Toaster} from "@/components/ui/Toaster";
@@ -28,10 +28,21 @@ it("troca de conta não mantém dados privados da conta anterior durante a recar
   vi.mocked(carregarPerfilCompleto).mockResolvedValue({ok:true,dados:{perfil,privados:{usuario_id:perfil.id,cpf:"52998224725",idade:25,foto_caminho:null,texto_ampliado:false,alto_contraste:false,reduzir_movimentos:false},oficina:null,fotoUrl:null,fachadaUrl:null}});
   const montar=(p:Perfil)=><PerfilProvider perfil={p}><Toaster><PerfilCompleto/></Toaster></PerfilProvider>;
   const view=render(montar(perfil));
-  expect(await screen.findByDisplayValue("52998224725")).toBeTruthy();
+  const cpf=await screen.findByDisplayValue("529.982.247-25") as HTMLInputElement;
+  // Visível enquanto digita (não é campo de senha) e com teclado numérico no celular.
+  expect(cpf.type).toBe("text");
+  expect(cpf.inputMode).toBe("numeric");
+  // Idade também: texto numérico (type="number" deixaria digitar "e").
+  const idade=screen.getByLabelText("Idade (opcional e privada)") as HTMLInputElement;
+  expect(idade.type).toBe("text");
+  expect(idade.inputMode).toBe("numeric");
+  fireEvent.change(idade,{target:{value:"2e5a1"}});
+  expect(idade.value).toBe("251");
+  fireEvent.change(cpf,{target:{value:"abc12345678909x"}});
+  expect(cpf.value).toBe("123.456.789-09");
   vi.mocked(carregarPerfilCompleto).mockImplementation(()=>new Promise(()=>{}));
   view.rerender(montar({...perfil,id:"conta-b",nome:"Outra Pessoa"}));
-  expect(screen.queryByDisplayValue("52998224725")).toBeNull();
+  expect(screen.queryByDisplayValue("529.982.247-25")).toBeNull();
 });
 it("sem os dados privados (ex.: migration ausente), nome e WhatsApp continuam editáveis",async()=>{
   const perfil:Perfil={id:"dono",nome:"Ana Silva",telefone:"81999990000",tipo:"ciclista",oficina:null,disponivel:false,especialidades:[],servicos:[],bairro_regiao:null,criado_em:"2026-11-21"};

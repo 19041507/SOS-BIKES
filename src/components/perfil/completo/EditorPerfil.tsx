@@ -4,11 +4,11 @@ import { use, useId, useRef, useState, useTransition, type FormEvent } from "rea
 import { RascunhosContexto } from "./RascunhosPerfil";
 import { useRouter } from "next/navigation";
 import { salvarSecaoPerfil } from "@/app/_actions/perfil-completo";
-import { validarOperacao } from "@/lib/perfil-completo/validacao";
+import { formatarCpf, validarOperacao } from "@/lib/perfil-completo/validacao";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toaster";
 
-export type CampoEditor = {id:string;titulo:string;tipo?:"text"|"tel"|"number"|"checkbox"|"password";max?:number;obrigatorio?:boolean;soVinculado?:boolean};
+export type CampoEditor = {id:string;titulo:string;tipo?:"text"|"tel"|"number"|"checkbox"|"password"|"cpf";max?:number;obrigatorio?:boolean;soVinculado?:boolean};
 export const CAMPO_PERFIL="min-h-12 w-full min-w-0 rounded-xl border border-field bg-white px-3.5 py-2 text-[15px] outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 export function EditorPerfil({operacao,campos,iniciais,aoSalvar,limpar=false,cnpjAnterior}: {
@@ -58,13 +58,18 @@ export function EditorPerfil({operacao,campos,iniciais,aoSalvar,limpar=false,cnp
         const id=`${prefixo}-${c.id}`;
         return <div key={c.id} className="flex min-w-0 flex-col gap-1.5">
           <label htmlFor={id} className="text-sm font-semibold">{c.titulo}</label>
-          <input id={id} type={c.tipo??"text"} required={c.obrigatorio}
+          {/* CPF e números usam texto com teclado numérico: type="number" aceita "e" (1e2) e esconde o que foi filtrado. */}
+          <input id={id} type={c.tipo==="cpf"||c.tipo==="number"?"text":c.tipo??"text"} required={c.obrigatorio}
+            inputMode={c.tipo==="cpf"||c.tipo==="number"?"numeric":undefined} placeholder={c.tipo==="cpf"?"000.000.000-00":undefined}
             checked={c.tipo==="checkbox"?valores[c.id]==="true":undefined}
             value={c.tipo==="checkbox"?undefined:valores[c.id]??""}
-            maxLength={c.max} min={c.tipo==="number"?1:undefined} max={c.tipo==="number"?120:undefined}
+            maxLength={c.tipo==="number"?3:c.max}
             autoComplete={c.id==="nome"?"name":c.id==="telefone"?"tel": "off"}
             onChange={e=>{
-              const valor=c.tipo==="checkbox"?String(e.target.checked):e.target.value;
+              const valor=c.tipo==="checkbox"?String(e.target.checked)
+                :c.tipo==="cpf"?formatarCpf(e.target.value)
+                :c.tipo==="number"?e.target.value.replace(/\D/g,"").slice(0,3)
+                :e.target.value;
               const proximos={...valores,[c.id]:valor,...(c.id==="cnpj"&&cnpjAnterior?{endereco:""}:{})};
               setValores(proximos);
               cache?.set(chave,proximos);
