@@ -69,11 +69,18 @@ select pg_temp.exigir((select count(*)=0 from public.oficina_privada),'outro mec
 select pg_temp.exigir((select count(*)=0 from public.atividade_perfil),'outro usuario nao le atividade');
 reset role;
 insert into public.chamados(id,ciclista_id,mecanico_id,categoria,endereco,status,estimativa,tempo_chegada_min,valor_final) values
-('30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','pneu','Endereco teste 123','concluido',30,10,30);
+('30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','pneu','Endereco teste 123','concluido',30,10,30),
+('30000000-0000-0000-0000-000000000009','10000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000001','pneu','Endereco teste 456','expirado',null,null,null);
 set local role authenticated;
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
+select pg_temp.exigir(jsonb_array_length(public.listar_secao_perfil('clientes'))=1,'clientes: so atendimentos concluidos');
 select public.salvar_perfil_completo('cliente_favorito','{"id":"10000000-0000-0000-0000-000000000001","salvar":true}');
 select pg_temp.exigir(jsonb_array_length(public.listar_secao_perfil('favoritos'))=1,'favorito de chamado proprio salvo');
+select pg_temp.exigir(jsonb_array_length(public.listar_secao_perfil('clientes'))=0,'cliente ja salvo sai da lista para adicionar');
+do $$ begin
+  perform public.salvar_perfil_completo('cliente_favorito','{"id":"10000000-0000-0000-0000-000000000002","salvar":true}');
+  raise exception 'favoritou cliente de chamado expirado';
+exception when insufficient_privilege then null; end $$;
 do $$ begin
   insert into public.mensagens(chamado_id,texto) values('30000000-0000-0000-0000-000000000001','Mensagem indevida');
   raise exception 'favorito liberou mensagem em chamado concluido';
