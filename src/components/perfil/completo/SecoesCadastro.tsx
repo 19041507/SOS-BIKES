@@ -11,7 +11,7 @@ import { EditorPerfil, type CampoEditor } from "./EditorPerfil";
 import { FotoPerfil } from "./FotoPerfil";
 import { ListaPerfil } from "./ListaPerfil";
 
-// Nome, WhatsApp e oficina ficam no FormularioDePerfil (regras do cadastro); aqui só os dados privados.
+// Nome e WhatsApp ficam no FormularioDePerfil (regras do cadastro); aqui só os dados privados.
 export const CAMPOS_PESSOAIS:CampoEditor[]=[
   {id:"cpf",titulo:"CPF (opcional e privado)",max:14,tipo:"password"},
   {id:"idade",titulo:"Idade (opcional e privada)",tipo:"number"},
@@ -19,7 +19,7 @@ export const CAMPOS_PESSOAIS:CampoEditor[]=[
 const CAMPOS_BIKE:CampoEditor[]=[{id:"modelo",titulo:"Modelo da bicicleta",max:100,obrigatorio:true},{id:"apelido",titulo:"Apelido (opcional)",max:80},{id:"cor",titulo:"Cor (opcional)",max:40}];
 const CAMPOS_LOCAL:CampoEditor[]=[{id:"nome",titulo:"Nome do local",max:80,obrigatorio:true},{id:"endereco",titulo:"Endereço",max:200,obrigatorio:true}];
 
-/** Sem `base` (dados privados indisponíveis), nome, WhatsApp e oficina continuam editáveis. */
+/** Sem `base` (dados privados indisponíveis), nome e WhatsApp continuam editáveis. */
 export function DadosPessoais({base,atualizar}:{base:BasePerfil|null;atualizar:()=>void}) {
   const [mostrar,setMostrar]=useState(false);
   return <div className="flex flex-col gap-6">
@@ -37,15 +37,13 @@ export function DadosPessoais({base,atualizar}:{base:BasePerfil|null;atualizar:(
 
 export function OficinaPerfil({base,atualizar}:{base:BasePerfil;atualizar:()=>void}) {
   return <div className="flex flex-col gap-5">
-    <p className="text-sm text-muted">
-      {base.perfil.oficina?`Oficina: ${base.perfil.oficina}. `:"Você aparece como mecânico autônomo. "}
-      O nome da oficina é editado em Dados pessoais. CNPJ, endereço e fachada são opcionais e privados.
-    </p>
+    <p className="text-sm text-muted">Autônomos não precisam de CNPJ. Se estiver vinculado a uma oficina, informe o nome e o CNPJ. Endereço e fachada são opcionais e privados nesta versão.</p>
     <EditorPerfil operacao="oficina" cnpjAnterior={base.oficina?.cnpj} campos={[
       {id:"vinculado",titulo:"Estou vinculado a uma oficina",tipo:"checkbox"},
-      {id:"cnpj",titulo:"CNPJ da oficina (opcional)",max:18,soVinculado:true},
+      {id:"nome",titulo:"Nome da oficina",max:120,obrigatorio:true,soVinculado:true},
+      {id:"cnpj",titulo:"CNPJ da oficina (obrigatório para vinculados)",max:18,obrigatorio:true,soVinculado:true},
       {id:"endereco",titulo:"Endereço da oficina (opcional)",max:200,soVinculado:true},
-    ]} iniciais={{vinculado:String(base.oficina?.vinculado??Boolean(base.perfil.oficina)),cnpj:base.oficina?.cnpj??"",endereco:base.oficina?.endereco??""}} aoSalvar={atualizar}/>
+    ]} iniciais={{vinculado:String(base.oficina?.vinculado??Boolean(base.perfil.oficina)),nome:base.perfil.oficina??"",cnpj:base.oficina?.cnpj??"",endereco:base.oficina?.endereco??""}} aoSalvar={atualizar}/>
     {base.oficina?.vinculado&&<FotoPerfil destino="fachada" url={base.fachadaUrl} aoSalvar={atualizar}/>}
   </div>;
 }

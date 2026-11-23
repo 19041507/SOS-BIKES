@@ -43,8 +43,8 @@ create table public.oficina_privada (
   cnpj text check(public.documento_perfil_valido(cnpj,'cnpj')),
   endereco text check(char_length(endereco) between 5 and 200),
   foto_caminho text,
-  -- O nome da oficina continua em perfis.oficina (livre e opcional); CNPJ, endereço e fachada são extras opcionais.
-  check (vinculado or (cnpj is null and endereco is null and foto_caminho is null))
+  -- Autônomo: sem CNPJ, endereço e fachada. Quem registra oficina informa o CNPJ (o nome fica em perfis.oficina).
+  check ((vinculado and cnpj is not null) or (not vinculado and cnpj is null and endereco is null and foto_caminho is null))
 );
 create table public.bicicletas_perfil (
   id uuid primary key default gen_random_uuid(),
@@ -96,7 +96,7 @@ create policy "Atividade do titular" on public.atividade_perfil for select to au
 create function public.salvar_perfil_completo(operacao text,dados jsonb)
 returns void language plpgsql security definer set search_path='' as $$
 declare u uuid:=auth.uid(); papel public.tipo_perfil; item uuid; cpf_val text; idade_val smallint;
-  vinculo boolean; cnpj_val text; atual public.oficina_privada;
+  vinculo boolean; cnpj_val text; atual public.oficina_privada; nome_oficina text;
 begin
   if u is null then raise insufficient_privilege using message='Sessão expirada.'; end if;
   -- Serializa as mutações por titular; jamais usa ID de usuário enviado pelo cliente.
@@ -119,8 +119,9 @@ begin
     if jsonb_typeof(dados->'vinculado') is distinct from 'boolean' then raise check_violation using message='Informe o vínculo.'; end if;
     vinculo:=(dados->>'vinculado')::boolean;
     cnpj_val:=case when vinculo then nullif(upper(regexp_replace(coalesce(dados->>'cnpj',''),'[. /-]','','g')),'') else null end;
-    if not public.documento_perfil_valido(cnpj_val,'cnpj') then
-      raise check_violation using message='Informe um CNPJ válido ou deixe em branco.';
+    nome_oficina:=btrim(coalesce(dados->>'nome',''));
+    if vinculo and (cnpj_val is null or not public.documento_perfil_valido(cnpj_val,'cnpj') or char_length(nome_oficina) not between 1 and 120) then
+      raise check_violation using message='Informe nome da oficina e CNPJ válido.';
     end if;
     select * into atual from public.oficina_privada where usuario_id=u;
     -- Só pede confirmação quando há dados de uma oficina identificada (CNPJ) que serão descartados.
@@ -131,6 +132,8 @@ begin
       values(u,vinculo,cnpj_val,case when vinculo and (atual.cnpj is null or atual.cnpj=cnpj_val) then nullif(btrim(dados->>'endereco'),'') else null end,
         case when vinculo and (atual.cnpj is null or atual.cnpj=cnpj_val) then atual.foto_caminho else null end)
       on conflict(usuario_id) do update set vinculado=excluded.vinculado,cnpj=excluded.cnpj,endereco=excluded.endereco,foto_caminho=excluded.foto_caminho;
+    -- Autônomo aparece como "Mecânico autônomo" (oficina nula), como no cadastro.
+    update public.perfis set oficina=case when vinculo then nome_oficina else null end where id=u;
   when 'bicicleta' then
     if papel<>'ciclista' then raise insufficient_privilege; end if;
     item:=nullif(dados->>'id','')::uuid;

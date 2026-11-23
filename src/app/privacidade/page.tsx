@@ -17,7 +17,7 @@ export default function PrivacidadePage() {
           <li>Mensagens do chat do chamado: comunicação entre o ciclista e o mecânico durante o atendimento. Só os dois participantes leem a conversa, que fica no histórico do chamado.</li>
           <li>Notificações: se você ativar, guardamos o endereço que o seu navegador gera para receber avisos. Ele é usado só para avisos do atendimento (chamados, respostas e mensagens) e apagado quando você desativa.</li>
           <li>Mecânicos favoritos: permitir encontrar e chamar novamente os profissionais salvos por você.</li>
-          <li>Meu perfil: CPF e idade opcionais ficam privados ao titular. Bicicletas, fotos e locais salvos organizam o cadastro do ciclista. Mecânicos com oficina podem informar CNPJ, endereço e foto da fachada (opcionais), que ficam privados nesta versão. Validar o formato do documento não verifica a identidade ou o vínculo.</li>
+          <li>Meu perfil: CPF e idade opcionais ficam privados ao titular. Bicicletas, fotos e locais salvos organizam o cadastro do ciclista. Mecânicos vinculados a uma oficina informam nome e CNPJ; CNPJ, endereço e foto da fachada ficam privados nesta versão. Validar o formato do documento não verifica a identidade ou o vínculo.</li>
           <li>Clientes favoritos do mecânico: lista privada limitada a pessoas dos seus próprios chamados. Preferências de acessibilidade ficam salvas por conta. A atividade registra alterações de cadastro e a situação dos chamados, sem rastrear todos os cliques ou registrar documentos e textos de mensagens nos eventos.</li>
         </ul>
       </section>

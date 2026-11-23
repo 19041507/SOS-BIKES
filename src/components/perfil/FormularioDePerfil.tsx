@@ -17,7 +17,10 @@ type Campo = "nome" | "telefone" | "oficina";
 const inputClass =
   "h-12 w-full rounded-xl border border-field bg-white px-3.5 text-[15px] outline-none placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 aria-invalid:border-danger";
 
-/** `embutido`: só o formulário (nome, WhatsApp e oficina), sem cabeçalho, senha e notificações. */
+/**
+ * `embutido`: só o formulário de nome e WhatsApp, sem cabeçalho, senha e notificações. A oficina fica
+ * na seção "Minha oficina" (nome + CNPJ obrigatório para quem registra oficina).
+ */
 export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } = {}) {
   const perfil = usePerfil();
   const router = useRouter();
@@ -46,7 +49,8 @@ export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } 
 
     startTransition(async () => {
       try {
-        const resultado = await atualizarPerfil(valores);
+        const { oficina, ...contato } = valores;
+        const resultado = await atualizarPerfil(embutido ? contato : { ...contato, oficina });
         if ("erros" in resultado) {
           setErros(resultado.erros);
           return;
@@ -88,7 +92,7 @@ export function FormularioDePerfil({ embutido = false }: { embutido?: boolean } 
         )}
       </div>
 
-      {mecanico && (
+      {mecanico && !embutido && (
         <div className="flex flex-col gap-1.5">
           <label htmlFor="oficina" className="text-sm font-semibold">
             Oficina <span className="font-normal text-subtle">(opcional)</span>

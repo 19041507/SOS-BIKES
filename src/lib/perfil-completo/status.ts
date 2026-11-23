@@ -4,7 +4,10 @@ export function pendenciasPerfil(perfil:Pick<Perfil,"nome"|"telefone"|"tipo"|"of
   const faltas:string[]=[];
   if(perfil.nome.trim().length<3) faltas.push("Nome completo");
   if(!perfil.telefone) faltas.push("WhatsApp");
-  // CNPJ é opcional: só cobra o nome de quem marcou que tem oficina.
-  if(perfil.tipo==="mecanico"&&oficina?.vinculado&&!perfil.oficina) faltas.push("Nome da oficina");
+  // Quem tem oficina (inclusive cadastros antigos com nome) precisa do CNPJ; autônomo não.
+  if(perfil.tipo==="mecanico"&&(oficina?.vinculado??Boolean(perfil.oficina))) {
+    if(!perfil.oficina) faltas.push("Nome da oficina");
+    if(!oficina?.cnpj) faltas.push("CNPJ da oficina");
+  }
   return faltas;
 }

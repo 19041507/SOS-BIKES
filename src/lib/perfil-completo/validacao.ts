@@ -52,10 +52,10 @@ export function validarOperacao(operacao: string, entrada: unknown): Record<stri
     case "oficina": {
       if (typeof d.vinculado !== "boolean") throw new Error("Informe o vínculo com a oficina.");
       if (!d.vinculado) return { vinculado: false, cnpj: null, confirmar: d.confirmar === true };
-      // CNPJ é opcional (o nome da oficina continua livre em Dados pessoais); se vier, precisa ser válido.
+      // Quem registra oficina informa nome e CNPJ; autônomo não precisa de nenhum dos dois.
       const cnpj = validarDocumento(d.cnpj, "cnpj");
-      if (cnpj === false) throw new Error("Informe um CNPJ válido ou deixe em branco.");
-      return { vinculado: true, cnpj, endereco: d.endereco ? texto(d.endereco, "Endereço", 5, 200) : null, confirmar: d.confirmar === true };
+      if (!cnpj) throw new Error("Informe um CNPJ válido.");
+      return { vinculado: true, nome: texto(d.nome, "Nome da oficina", 1, 120), cnpj, endereco: d.endereco ? texto(d.endereco, "Endereço", 5, 200) : null, confirmar: d.confirmar === true };
     }
     case "bicicleta":
       return { id: d.id ? id(d.id) : null, modelo: texto(d.modelo, "Modelo", 1, 100), apelido: d.apelido ? texto(d.apelido, "Apelido", 1, 80) : null, cor: d.cor ? texto(d.cor, "Cor", 1, 40) : null };

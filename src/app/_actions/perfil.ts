@@ -3,7 +3,8 @@
 import { normalizarTelefone } from "@/lib/cadastro";
 import { createClient } from "@/lib/supabase/server";
 
-type DadosDoPerfil = { nome: string; telefone: string; oficina: string };
+/** `oficina` ausente = não alterar (no Meu perfil completo, a oficina tem seção própria, com CNPJ). */
+type DadosDoPerfil = { nome: string; telefone: string; oficina?: string };
 
 export type ResultadoDoPerfil = { erros: Partial<Record<keyof DadosDoPerfil | "geral", string>> } | { ok: true };
 
@@ -28,7 +29,7 @@ export async function atualizarPerfil(dados: DadosDoPerfil): Promise<ResultadoDo
       nome,
       telefone,
       // Só o mecânico tem oficina; vazio = autônomo.
-      ...(atual?.tipo === "mecanico" ? { oficina: dados.oficina.trim() || null } : {}),
+      ...(atual?.tipo === "mecanico" && dados.oficina !== undefined ? { oficina: dados.oficina.trim() || null } : {}),
     })
     .eq("id", auth.user.id);
 

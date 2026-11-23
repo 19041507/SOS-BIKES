@@ -42,3 +42,10 @@ it("sem os dados privados (ex.: migration ausente), nome e WhatsApp continuam ed
   expect(screen.getByLabelText("WhatsApp")).toBeTruthy();
   expect(screen.queryByLabelText("CPF (opcional e privado)")).toBeNull();
 });
+it("no perfil completo do mecânico, Dados pessoais não mostra nem envia a oficina",async()=>{
+  const perfil:Perfil={id:"dono",nome:"Lucas Silva",telefone:"81999990000",tipo:"mecanico",oficina:"BikeFast",disponivel:false,criado_em:"2026-11-21"};
+  vi.mocked(carregarPerfilCompleto).mockResolvedValue({ok:true,dados:{perfil,privados:null,oficina:null,fotoUrl:null,fachadaUrl:null}});
+  render(<PerfilProvider perfil={perfil}><Toaster><PerfilCompleto/></Toaster></PerfilProvider>);
+  expect(await screen.findByLabelText("Nome completo")).toBeTruthy();
+  expect(screen.queryByLabelText(/^Oficina/)).toBeNull();
+});

@@ -15,11 +15,13 @@ it("dados privados: só CPF e idade (nome e WhatsApp ficam no formulário de per
   expect(() => validarOperacao("dados", { idade:"121" })).toThrow(/idade/i);
   expect(() => validarOperacao("dados", { cpf:"111.111.111-11" })).toThrow(/CPF/);
 });
-it("CNPJ da oficina é opcional, mas precisa ser válido quando informado", () => {
+it("autônomo não precisa de CNPJ; quem registra oficina informa nome e CNPJ válido", () => {
   expect(validarOperacao("oficina", { vinculado:false })).toMatchObject({vinculado:false,cnpj:null});
-  expect(validarOperacao("oficina", { vinculado:true, cnpj:"" })).toMatchObject({vinculado:true,cnpj:null});
-  expect(validarOperacao("oficina", { vinculado:true, cnpj:"11.222.333/0001-81" })).toMatchObject({cnpj:"11222333000181"});
-  expect(() => validarOperacao("oficina", { vinculado:true, cnpj:"11.222.333/0001-80" })).toThrow(/CNPJ/);
+  expect(() => validarOperacao("oficina", { vinculado:true, nome:"Oficina", cnpj:"" })).toThrow(/CNPJ/);
+  expect(() => validarOperacao("oficina", { vinculado:true, nome:"Oficina", cnpj:"11.222.333/0001-80" })).toThrow(/CNPJ/);
+  expect(() => validarOperacao("oficina", { vinculado:true, nome:"", cnpj:"11.222.333/0001-81" })).toThrow(/oficina/i);
+  expect(validarOperacao("oficina", { vinculado:true, nome:" BikeFast ", cnpj:"11.222.333/0001-81" }))
+    .toMatchObject({ nome:"BikeFast", cnpj:"11222333000181" });
 });
 it("recusa operacoes, IDs e campos de colecao invalidos", () => {
   expect(() => validarOperacao("qualquer", {})).toThrow();

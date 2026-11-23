@@ -40,22 +40,26 @@ do $$ begin
 exception when insufficient_privilege then null; end $$;
 select set_config('request.jwt.claim.sub','20000000-0000-0000-0000-000000000001',true);
 select public.salvar_perfil_completo('dados','{"nome":"Mecanico Um","telefone":"81999990000","idade":40}');
--- CNPJ é opcional; se vier, precisa ser válido. O nome da oficina (perfis.oficina) não é alterado aqui.
-select public.salvar_perfil_completo('oficina','{"vinculado":true,"cnpj":""}');
-select pg_temp.exigir((select vinculado and cnpj is null from public.oficina_privada),'vinculado sem CNPJ aceito');
-select pg_temp.exigir((select oficina='Oficina antiga' from public.perfis where id=auth.uid()),'nome da oficina preservado');
+-- Quem registra oficina informa nome e CNPJ válido; autônomo não precisa.
 do $$ begin
-  perform public.salvar_perfil_completo('oficina','{"vinculado":true,"cnpj":"11222333000180"}');
+  perform public.salvar_perfil_completo('oficina','{"vinculado":true,"nome":"Oficina teste","cnpj":""}');
+  raise exception 'vinculado sem CNPJ aceito';
+exception when check_violation then null; end $$;
+do $$ begin
+  perform public.salvar_perfil_completo('oficina','{"vinculado":true,"nome":"Oficina teste","cnpj":"11222333000180"}');
   raise exception 'CNPJ invalido aceito';
 exception when check_violation then null; end $$;
+select pg_temp.exigir((select oficina='Oficina antiga' from public.perfis where id=auth.uid()),'erro preserva o nome da oficina');
 select public.salvar_perfil_completo('oficina','{"vinculado":true,"nome":"Oficina teste","cnpj":"11222333000181","endereco":"Rua oficina 123"}');
 select pg_temp.exigir((select cnpj='11222333000181' from public.oficina_privada),'oficina salva');
+select pg_temp.exigir((select oficina='Oficina teste' from public.perfis where id=auth.uid()),'nome da oficina salvo');
 do $$ begin
   perform public.salvar_perfil_completo('oficina','{"vinculado":false}');
   raise exception 'removeu oficina sem confirmacao';
 exception when check_violation then null; end $$;
 select public.salvar_perfil_completo('oficina','{"vinculado":false,"confirmar":true}');
 select pg_temp.exigir((select cnpj is null and not vinculado from public.oficina_privada),'autonomo sem CNPJ');
+select pg_temp.exigir((select oficina is null from public.perfis where id=auth.uid()),'autonomo aparece sem oficina');
 do $$ begin
   perform public.salvar_perfil_completo('cliente_favorito','{"id":"10000000-0000-0000-0000-000000000002","salvar":true}');
   raise exception 'cliente sem chamado favoritado';
