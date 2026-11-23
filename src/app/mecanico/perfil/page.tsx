@@ -10,7 +10,7 @@ export default function PerfilPage() {
   return (
     <>
       <FormularioDePerfil />
-      <div className="mx-auto w-full max-w-2xl px-3 pb-4 sm:px-4">
+      <div id="instalar-app" tabIndex={-1} className="mx-auto w-full max-w-4xl scroll-mt-4 px-3 pb-6 sm:px-6">
         <InstalarApp />
       </div>
     </>

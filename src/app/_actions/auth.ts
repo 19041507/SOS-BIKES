@@ -3,10 +3,37 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { supabaseConfigurado } from "@/lib/supabase/config";
+import { createClient as createAuthClient } from "@supabase/supabase-js";
+import { supabaseConfigurado, supabaseCredenciais } from "@/lib/supabase/config";
 import { SENHA_MINIMA, emailValido, normalizarTelefone } from "@/lib/cadastro";
 import { VERSAO_TERMOS } from "@/lib/legal";
 import type { Enum } from "@/lib/supabase/database.types";
+import { trocarSenhaAutenticada, type ResultadoDaSenha } from "@/lib/trocar-senha";
+
+/** Troca a senha de quem está logado, sem sair da conta nem redirecionar. */
+export async function trocarSenha(dados: { atual: string; nova: string }): Promise<ResultadoDaSenha> {
+  if (!supabaseConfigurado) return { erro: "A troca de senha não está configurada neste ambiente." };
+  try {
+    const supabase = await createClient();
+    const { url, publishableKey } = supabaseCredenciais();
+    // Reautenticação não escreve cookies nem substitui a sessão que abriu o perfil.
+    const isolado = createAuthClient(url, publishableKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+    return await trocarSenhaAutenticada({
+      getUser: () => supabase.auth.getUser(),
+      signInWithPassword: async entrada => {
+        const resultado = await isolado.auth.signInWithPassword(entrada);
+        // A conferência abre uma sessão própria no Auth: encerra para não acumular sessões órfãs.
+        if (resultado.data.session) await isolado.auth.signOut({ scope: "local" }).catch(() => {});
+        return resultado;
+      },
+      updateUser: alteracao => supabase.auth.updateUser(alteracao),
+    }, dados);
+  } catch {
+    return { erro: "Não foi possível alterar a senha. Tente de novo." };
+  }
+}
 
 type DadosDeEntrada = {
   email: string;

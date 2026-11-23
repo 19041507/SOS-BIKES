@@ -31,7 +31,16 @@ export async function estadoDasNotificacoes(): Promise<EstadoDasNotificacoes> {
   if (!suportado() || !CHAVE_PUBLICA) return "indisponivel";
   if (Notification.permission === "denied") return "bloqueadas";
   const inscricao = await (await registro())?.pushManager.getSubscription();
-  return inscricao && Notification.permission === "granted" ? "ativadas" : "desativadas";
+  if (!inscricao || Notification.permission !== "granted") return "desativadas";
+  // Uma inscrição só recebe avisos se também pertencer à conta atual no servidor.
+  // O SELECT usa o RLS existente; não revela inscrições de outras pessoas.
+  const { data, error } = await createClient()
+    .from("inscricoes_push")
+    .select("id")
+    .eq("endpoint", inscricao.endpoint)
+    .maybeSingle();
+  if (error) throw new Error("Não foi possível consultar as notificações.");
+  return data ? "ativadas" : "desativadas";
 }
 
 /** A chave VAPID vem em base64url; o PushManager quer os bytes. */
@@ -79,6 +88,8 @@ export async function ativarNotificacoes(): Promise<EstadoDasNotificacoes> {
 export async function desativarNotificacoes() {
   const inscricao = await (await registro())?.pushManager.getSubscription();
   if (!inscricao) return;
-  await createClient().from("inscricoes_push").delete().eq("endpoint", inscricao.endpoint);
-  await inscricao.unsubscribe();
+  const { error } = await createClient().from("inscricoes_push").delete().eq("endpoint", inscricao.endpoint);
+  if (error) throw new Error("Não foi possível desativar as notificações.");
+  const cancelada = await inscricao.unsubscribe();
+  if (!cancelada) throw new Error("Não foi possível desativar as notificações.");
 }
