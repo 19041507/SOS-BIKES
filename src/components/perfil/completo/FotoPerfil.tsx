@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useId, useRef, useState, useTransition, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { alterarFotoPerfil } from "@/app/_actions/perfil-completo";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toaster";
@@ -13,6 +14,7 @@ export function FotoPerfil({destino,itemId,url,aoSalvar}: {destino:"avatar"|"fac
   const ocupado=useRef(false);
   const form=useRef<HTMLFormElement>(null);
   const avisar=useToast();
+  const router=useRouter();
   function enviar(evento?:FormEvent<HTMLFormElement>,remover=false) {
     evento?.preventDefault();
     if(ocupado.current||!form.current) return;
@@ -33,6 +35,8 @@ export function FotoPerfil({destino,itemId,url,aoSalvar}: {destino:"avatar"|"fac
         if(r.dados.limpezaPendente) avisar("Foto atualizada; a remoção do arquivo antigo ainda está pendente.","info");
         form.current?.reset();
         aoSalvar();
+        // A foto de perfil também aparece no cabeçalho do site (AreaLogada).
+        if(destino==="avatar") router.refresh();
       } catch {setErro("Não foi possível confirmar a alteração. Atualize antes de tentar novamente.");}
       finally {ocupado.current=false;}
     });

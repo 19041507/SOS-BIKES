@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { sair } from "@/app/_actions/auth";
 import { Logo } from "./Logo";
 import { MenuMobile } from "./MenuMobile";
@@ -5,7 +6,8 @@ import { NavPrincipal, type LinkDeNavegacao } from "./NavPrincipal";
 
 type AppHeaderProps = {
   links: LinkDeNavegacao[];
-  user: { initials: string; name: string };
+  /** `fotoUrl`: foto do Meu perfil (link assinado, privado); sem ela, as iniciais. */
+  user: { initials: string; name: string; fotoUrl?: string | null };
   badge?: string;
 };
 
@@ -25,9 +27,7 @@ export function AppHeader({ links, user, badge }: AppHeaderProps) {
           <NavPrincipal links={links} />
         </div>
         <div className="hidden min-w-0 max-w-[35%] items-center gap-2 lg:flex">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-muted text-sm font-bold text-brand">
-            {user.initials}
-          </span>
+          <Avatar user={user} className="size-9" />
           <span className="truncate text-[15px] font-medium" title={user.name}>{user.name}</span>
           <form action={sair} className="shrink-0">
             <button
@@ -40,9 +40,7 @@ export function AppHeader({ links, user, badge }: AppHeaderProps) {
         </div>
         <MenuMobile>
           <div className="mb-3 flex items-center gap-3 border-b border-line px-2 pb-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-muted text-sm font-bold text-brand">
-              {user.initials}
-            </span>
+            <Avatar user={user} className="size-10" />
             <div className="min-w-0">
               <p className="break-words text-sm font-semibold">{user.name}</p>
               {badge && <p className="mt-0.5 text-xs text-subtle">{badge}</p>}
@@ -57,5 +55,16 @@ export function AppHeader({ links, user, badge }: AppHeaderProps) {
         </MenuMobile>
       </div>
     </header>
+  );
+}
+
+function Avatar({ user, className }: { user: AppHeaderProps["user"]; className: string }) {
+  if (user.fotoUrl) {
+    return <Image src={user.fotoUrl} unoptimized width={40} height={40} alt="" className={`${className} shrink-0 rounded-full object-cover`} />;
+  }
+  return (
+    <span className={`${className} flex shrink-0 items-center justify-center rounded-full bg-brand-muted text-sm font-bold text-brand`}>
+      {user.initials}
+    </span>
   );
 }
