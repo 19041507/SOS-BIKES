@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {useEffect,useRef,useState} from "react";
 import {useSearchParams} from "next/navigation";
 import {carregarPerfilCompleto} from "@/app/_actions/perfil-completo";
@@ -78,7 +79,9 @@ export function PerfilCompleto() {
   return <RascunhosPerfil key={perfil.id}>
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 p-3 sm:p-6">
       <header className="flex min-w-0 items-center gap-4 rounded-2xl bg-brand p-5 text-white sm:p-7">
-        <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/15 text-xl font-bold">{iniciais(atual.nome)}</span>
+        {base?.fotoUrl
+          ?<Image src={base.fotoUrl} unoptimized width={64} height={64} alt="" className="size-16 shrink-0 rounded-2xl border border-white/30 object-cover"/>
+          :<span className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-white/15 text-xl font-bold">{iniciais(atual.nome)}</span>}
         <div className="min-w-0"><p className="text-xs font-semibold tracking-wider text-white/80">{perfil.tipo==="mecanico"?"ESPAÇO DO MECÂNICO":"ESPAÇO DO CICLISTA"}</p><h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">Meu perfil</h1><p className="mt-1 text-sm text-white/90">Seus dados, sua segurança e sua experiência no SOS Bikes.</p></div>
       </header>
       {erro&&<div role="alert" className="flex flex-col gap-3 rounded-xl bg-red-50 p-4 text-sm text-danger"><p>{erro}</p><Button variant="secondary" loading={carregando} onClick={recarregar} className="self-start">Tentar novamente</Button></div>}
